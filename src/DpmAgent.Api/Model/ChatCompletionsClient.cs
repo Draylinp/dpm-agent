@@ -81,7 +81,7 @@ public abstract class ChatCompletionsClient : IChatModel
         var entrada = Tokens(json, "prompt_tokens");
         var salida = Tokens(json, "completion_tokens");
         _logger.LogInformation("{Proveedor} {Model} respondió en {Ms} ms (tokens: {Entrada} + {Salida})", Proveedor, Modelo, ms, entrada, salida);
-        _registro?.Registrar(new UsoModelo(Proveedor, Modelo, ContextoUso.Proposito, entrada, salida, ms, DateTimeOffset.UtcNow));
+        _registro?.Registrar(ContextoUso.Uso(Proveedor, Modelo, entrada, salida, ms));
 
         // Se clona para separarlo del documento original.
         return message.DeepClone().AsObject();

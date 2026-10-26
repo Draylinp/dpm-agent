@@ -748,6 +748,53 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.ToTable("Bitacora", (string)null);
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroUsoModelo", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Milisegundos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Modelo")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Proposito")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Proveedor")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SesionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TokensEntrada")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TokensSalida")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId", "FechaUtc");
+
+                    b.ToTable("UsosModelo", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.UsuarioPanel", b =>
                 {
                     b.Property<int>("Id")
@@ -988,6 +1035,15 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroBitacora", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroUsoModelo", b =>
                 {
                     b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
                         .WithMany()

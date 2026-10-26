@@ -141,9 +141,12 @@ public sealed class FiltroLlamaGuard : IFiltroSalida
             throw new HttpRequestException($"Llama Guard respondió {(int)res.StatusCode}.", null, res.StatusCode);
 
         var json = JsonNode.Parse(raw)!;
-        _registro?.Registrar(new UsoModelo("Llama Guard", _opciones.Model!, "filtro",
-            json["usage"]?["prompt_tokens"]?.GetValue<int>() ?? 0, json["usage"]?["completion_tokens"]?.GetValue<int>() ?? 0,
-            (int)(DateTime.UtcNow - inicio).TotalMilliseconds, DateTimeOffset.UtcNow));
+        using (ContextoUso.Usar("filtro"))
+        {
+            _registro?.Registrar(ContextoUso.Uso("Llama Guard", _opciones.Model!,
+                json["usage"]?["prompt_tokens"]?.GetValue<int>() ?? 0, json["usage"]?["completion_tokens"]?.GetValue<int>() ?? 0,
+                (int)(DateTime.UtcNow - inicio).TotalMilliseconds));
+        }
 
         return Interpretar(json["choices"]?[0]?["message"]?["content"]?.ToString());
     }

@@ -781,6 +781,55 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.ToTable("Bitacora", (string)null);
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroUsoModelo", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Milisegundos")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Modelo")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Proposito")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Proveedor")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("SesionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("TokensEntrada")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TokensSalida")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId", "FechaUtc");
+
+                    b.ToTable("UsosModelo", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.UsuarioPanel", b =>
                 {
                     b.Property<int>("Id")
@@ -1023,6 +1072,15 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroBitacora", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroUsoModelo", b =>
                 {
                     b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
                         .WithMany()

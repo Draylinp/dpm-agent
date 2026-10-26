@@ -37,8 +37,9 @@ dotnet run --project tools/DpmAgent.Eval
 # Real model: Muse Spark + Glimmer as the judge
 export META_API_KEY=...
 export Eval__Juez__BaseUrl=https://<your-glimmer>/v1/ Eval__Juez__Model=<model> Eval__Juez__ApiKey=...
-export Precios__Modelos__muse-spark-1.2__EntradaPorMillon=<price> Precios__Modelos__muse-spark-1.2__SalidaPorMillon=<price>
-dotnet run --project tools/DpmAgent.Eval -- --modelo real
+# The model name has "-" and ".", which `export` does not accept: pass the prices with `env`
+env 'Precios__Modelos__muse-spark-1.2__EntradaPorMillon=<price>' 'Precios__Modelos__muse-spark-1.2__SalidaPorMillon=<price>' \
+  dotnet run --project tools/DpmAgent.Eval -- --modelo real
 ```
 
 Options: `--filtro <text>` (only cases whose id contains it), `--sin-juez`, `--casos <dir>`, `--salida <dir>`, `--no-escribir`.

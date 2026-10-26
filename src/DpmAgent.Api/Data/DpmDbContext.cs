@@ -50,6 +50,8 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<Mensaje> Mensajes => Set<Mensaje>();
 
+    public DbSet<RegistroUsoModelo> UsosModelo => Set<RegistroUsoModelo>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
         // SQLite devuelve DateTime sin Kind y PostgreSQL exige UTC: todo entra y sale como UTC.
@@ -262,6 +264,18 @@ public abstract class DpmDbContext : DbContext
         b.Entity<Mensaje>(e =>
         {
             e.Property(x => x.Rol).HasMaxLength(20);
+        });
+
+        b.Entity<RegistroUsoModelo>(e =>
+        {
+            e.ToTable("UsosModelo");
+            e.Property(x => x.Proveedor).HasMaxLength(40);
+            e.Property(x => x.Modelo).HasMaxLength(120);
+            e.Property(x => x.Proposito).HasMaxLength(20);
+            e.Property(x => x.SesionId).HasMaxLength(100);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasIndex(x => new { x.ConsultorioId, x.FechaUtc });
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
     }
 

@@ -79,6 +79,7 @@
       <button data-tab="escalamientos" data-i18n="tab.escalamientos"></button>
       <button data-tab="carnets" data-i18n="tab.carnets"></button>
       <button data-tab="autorizaciones" data-i18n="tab.autorizaciones"></button>
+      <button data-tab="costos" data-i18n="tab.costos"></button>
       <button data-tab="bitacora" data-i18n="tab.bitacora"></button>
     </nav>
     <div class="card">
@@ -252,7 +253,7 @@
 
   async function costos() {
     const c = await api('/api/panel/costos');
-    const dinero = (v) => v === null || v === undefined ? '—' : `$${v.toFixed(4)}`;
+    const dinero = (v) => v === null || v === undefined ? '—' : `${v.toFixed(4)} ${c.moneda}`;
     const fila = (clave, valor) => el('tr', {}, el('th', {}, t(clave)), el('td', {}, valor));
     return el('div', {},
       el('p', { class: 'muted' }, t('costos.periodo')),

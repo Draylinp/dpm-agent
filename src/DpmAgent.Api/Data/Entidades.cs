@@ -430,3 +430,29 @@ public sealed class Mensaje
 
     public DateTime CreadoUtc { get; set; }
 }
+
+/// <summary>Una llamada al modelo: solo cifras para calcular costos, nunca el contenido.</summary>
+public sealed class RegistroUsoModelo
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public DateTime FechaUtc { get; set; }
+
+    public required string Proveedor { get; set; }
+
+    public required string Modelo { get; set; }
+
+    /// <summary>agente, filtro, carnet...</summary>
+    public required string Proposito { get; set; }
+
+    /// <summary>Conversación que originó la llamada, si la hubo (para el costo por conversación).</summary>
+    public string? SesionId { get; set; }
+
+    public int TokensEntrada { get; set; }
+
+    public int TokensSalida { get; set; }
+
+    public int Milisegundos { get; set; }
+}

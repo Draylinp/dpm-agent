@@ -128,6 +128,8 @@ Despliegue en Azure App Service con PostgreSQL, Key Vault y GitHub Actions: ver 
 
 Modo demo pública (banner, botones de ejemplo, reinicio, límite diario por IP): ver [docs/es/DEMO.md](docs/es/DEMO.md).
 
+Costo por conversación y por cita agendada, con precios en la configuración: ver [docs/es/COSTOS.md](docs/es/COSTOS.md).
+
 Configuración opcional (`appsettings.json` o variables de entorno):
 
 | Variable | Valor por defecto |

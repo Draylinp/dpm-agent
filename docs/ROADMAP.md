@@ -20,6 +20,7 @@ Entrega: **miércoles 4 de noviembre, 9:00 PM ET** (misma hora en República Dom
 | Lun 26 oct | F11: banco de evaluación (84 casos, 89 con F12, 11 categorías, es/en/ht + fr/pt), verificador determinista, juez LLM con rúbrica, evaluador `tools/DpmAgent.Eval` con tablas por categoría e idioma, tokens y latencia p50/p95; corre en CI con el modelo guionado | ✅ |
 | Lun 26 oct | F12: filtro de seguridad de salida (reglas multilingües + Llama Guard con pesos abiertos o el modelo como clasificador); reemplaza, escala y registra en la bitácora; medido en el banco (5 casos con dosis bloqueados) | ✅ |
 | Lun 26 oct | F13: demo pública (`Demo:Habilitado`): banner, 6 ejemplos en el idioma de la interfaz, traza visible, reinicio aislado al consultorio marcado `EsDemo`, escenario con cita y lista de espera listo para la oferta automática, límite diario por IP y de reinicios por hora | ✅ |
+| Lun 26 oct | F14: costo. Tokens de entrada y salida por llamada (sin contenido) guardados en segundo plano con consultorio y conversación; precios por modelo en la configuración; pestaña y endpoint del panel con costo por conversación y por cita agendada; el banco informa el costo promedio por caso | ✅ |
 | Pendiente | F11: correr el banco contra Muse Spark y pegar la tabla en el README | ⬜ |
 | Lun 26 oct | Pruebas de integración opcionales contra la Meta Model API, script con curl y guía de ajustes | ✅ |
 | Mar 27 oct | Workshop Meta P1. Primera llamada real (`docs/es/PRUEBAS-META.md`) y ajuste del prompt con conversaciones de prueba | ⬜ |

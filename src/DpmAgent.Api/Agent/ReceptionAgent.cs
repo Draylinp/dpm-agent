@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
+using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Idiomas;
 using DpmAgent.Api.Model;
@@ -39,6 +40,7 @@ public sealed class ReceptionAgent
     private readonly ILogger<ReceptionAgent> _logger;
     private readonly LimitadorSesiones? _limitador;
     private readonly IFiltroSalida? _filtro;
+    private readonly IConsultorioActual? _consultorio;
 
     public ReceptionAgent(
         IChatModel model,
@@ -47,8 +49,10 @@ public sealed class ReceptionAgent
         ILogger<ReceptionAgent> logger,
         TimeProvider? clock = null,
         LimitadorSesiones? limitador = null,
-        IFiltroSalida? filtro = null)
+        IFiltroSalida? filtro = null,
+        IConsultorioActual? consultorio = null)
     {
+        _consultorio = consultorio;
         _limitador = limitador;
         _filtro = filtro;
         _model = model;
@@ -72,6 +76,7 @@ public sealed class ReceptionAgent
             throw new SesionInvalidaException("El identificador de la conversación no es válido.");
 
         using var _ = _logger.BeginScope(new Dictionary<string, object> { ["SesionId"] = sesionId });
+        using var __ = ContextoUso.Conversacion(_consultorio?.Id, sesionId);
         _limitador?.Verificar(sesionId);
 
         var sesion = await _store.ObtenerAsync(sesionId, ct);
