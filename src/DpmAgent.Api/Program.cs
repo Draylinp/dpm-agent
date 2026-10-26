@@ -1,4 +1,5 @@
 using DpmAgent.Api.Agent;
+using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
 
@@ -8,14 +9,15 @@ builder.Services.Configure<MetaOptions>(builder.Configuration.GetSection(MetaOpt
 builder.Services.AddHttpClient<IChatModel, MetaModelClient>();
 
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddSingleton<IDpmGateway, MockDpmGateway>();
-builder.Services.AddSingleton<AgentTools>();
-builder.Services.AddSingleton<ConversationStore>();
+builder.Services.AddPersistencia(builder.Configuration);
+builder.Services.AddScoped<AgentTools>();
 builder.Services.AddScoped<ReceptionAgent>();
 
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+await app.Services.InicializarBaseDatosAsync();
 
 app.UseExceptionHandler();
 app.UseDefaultFiles();
@@ -50,8 +52,8 @@ app.MapPost("/api/chat", async (ChatRequest req, ReceptionAgent agent, Cancellat
     }
 });
 
-app.MapGet("/api/escalamientos", (AgentTools tools) =>
-    Results.Ok(tools.Escalamientos.OrderByDescending(e => e.Creado)));
+app.MapGet("/api/escalamientos", async (IDpmGateway dpm, CancellationToken ct) =>
+    Results.Ok(await dpm.ListarEscalamientosAsync(ct)));
 
 app.MapGet("/api/medicos", async (IDpmGateway dpm, CancellationToken ct) =>
     Results.Ok(await dpm.ListarMedicosAsync(ct)));

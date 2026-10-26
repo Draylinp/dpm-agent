@@ -12,9 +12,18 @@ public sealed record Cita(
     string Motivo,
     string Estado);
 
+public sealed record Escalamiento(
+    string Id,
+    string SesionId,
+    string? PacienteId,
+    string Motivo,
+    bool Urgente,
+    string Estado,
+    DateTimeOffset Creado);
+
 /// <summary>
-/// Puerta de entrada al sistema DPM. Durante el hackathon se usa una implementación
-/// simulada con datos ficticios; luego se puede conectar a la API real de DPM.
+/// Puerta de entrada a los datos del consultorio. <see cref="DbDpmGateway"/> los guarda con EF Core;
+/// <see cref="MockDpmGateway"/> los tiene en memoria para las pruebas.
 /// </summary>
 public interface IDpmGateway
 {
@@ -35,4 +44,8 @@ public interface IDpmGateway
     /// Devuelve null si la cita no existe o es de otro paciente (no se distingue a propósito).
     /// </summary>
     Task<Cita?> CancelarCitaAsync(string citaId, string pacienteId, CancellationToken ct);
+
+    Task<Escalamiento> RegistrarEscalamientoAsync(string sesionId, string? pacienteId, string motivo, bool urgente, CancellationToken ct);
+
+    Task<IReadOnlyList<Escalamiento>> ListarEscalamientosAsync(CancellationToken ct);
 }

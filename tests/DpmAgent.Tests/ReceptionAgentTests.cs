@@ -14,7 +14,7 @@ public class ReceptionAgentTests
         var clock = new FixedClock(Ahora);
         var dpm = new MockDpmGateway(clock);
         var tools = new AgentTools(dpm);
-        var agent = new ReceptionAgent(modelo, tools, new ConversationStore(), NullLogger<ReceptionAgent>.Instance, clock);
+        var agent = new ReceptionAgent(modelo, tools, new InMemoryConversationStore(), NullLogger<ReceptionAgent>.Instance, clock);
         return (agent, tools, dpm);
     }
 
@@ -64,11 +64,11 @@ public class ReceptionAgentTests
             .ThenTool("escalar_a_personal", new { motivo = "Pregunta sobre medicamento", urgente = false })
             .ThenText("Eso se lo responde la doctora. Ya le pasé su consulta al personal.");
 
-        var (agent, tools, _) = Crear(modelo);
+        var (agent, _, dpm) = Crear(modelo);
 
         await agent.RunAsync("s1", "¿Puedo tomar ibuprofeno?", CancellationToken.None);
 
-        var esc = Assert.Single(tools.Escalamientos);
+        var esc = Assert.Single(await dpm.ListarEscalamientosAsync(CancellationToken.None));
         Assert.Equal("s1", esc.SesionId);
         Assert.False(esc.Urgente);
     }

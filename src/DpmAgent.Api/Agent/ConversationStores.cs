@@ -15,11 +15,14 @@ public sealed class Sesion
 
     public string Id { get; }
 
-    public string? TelefonoCanal { get; private set; }
+    public string? TelefonoCanal { get; internal set; }
 
     public string? PacienteId { get; set; }
 
     public List<JsonObject> Mensajes { get; set; } = [];
+
+    /// <summary>Cuántos de <see cref="Mensajes"/> ya estaban guardados al cargar la sesión.</summary>
+    internal int MensajesGuardados { get; set; }
 
     /// <summary>
     /// Asocia el teléfono del canal a la sesión. Una sesión no puede cambiar de teléfono:
@@ -44,30 +47,41 @@ public sealed class Sesion
         TelefonoCanal = TelefonoCanal,
         PacienteId = PacienteId,
         Mensajes = new List<JsonObject>(Mensajes),
+        MensajesGuardados = Mensajes.Count,
     };
 }
 
 public sealed class SesionInvalidaException(string message) : Exception(message);
 
-/// <summary>
-/// Historial de conversaciones en memoria, por sesión.
-/// </summary>
-public sealed class ConversationStore
+/// <summary>Historial y estado de las conversaciones, por sesión.</summary>
+public interface IConversationStore
 {
-    private const int MaxMensajes = 60;
+    /// <summary>Devuelve el estado de la sesión (vacío si es nueva). Los cambios se aplican con <see cref="GuardarAsync"/>.</summary>
+    Task<Sesion> ObtenerAsync(string sesionId, CancellationToken ct);
+
+    Task GuardarAsync(Sesion sesion, CancellationToken ct);
+}
+
+/// <summary>
+/// Historial en memoria, para pruebas y para correr sin base de datos.
+/// </summary>
+public sealed class InMemoryConversationStore : IConversationStore
+{
+    internal const int MaxMensajes = 60;
 
     private readonly ConcurrentDictionary<string, Sesion> _sesiones = new();
 
-    /// <summary>Devuelve una copia del estado; los cambios se aplican con <see cref="Save"/>.</summary>
-    public Sesion Get(string sesionId) => _sesiones.GetOrAdd(sesionId, id => new Sesion(id)).Copia();
+    public Task<Sesion> ObtenerAsync(string sesionId, CancellationToken ct) =>
+        Task.FromResult(_sesiones.GetOrAdd(sesionId, id => new Sesion(id)).Copia());
 
-    public void Save(Sesion sesion)
+    public Task GuardarAsync(Sesion sesion, CancellationToken ct)
     {
         sesion.Mensajes = Recortar(sesion.Mensajes);
         _sesiones[sesion.Id] = sesion.Copia();
+        return Task.CompletedTask;
     }
 
-    /// <summary>Recorta mensajes antiguos sin dejar respuestas de herramientas huérfanas al inicio.</summary>
+    /// <summary>Deja los últimos mensajes sin dejar respuestas de herramientas huérfanas al inicio.</summary>
     internal static List<JsonObject> Recortar(List<JsonObject> mensajes)
     {
         if (mensajes.Count <= MaxMensajes)

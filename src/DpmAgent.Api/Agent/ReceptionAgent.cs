@@ -19,14 +19,14 @@ public sealed class ReceptionAgent
 
     private readonly IChatModel _model;
     private readonly AgentTools _tools;
-    private readonly ConversationStore _store;
+    private readonly IConversationStore _store;
     private readonly TimeProvider _clock;
     private readonly ILogger<ReceptionAgent> _logger;
 
     public ReceptionAgent(
         IChatModel model,
         AgentTools tools,
-        ConversationStore store,
+        IConversationStore store,
         ILogger<ReceptionAgent> logger,
         TimeProvider? clock = null)
     {
@@ -48,7 +48,7 @@ public sealed class ReceptionAgent
     {
         sesionId = string.IsNullOrWhiteSpace(sesionId) ? Guid.NewGuid().ToString("N")[..12] : sesionId.Trim();
 
-        var sesion = _store.Get(sesionId);
+        var sesion = await _store.ObtenerAsync(sesionId, ct);
         sesion.VincularTelefono(telefonoCanal);
 
         var historial = sesion.Mensajes;
@@ -67,7 +67,7 @@ public sealed class ReceptionAgent
             if (respuesta["tool_calls"] is not JsonArray llamadas || llamadas.Count == 0)
             {
                 var texto = respuesta["content"]?.ToString()?.Trim();
-                _store.Save(sesion);
+                await _store.GuardarAsync(sesion, ct);
                 return new AgentReply(sesionId, string.IsNullOrEmpty(texto) ? "¿En qué más le puedo ayudar?" : texto, pasos);
             }
 
@@ -91,7 +91,7 @@ public sealed class ReceptionAgent
         }
 
         _logger.LogWarning("Sesión {Sesion}: se alcanzó el límite de {Max} iteraciones.", sesionId, MaxIteraciones);
-        _store.Save(sesion);
+        await _store.GuardarAsync(sesion, ct);
         return new AgentReply(
             sesionId,
             "Disculpe, no pude completar la solicitud. Voy a pasar su caso al personal del consultorio.",
@@ -100,7 +100,7 @@ public sealed class ReceptionAgent
 
     private string SystemPrompt()
     {
-        var ahora = TimeZoneInfo.ConvertTime(_clock.GetUtcNow(), MockDpmGateway.ZonaRd);
+        var ahora = TimeZoneInfo.ConvertTime(_clock.GetUtcNow(), HorarioConsultorio.ZonaRd);
         var es = CultureInfo.GetCultureInfo("es-DO");
 
         return $"""

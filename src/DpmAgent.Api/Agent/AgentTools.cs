@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -6,8 +5,6 @@ using System.Text.Json.Nodes;
 using DpmAgent.Api.Dpm;
 
 namespace DpmAgent.Api.Agent;
-
-public sealed record Escalamiento(string Id, string SesionId, string Motivo, bool Urgente, DateTimeOffset Creado);
 
 /// <summary>
 /// Herramientas que el agente puede usar. Todas son administrativas:
@@ -21,15 +18,13 @@ public sealed class AgentTools
 
     private static readonly JsonSerializerOptions JsonOpts = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
+    private static readonly JsonArray Definiciones = BuildDefinitions();
+
     private readonly IDpmGateway _dpm;
-    private readonly ConcurrentQueue<Escalamiento> _escalamientos = new();
-    private int _secEscalamiento;
 
     public AgentTools(IDpmGateway dpm) => _dpm = dpm;
 
-    public IReadOnlyCollection<Escalamiento> Escalamientos => _escalamientos.ToArray();
-
-    public JsonArray Definitions { get; } = BuildDefinitions();
+    public JsonArray Definitions => Definiciones;
 
     public async Task<string> ExecuteAsync(Sesion sesion, string name, string? argumentsJson, CancellationToken ct)
     {
@@ -56,7 +51,7 @@ public sealed class AgentTools
                 "crear_cita" => await CrearCita(sesion, args, ct),
                 "citas_del_paciente" => await CitasDelPaciente(sesion, ct),
                 "cancelar_cita" => await CancelarCita(sesion, Req(args, "cita_id"), ct),
-                "escalar_a_personal" => Escalar(sesion.Id, args),
+                "escalar_a_personal" => await Escalar(sesion, args, ct),
                 _ => Error($"Herramienta desconocida: {name}"),
             };
         }
@@ -149,17 +144,10 @@ public sealed class AgentTools
             : Ok(new { cancelada = true, cita = Resumen(cita) });
     }
 
-    private string Escalar(string sesionId, JsonObject args)
+    private async Task<string> Escalar(Sesion sesion, JsonObject args, CancellationToken ct)
     {
         var urgente = args["urgente"]?.GetValueKind() == JsonValueKind.True;
-        var e = new Escalamiento(
-            $"ESC-{Interlocked.Increment(ref _secEscalamiento)}",
-            sesionId,
-            Req(args, "motivo"),
-            urgente,
-            DateTimeOffset.UtcNow);
-
-        _escalamientos.Enqueue(e);
+        var e = await _dpm.RegistrarEscalamientoAsync(sesion.Id, sesion.PacienteId, Req(args, "motivo"), urgente, ct);
         return Ok(new { escalado = true, id = e.Id, urgente });
     }
 
@@ -169,16 +157,16 @@ public sealed class AgentTools
         paciente_id = c.PacienteId,
         medico_id = c.MedicoId,
         fecha_hora = Iso(c.FechaHora),
-        texto = $"{TimeZoneInfo.ConvertTime(c.FechaHora, MockDpmGateway.ZonaRd).ToString("dddd d 'de' MMMM", Es)}, {Hora(c.FechaHora)}",
+        texto = $"{TimeZoneInfo.ConvertTime(c.FechaHora, HorarioConsultorio.ZonaRd).ToString("dddd d 'de' MMMM", Es)}, {Hora(c.FechaHora)}",
         motivo = c.Motivo,
         estado = c.Estado,
     };
 
     private static string Iso(DateTimeOffset d) =>
-        TimeZoneInfo.ConvertTime(d, MockDpmGateway.ZonaRd).ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture);
+        TimeZoneInfo.ConvertTime(d, HorarioConsultorio.ZonaRd).ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture);
 
     private static string Hora(DateTimeOffset d) =>
-        TimeZoneInfo.ConvertTime(d, MockDpmGateway.ZonaRd).ToString("h:mm tt", Es);
+        TimeZoneInfo.ConvertTime(d, HorarioConsultorio.ZonaRd).ToString("h:mm tt", Es);
 
     private static string Req(JsonObject args, string key)
     {

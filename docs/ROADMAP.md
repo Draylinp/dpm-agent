@@ -6,7 +6,7 @@ Entrega: **miércoles 4 de noviembre, 9:00 PM ET** (misma hora en República Dom
 |---|---|---|
 | Lun 26 oct | Base del proyecto: API, cliente Meta, agente con tool calling, DPM simulado, pruebas | ✅ |
 | Lun 26 oct | Seguridad: cada sesión queda atada al paciente del teléfono del canal; no se pueden ver, crear ni cancelar citas ajenas | ✅ |
-| Lun 26 oct | F1: persistencia con EF Core y multi-consultorio | 🔄 |
+| Lun 26 oct | F1: persistencia con EF Core (SQLite local, PostgreSQL en la nube), entidades con `ConsultorioId`, seed ficticio, historial persistente; se conserva todo al reiniciar | ✅ |
 | Lun 26 oct | Primera llamada real a Muse Spark con la clave del evento | ⬜ |
 | Mar 27 oct | Workshop Meta P1. Ajustar prompt con conversaciones reales de prueba | ⬜ |
 | Mié 28 oct | Workshop Meta P2. Reprogramar citas y recordatorios | ⬜ |

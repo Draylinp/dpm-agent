@@ -3,15 +3,15 @@ using System.Collections.Concurrent;
 namespace DpmAgent.Api.Dpm;
 
 /// <summary>
-/// DPM simulado en memoria. Todos los datos son ficticios.
-/// Horario: lunes a viernes, 8:00 a 12:00 y 14:00 a 17:00, citas de 30 minutos.
+/// DPM simulado en memoria, para pruebas y para correr sin base de datos. Todos los datos son ficticios.
 /// </summary>
 public sealed class MockDpmGateway : IDpmGateway
 {
-    public static readonly TimeZoneInfo ZonaRd = TimeZoneInfo.FindSystemTimeZoneById("America/Santo_Domingo");
+    public static readonly TimeZoneInfo ZonaRd = HorarioConsultorio.ZonaRd;
 
     private readonly ConcurrentDictionary<string, Paciente> _pacientes = new();
     private readonly ConcurrentDictionary<string, Cita> _citas = new();
+    private readonly ConcurrentQueue<Escalamiento> _escalamientos = new();
     private readonly List<Medico> _medicos =
     [
         new("MED-01", "Dra. Ana Valdez (ficticia)", "Medicina General"),
@@ -22,6 +22,7 @@ public sealed class MockDpmGateway : IDpmGateway
     private readonly TimeProvider _clock;
     private int _secPaciente = 100;
     private int _secCita = 1000;
+    private int _secEscalamiento;
 
     public MockDpmGateway(TimeProvider? clock = null)
     {
@@ -33,10 +34,10 @@ public sealed class MockDpmGateway : IDpmGateway
 
     public Task<Paciente?> BuscarPacienteAsync(string telefonoOId, CancellationToken ct)
     {
-        var clave = SoloDigitos(telefonoOId);
+        var telefono = Telefono.Normalizar(telefonoOId);
         var paciente = _pacientes.Values.FirstOrDefault(p =>
             p.Id.Equals(telefonoOId.Trim(), StringComparison.OrdinalIgnoreCase) ||
-            (clave.Length >= 7 && SoloDigitos(p.Telefono).EndsWith(clave[^Math.Min(10, clave.Length)..])));
+            (telefono is not null && Telefono.Normalizar(p.Telefono) == telefono));
 
         return Task.FromResult(paciente);
     }
@@ -46,7 +47,11 @@ public sealed class MockDpmGateway : IDpmGateway
         string id;
         lock (_lock) { id = $"PAC-{++_secPaciente:000}"; }
 
-        var paciente = new Paciente(id, nombre.Trim(), SoloDigitos(telefono), string.IsNullOrWhiteSpace(ars) ? null : ars.Trim());
+        var paciente = new Paciente(
+            id,
+            nombre.Trim(),
+            Telefono.Normalizar(telefono) ?? throw new ArgumentException("El teléfono no es válido."),
+            string.IsNullOrWhiteSpace(ars) ? null : ars.Trim());
         _pacientes[id] = paciente;
         return Task.FromResult(paciente);
     }
@@ -59,27 +64,17 @@ public sealed class MockDpmGateway : IDpmGateway
         if (_medicos.All(m => m.Id != medicoId))
             throw new ArgumentException($"No existe el médico {medicoId}.");
 
-        var libres = new List<DateTimeOffset>();
-        if (fecha.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
-            return Task.FromResult<IReadOnlyList<DateTimeOffset>>(libres);
-
         var ahora = _clock.GetUtcNow();
         var ocupadas = _citas.Values
             .Where(c => c.MedicoId == medicoId && c.Estado == "confirmada")
             .Select(c => c.FechaHora)
             .ToHashSet();
 
-        foreach (var (inicio, fin) in new[] { (8, 12), (14, 17) })
-        {
-            for (var t = new TimeOnly(inicio, 0); t < new TimeOnly(fin, 0); t = t.AddMinutes(30))
-            {
-                var slot = EnHoraRd(fecha, t);
-                if (slot > ahora && !ocupadas.Contains(slot))
-                    libres.Add(slot);
-            }
-        }
+        IReadOnlyList<DateTimeOffset> libres = HorarioConsultorio.TurnosDelDia(fecha)
+            .Where(t => t > ahora && !ocupadas.Contains(t))
+            .ToList();
 
-        return Task.FromResult<IReadOnlyList<DateTimeOffset>>(libres);
+        return Task.FromResult(libres);
     }
 
     public async Task<Cita> CrearCitaAsync(string pacienteId, string medicoId, DateTimeOffset fechaHora, string motivo, CancellationToken ct)
@@ -87,8 +82,7 @@ public sealed class MockDpmGateway : IDpmGateway
         if (!_pacientes.ContainsKey(pacienteId))
             throw new ArgumentException($"No existe el paciente {pacienteId}.");
 
-        var local = TimeZoneInfo.ConvertTime(fechaHora, ZonaRd);
-        var disponibles = await ConsultarDisponibilidadAsync(medicoId, DateOnly.FromDateTime(local.DateTime), ct);
+        var disponibles = await ConsultarDisponibilidadAsync(medicoId, HorarioConsultorio.FechaRd(fechaHora), ct);
         if (!disponibles.Contains(fechaHora))
             throw new InvalidOperationException("Ese horario no está disponible.");
 
@@ -116,15 +110,27 @@ public sealed class MockDpmGateway : IDpmGateway
             return Task.FromResult<Cita?>(null);
 
         var cancelada = cita with { Estado = "cancelada" };
-        _citas[citaId] = cancelada;
+        _citas[cita.Id] = cancelada;
         return Task.FromResult<Cita?>(cancelada);
     }
 
-    public static DateTimeOffset EnHoraRd(DateOnly fecha, TimeOnly hora)
+    public Task<Escalamiento> RegistrarEscalamientoAsync(string sesionId, string? pacienteId, string motivo, bool urgente, CancellationToken ct)
     {
-        var local = fecha.ToDateTime(hora, DateTimeKind.Unspecified);
-        return new DateTimeOffset(local, ZonaRd.GetUtcOffset(local));
+        var e = new Escalamiento(
+            $"ESC-{Interlocked.Increment(ref _secEscalamiento)}",
+            sesionId,
+            pacienteId,
+            motivo.Trim(),
+            urgente,
+            "pendiente",
+            _clock.GetUtcNow());
+
+        _escalamientos.Enqueue(e);
+        return Task.FromResult(e);
     }
 
-    private static string SoloDigitos(string s) => new(s.Where(char.IsDigit).ToArray());
+    public Task<IReadOnlyList<Escalamiento>> ListarEscalamientosAsync(CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<Escalamiento>>(_escalamientos.Reverse().ToList());
+
+    public static DateTimeOffset EnHoraRd(DateOnly fecha, TimeOnly hora) => HorarioConsultorio.EnHoraRd(fecha, hora);
 }

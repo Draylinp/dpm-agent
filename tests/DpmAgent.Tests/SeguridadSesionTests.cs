@@ -149,7 +149,7 @@ public class SeguridadSesionTests
     public async Task Una_sesion_no_puede_cambiar_de_telefono()
     {
         var modelo = new ScriptedChatModel().ThenText("Hola");
-        var agent = new ReceptionAgent(modelo, _tools, new ConversationStore(), NullLogger<ReceptionAgent>.Instance, new FixedClock(Ahora));
+        var agent = new ReceptionAgent(modelo, _tools, new InMemoryConversationStore(), NullLogger<ReceptionAgent>.Instance, new FixedClock(Ahora));
 
         var r1 = await agent.RunAsync(null, "hola", "8095550101", CancellationToken.None);
 
@@ -166,7 +166,7 @@ public class SeguridadSesionTests
             .ThenText("Hola, María")
             .ThenTool("citas_del_paciente", new { })
             .ThenText("Tiene una cita el martes");
-        var agent = new ReceptionAgent(modelo, _tools, new ConversationStore(), NullLogger<ReceptionAgent>.Instance, new FixedClock(Ahora));
+        var agent = new ReceptionAgent(modelo, _tools, new InMemoryConversationStore(), NullLogger<ReceptionAgent>.Instance, new FixedClock(Ahora));
 
         var r1 = await agent.RunAsync(null, "hola", "8095550101", CancellationToken.None);
         var r2 = await agent.RunAsync(r1.SesionId, "¿qué citas tengo?", null, CancellationToken.None);
