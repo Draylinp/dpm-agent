@@ -164,7 +164,14 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("WhatsAppPhoneNumberId")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WhatsAppPhoneNumberId")
+                        .IsUnique();
 
                     b.ToTable("Consultorios");
                 });
@@ -364,6 +371,70 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.ToTable("Mensajes");
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeEntrante", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Intentos")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("MediaId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("ProcesadoUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProveedorId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("RecibidoUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Texto")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId");
+
+                    b.HasIndex("Estado");
+
+                    b.HasIndex("ProveedorId")
+                        .IsUnique();
+
+                    b.ToTable("MensajesEntrantes", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeSaliente", b =>
                 {
                     b.Property<long>("Id")
@@ -402,6 +473,14 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
 
                     b.Property<int>("Intentos")
                         .HasColumnType("integer");
+
+                    b.Property<string>("ParametrosJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Plantilla")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.Property<string>("SesionId")
                         .IsRequired()
@@ -673,6 +752,15 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.HasOne("DpmAgent.Api.Data.Entidades.Conversacion", null)
                         .WithMany("Mensajes")
                         .HasForeignKey("ConversacionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeEntrante", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

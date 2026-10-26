@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DpmAgent.Api.Canales;
 using DpmAgent.Api.Data;
 using Microsoft.EntityFrameworkCore;
@@ -43,6 +44,10 @@ public sealed class DespachadorMensajes
             .Take(Lote)
             .ToListAsync(ct);
 
+        var remitentes = pendientes.Count == 0
+            ? new Dictionary<int, string?>()
+            : await _db.Consultorios.AsNoTracking().ToDictionaryAsync(c => c.Id, c => c.WhatsAppPhoneNumberId, ct);
+
         var entregados = 0;
         foreach (var m in pendientes)
         {
@@ -52,7 +57,10 @@ public sealed class DespachadorMensajes
                 if (canal is null)
                     throw new InvalidOperationException($"No hay canal configurado para '{m.Canal}'.");
 
-                await canal.EnviarAsync(new MensajeParaEnviar(m.Id, m.SesionId, m.Destino, m.Texto, m.Tipo), ct);
+                var parametros = m.ParametrosJson is null ? null : JsonSerializer.Deserialize<string[]>(m.ParametrosJson);
+                await canal.EnviarAsync(new MensajeParaEnviar(
+                    m.Id, m.SesionId, m.Destino, m.Texto, m.Tipo,
+                    remitentes.GetValueOrDefault(m.ConsultorioId), m.Plantilla, parametros), ct);
                 m.Estado = "enviado";
                 m.EnviadoUtc = _clock.GetUtcNow().UtcDateTime;
                 m.Error = null;

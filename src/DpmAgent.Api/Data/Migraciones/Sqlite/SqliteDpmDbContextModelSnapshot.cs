@@ -153,7 +153,14 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("WhatsAppPhoneNumberId")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("WhatsAppPhoneNumberId")
+                        .IsUnique();
 
                     b.ToTable("Consultorios");
                 });
@@ -343,6 +350,68 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.ToTable("Mensajes");
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeEntrante", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Intentos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MediaId")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ProcesadoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProveedorId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("RecibidoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Texto")
+                        .HasMaxLength(4096)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId");
+
+                    b.HasIndex("Estado");
+
+                    b.HasIndex("ProveedorId")
+                        .IsUnique();
+
+                    b.ToTable("MensajesEntrantes", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeSaliente", b =>
                 {
                     b.Property<long>("Id")
@@ -379,6 +448,14 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
 
                     b.Property<int>("Intentos")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("ParametrosJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Plantilla")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("SesionId")
                         .IsRequired()
@@ -644,6 +721,15 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.HasOne("DpmAgent.Api.Data.Entidades.Conversacion", null)
                         .WithMany("Mensajes")
                         .HasForeignKey("ConversacionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeEntrante", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

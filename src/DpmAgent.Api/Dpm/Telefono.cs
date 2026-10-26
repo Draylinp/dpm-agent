@@ -18,6 +18,18 @@ public static class Telefono
         return digitos.Length > 10 ? digitos[^10..] : digitos;
     }
 
+    /// <summary>
+    /// Formato internacional sin "+", como lo usa WhatsApp. Los números de 10 dígitos
+    /// (República Dominicana y resto del plan norteamericano) llevan el código 1.
+    /// </summary>
+    public static string? Internacional(string? valor)
+    {
+        var digitos = valor is null ? "" : new string(valor.Where(char.IsDigit).ToArray());
+        if (digitos.Length < 7)
+            return null;
+        return digitos.Length == 10 ? "1" + digitos : digitos;
+    }
+
     public static bool Iguales(string? a, string? b)
     {
         var na = Normalizar(a);

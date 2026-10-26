@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using DpmAgent.Api.Agent;
 using DpmAgent.Api.Canales;
@@ -28,8 +29,9 @@ public sealed class Notificador
     }
 
     /// <summary>Encola un mensaje para el paciente en su conversación más reciente (o en WhatsApp si no tiene).</summary>
-    public async Task<string> NotificarPacienteAsync(int pacienteId, string texto, string tipo, CancellationToken ct)
+    public async Task<string> NotificarPacienteAsync(int pacienteId, MensajeAgenda mensaje, string tipo, CancellationToken ct)
     {
+        var texto = mensaje.Texto;
         var paciente = await _db.Pacientes.AsNoTracking().FirstAsync(p => p.Id == pacienteId, ct);
 
         var sesionId = await _db.Conversaciones.AsNoTracking()
@@ -53,6 +55,8 @@ public sealed class Notificador
             Destino = paciente.Telefono,
             Texto = texto,
             Tipo = tipo,
+            Plantilla = mensaje.Plantilla,
+            ParametrosJson = JsonSerializer.Serialize(mensaje.Parametros),
             Estado = "pendiente",
             CreadoUtc = _clock.GetUtcNow().UtcDateTime,
         });
@@ -60,5 +64,26 @@ public sealed class Notificador
 
         _despertador.Despertar();
         return sesionId;
+    }
+
+    /// <summary>
+    /// Encola la respuesta del agente a un mensaje que llegó por un canal externo (WhatsApp).
+    /// No se agrega al historial: el agente ya la guardó.
+    /// </summary>
+    public async Task EncolarRespuestaAsync(string sesionId, string telefono, string texto, CancellationToken ct)
+    {
+        _db.MensajesSalientes.Add(new MensajeSaliente
+        {
+            ConsultorioId = _db.ConsultorioId,
+            SesionId = sesionId,
+            Canal = CanalesConocidos.DeSesion(sesionId),
+            Destino = Telefono.Normalizar(telefono) ?? telefono,
+            Texto = texto.Length > 2000 ? texto[..2000] : texto,
+            Tipo = "respuesta",
+            Estado = "pendiente",
+            CreadoUtc = _clock.GetUtcNow().UtcDateTime,
+        });
+        await _db.SaveChangesAsync(ct);
+        _despertador.Despertar();
     }
 }

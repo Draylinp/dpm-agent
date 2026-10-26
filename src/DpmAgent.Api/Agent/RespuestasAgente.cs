@@ -9,6 +9,12 @@ public static class RespuestasAgente
         {
             return await accion();
         }
+        catch (EntradaRechazadaException ex)
+        {
+            return ex.StatusCode == StatusCodes.Status400BadRequest
+                ? Results.BadRequest(new { error = ex.Message })
+                : Results.Json(new { error = ex.Message }, statusCode: ex.StatusCode);
+        }
         catch (SesionInvalidaException ex)
         {
             return Results.Problem(ex.Message, statusCode: StatusCodes.Status409Conflict);

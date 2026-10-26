@@ -202,9 +202,9 @@ public sealed class MotorAgenda
             c.RecordatorioEnviadoUtc = ahora;
             await _db.SaveChangesAsync(ct);
 
-            var texto = TextosAgenda.Recordatorio(c.Paciente!.Nombre, c.Medico!.Nombre, new DateTimeOffset(c.FechaHoraUtc, TimeSpan.Zero))
-                        + $" (cita {IdsDpm.Cita(c.Id)})";
-            await _notificador.NotificarPacienteAsync(c.PacienteId, texto, "recordatorio", ct);
+            var mensaje = TextosAgenda.Recordatorio(
+                c.Paciente!.Nombre, c.Medico!.Nombre, new DateTimeOffset(c.FechaHoraUtc, TimeSpan.Zero), IdsDpm.Cita(c.Id));
+            await _notificador.NotificarPacienteAsync(c.PacienteId, mensaje, "recordatorio", ct);
             await _bitacora.RegistrarAsync(Bitacora.Sistema, "recordatorio_enviado", "cita", IdsDpm.Cita(c.Id), null, null, ct);
         }
 

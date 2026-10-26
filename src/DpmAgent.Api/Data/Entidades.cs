@@ -10,8 +10,11 @@ public sealed class Consultorio
 
     public required string Nombre { get; set; }
 
-    /// <summary>Número de WhatsApp Business del consultorio (se usa en F5 para enrutar mensajes).</summary>
+    /// <summary>Número de WhatsApp Business del consultorio, para mostrar.</summary>
     public string? TelefonoWhatsApp { get; set; }
+
+    /// <summary>phone_number_id de WhatsApp Cloud API: identifica a qué consultorio llega cada mensaje.</summary>
+    public string? WhatsAppPhoneNumberId { get; set; }
 
     public DateTime CreadoUtc { get; set; }
 }
@@ -157,8 +160,14 @@ public sealed class MensajeSaliente
 
     public required string Texto { get; set; }
 
-    /// <summary>oferta, recordatorio o aviso.</summary>
+    /// <summary>oferta, recordatorio, aviso o respuesta.</summary>
     public required string Tipo { get; set; }
+
+    /// <summary>Clave de la plantilla de WhatsApp a usar fuera de la ventana de 24 horas (oferta, recordatorio...).</summary>
+    public string? Plantilla { get; set; }
+
+    /// <summary>Parámetros de la plantilla, como arreglo JSON de textos.</summary>
+    public string? ParametrosJson { get; set; }
 
     /// <summary>pendiente, enviado o fallido.</summary>
     public required string Estado { get; set; }
@@ -170,6 +179,40 @@ public sealed class MensajeSaliente
     public DateTime CreadoUtc { get; set; }
 
     public DateTime? EnviadoUtc { get; set; }
+}
+
+/// <summary>
+/// Mensaje recibido por WhatsApp. El webhook solo lo guarda (para responder rápido a Meta y no
+/// procesar dos veces un reintento); un procesador en segundo plano lo pasa al agente.
+/// </summary>
+public sealed class MensajeEntrante
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    /// <summary>Id del mensaje en WhatsApp (wamid). Único: los reintentos de Meta se ignoran.</summary>
+    public required string ProveedorId { get; set; }
+
+    public required string Telefono { get; set; }
+
+    /// <summary>text, audio, image u otro.</summary>
+    public required string Tipo { get; set; }
+
+    public string? Texto { get; set; }
+
+    public string? MediaId { get; set; }
+
+    /// <summary>pendiente, procesado o fallido.</summary>
+    public required string Estado { get; set; }
+
+    public int Intentos { get; set; }
+
+    public string? Error { get; set; }
+
+    public DateTime RecibidoUtc { get; set; }
+
+    public DateTime? ProcesadoUtc { get; set; }
 }
 
 /// <summary>Bitácora: quién hizo qué y cuándo. Sin detalles clínicos.</summary>

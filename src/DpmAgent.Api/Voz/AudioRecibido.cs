@@ -167,4 +167,4 @@ public sealed class AudioRecibido
     }
 }
 
-public sealed class AudioInvalidoException(string message) : Exception(message);
+public sealed class AudioInvalidoException(string message) : Agent.EntradaRechazadaException(message);

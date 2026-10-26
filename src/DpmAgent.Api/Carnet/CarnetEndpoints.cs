@@ -1,10 +1,7 @@
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Agent;
 using DpmAgent.Api.Dpm;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Extensions.Options;
+using DpmAgent.Api.Voz;
 
 namespace DpmAgent.Api.Carnet;
 
@@ -15,92 +12,17 @@ public sealed record CorreccionCarnet(string? Nombre, string? Ars, string? Numer
 
 public static class CarnetEndpoints
 {
-    public const string PrefijoCarnet = "[Foto de carnet] ";
-
-    private static readonly JsonSerializerOptions JsonOpts = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
-
     public static IEndpointRouteBuilder MapCarnet(this IEndpointRouteBuilder app)
     {
         // Paciente (o el panel) envía la foto: se lee, queda pendiente y el agente le pide confirmación.
-        app.MapPost("/api/pacientes/carnet", async (
-            HttpRequest http,
-            ILectorCarnet lector,
-            IDpmGateway dpm,
-            IConversationStore conversaciones,
-            ReceptionAgent agent,
-            IOptions<CarnetOptions> opciones,
-            CancellationToken ct) =>
+        app.MapPost("/api/pacientes/carnet", async (HttpRequest http, ProcesadorCarnet procesador, CancellationToken ct) =>
         {
-            var maxBytes = opciones.Value.MaxBytes;
-            if (!http.HasFormContentType)
-                return Results.BadRequest(new { error = "Envíe la foto como multipart/form-data en el campo 'imagen'." });
+            var archivo = await ArchivoSubido.LeerAsync(http, "imagen", procesador.MaxBytes, "La imagen", ct);
+            if (archivo.Error is not null)
+                return archivo.Error;
 
-            var maxCuerpo = maxBytes + 64 * 1024;
-            if (http.HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>() is { IsReadOnly: false } limite)
-                limite.MaxRequestBodySize = maxCuerpo;
-
-            IFormCollection form;
-            try
-            {
-                form = await http.ReadFormAsync(new FormOptions { MultipartBodyLengthLimit = maxCuerpo }, ct);
-            }
-            catch (Exception ex) when (ex is InvalidDataException or BadHttpRequestException)
-            {
-                return Results.Problem("La imagen es demasiado grande.", statusCode: StatusCodes.Status413PayloadTooLarge);
-            }
-
-            var archivo = form.Files["imagen"];
-            if (archivo is null)
-                return Results.BadRequest(new { error = "Falta la foto en el campo 'imagen'." });
-            if (archivo.Length > maxBytes)
-                return Results.Problem("La imagen es demasiado grande.", statusCode: StatusCodes.Status413PayloadTooLarge);
-
-            ImagenRecibida imagen;
-            try
-            {
-                using var buffer = new MemoryStream((int)archivo.Length);
-                await archivo.CopyToAsync(buffer, ct);
-                imagen = ImagenRecibida.Validar(buffer.ToArray(), maxBytes);
-            }
-            catch (ImagenInvalidaException ex)
-            {
-                return Results.BadRequest(new { error = ex.Message });
-            }
-
-            var sesionId = form["sesionId"].ToString();
-            sesionId = string.IsNullOrWhiteSpace(sesionId) ? Guid.NewGuid().ToString("N")[..12] : sesionId.Trim();
-            var telefono = form["telefono"].ToString();
-
-            return await RespuestasAgente.EjecutarAsync(async () =>
-            {
-                // El carnet queda atado al teléfono verificado de la conversación.
-                var sesion = await conversaciones.ObtenerAsync(sesionId, ct);
-                sesion.VincularTelefono(telefono);
-                if (sesion.TelefonoCanal is null)
-                    return Results.BadRequest(new { error = "Se necesita el teléfono del paciente para asociar el carnet." });
-
-                var lectura = await lector.LeerAsync(imagen, ct);
-
-                CarnetLeido? carnet = null;
-                string mensaje;
-                if (lectura.EsCarnet)
-                {
-                    carnet = await dpm.GuardarCarnetPendienteAsync(sesion.Id, sesion.TelefonoCanal, sesion.PacienteId, lectura.Datos, ct);
-                    mensaje = PrefijoCarnet + JsonSerializer.Serialize(new
-                    {
-                        nombre = lectura.Datos.Nombre,
-                        ars = lectura.Datos.Ars,
-                        numero_afiliado = lectura.Datos.NumeroAfiliado,
-                    }, JsonOpts);
-                }
-                else
-                {
-                    mensaje = "[Foto] La imagen recibida no parece un carnet de ARS legible.";
-                }
-
-                var reply = await agent.RunAsync(sesion.Id, mensaje, telefono, ct);
-                return Results.Ok(new CarnetReply(reply.SesionId, carnet, reply.Respuesta, reply.Pasos));
-            });
+            return await RespuestasAgente.EjecutarAsync(async () => Results.Ok(await procesador.ProcesarAsync(
+                archivo.Datos!, http.Form()["sesionId"].ToString(), http.Form()["telefono"].ToString(), ct)));
         });
 
         // Acciones de la secretaria. Quedan detrás de la autenticación del panel en F6.

@@ -36,6 +36,8 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<MensajeSaliente> MensajesSalientes => Set<MensajeSaliente>();
 
+    public DbSet<MensajeEntrante> MensajesEntrantes => Set<MensajeEntrante>();
+
     public DbSet<RegistroBitacora> Bitacora => Set<RegistroBitacora>();
 
     public DbSet<CarnetPendiente> CarnetsPendientes => Set<CarnetPendiente>();
@@ -56,6 +58,8 @@ public abstract class DpmDbContext : DbContext
         {
             e.Property(x => x.Nombre).HasMaxLength(200);
             e.Property(x => x.TelefonoWhatsApp).HasMaxLength(20);
+            e.Property(x => x.WhatsAppPhoneNumberId).HasMaxLength(40);
+            e.HasIndex(x => x.WhatsAppPhoneNumberId).IsUnique();
         });
 
         b.Entity<Medico>(e =>
@@ -140,9 +144,27 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.Tipo).HasMaxLength(20);
             e.Property(x => x.Estado).HasMaxLength(20);
             e.Property(x => x.Error).HasMaxLength(500);
+            e.Property(x => x.Plantilla).HasMaxLength(40);
+            e.Property(x => x.ParametrosJson).HasMaxLength(2000);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasIndex(x => x.Estado);
             e.HasIndex(x => new { x.ConsultorioId, x.SesionId });
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<MensajeEntrante>(e =>
+        {
+            e.ToTable("MensajesEntrantes");
+            e.Property(x => x.ProveedorId).HasMaxLength(200);
+            e.Property(x => x.Telefono).HasMaxLength(20);
+            e.Property(x => x.Tipo).HasMaxLength(20);
+            e.Property(x => x.Texto).HasMaxLength(4096);
+            e.Property(x => x.MediaId).HasMaxLength(200);
+            e.Property(x => x.Estado).HasMaxLength(20);
+            e.Property(x => x.Error).HasMaxLength(500);
+            e.HasIndex(x => x.ProveedorId).IsUnique();
+            e.HasIndex(x => x.Estado);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
 

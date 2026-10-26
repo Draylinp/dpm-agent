@@ -44,4 +44,4 @@ public sealed class ImagenRecibida
     }
 }
 
-public sealed class ImagenInvalidaException(string message) : Exception(message);
+public sealed class ImagenInvalidaException(string message) : Agent.EntradaRechazadaException(message);

@@ -175,3 +175,37 @@ public sealed class CanalWhatsAppFalso : DpmAgent.Api.Canales.IMessageChannel
         return Task.CompletedTask;
     }
 }
+
+/// <summary>WhatsApp Cloud API falsa: guarda lo enviado y devuelve el archivo configurado.</summary>
+public sealed class WhatsAppApiFalsa : DpmAgent.Api.Canales.WhatsApp.IWhatsAppCloudApi
+{
+    public List<(string Remitente, string Destino, string Texto)> Textos { get; } = [];
+
+    public List<(string Remitente, string Destino, string Plantilla, string Idioma, IReadOnlyList<string> Parametros)> Plantillas { get; } = [];
+
+    public byte[] Archivo { get; set; } = [];
+
+    public Exception? FallarAlDescargar { get; set; }
+
+    public Task EnviarTextoAsync(string phoneNumberId, string destino, string texto, CancellationToken ct)
+    {
+        Textos.Add((phoneNumberId, destino, texto));
+        return Task.CompletedTask;
+    }
+
+    public Task EnviarPlantillaAsync(
+        string phoneNumberId, string destino, string plantilla, string idioma, IReadOnlyList<string> parametros, CancellationToken ct)
+    {
+        Plantillas.Add((phoneNumberId, destino, plantilla, idioma, parametros));
+        return Task.CompletedTask;
+    }
+
+    public Task<DpmAgent.Api.Canales.WhatsApp.MediaDescargada> DescargarMediaAsync(string mediaId, long maxBytes, CancellationToken ct)
+    {
+        if (FallarAlDescargar is not null)
+            throw FallarAlDescargar;
+        if (Archivo.Length > maxBytes)
+            throw new DpmAgent.Api.Canales.WhatsApp.ArchivoDemasiadoGrandeException();
+        return Task.FromResult(new DpmAgent.Api.Canales.WhatsApp.MediaDescargada(Archivo, null));
+    }
+}

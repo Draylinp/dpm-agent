@@ -24,6 +24,7 @@ DPM Agent se encarga de esa conversación repetitiva y deja al personal lo que d
 - **Lista de espera que llena huecos sola**: si no hay horario, el agente anota al paciente (`agregar_lista_espera`). Cuando alguien cancela, un servicio en segundo plano ofrece el hueco al primero de la lista cuyo rango de días y horas coincide, por su canal. Si no responde en 30 minutos, la oferta vence y pasa al siguiente; si acepta (`responder_oferta`), se reserva validando de nuevo que siga libre.
 - **Recordatorio 24 horas antes**, con opción de confirmar (`confirmar_asistencia`) o cancelar.
 - **Bitácora** (`GET /api/bitacora`): quién hizo qué y cuándo (agente, sistema o secretaria), sin detalles clínicos. Los mensajes automáticos son plantillas fijas, no texto del modelo.
+- **WhatsApp Cloud API**: webhook con verificación de firma `X-Hub-Signature-256`, texto, notas de voz y fotos del carnet, respuestas y mensajes proactivos con plantillas aprobadas. Ver [docs/WHATSAPP.md](docs/WHATSAPP.md).
 - **Persistencia y multi-consultorio**: citas, pacientes, escalamientos y conversaciones se guardan con EF Core (SQLite en local, PostgreSQL en la nube). Cada registro lleva su `ConsultorioId` y cada consulta se filtra por el consultorio actual.
 - **Escalamiento al personal**: preguntas clínicas, quejas o posibles emergencias se pasan a un humano y quedan registradas en `/api/escalamientos`. En una posible emergencia el agente indica llamar al 911.
 - Panel de prueba que muestra, al lado del chat, cada herramienta que el modelo usó y lo que devolvió.
@@ -66,7 +67,7 @@ src/DpmAgent.Api/
   Data/    DpmDbContext, entidades, migraciones por proveedor, datos de demo
   Model/   IChatModel, MetaModelClient, MetaOptions
   Agenda/  lista de espera, motor de ofertas y recordatorios, notificador, despachador, bitácora
-  Canales/ IMessageChannel, WebChatChannel
+  Canales/ IMessageChannel, WebChatChannel, WhatsApp/ (Cloud API, webhook, procesador)
   Carnet/  ILectorCarnet, MetaLectorCarnet, ServicioCarnet, endpoints del carnet
   Voz/     ITranscriber, MetaTranscriber, validación de audio, endpoint de notas de voz
   Dpm/     IDpmGateway, DbDpmGateway, MockDpmGateway, horario del consultorio

@@ -1,7 +1,17 @@
 namespace DpmAgent.Api.Canales;
 
 /// <summary>Mensaje listo para entregar por un canal.</summary>
-public sealed record MensajeParaEnviar(long Id, string SesionId, string Destino, string Texto, string Tipo);
+/// <param name="RemitenteId">Número emisor en el canal (phone_number_id de WhatsApp del consultorio).</param>
+/// <param name="Plantilla">Clave de plantilla para mensajes que inicia el consultorio; null en respuestas.</param>
+public sealed record MensajeParaEnviar(
+    long Id,
+    string SesionId,
+    string Destino,
+    string Texto,
+    string Tipo,
+    string? RemitenteId = null,
+    string? Plantilla = null,
+    IReadOnlyList<string>? Parametros = null);
 
 /// <summary>Canal por el que se entregan los mensajes que el sistema envía por iniciativa propia.</summary>
 public interface IMessageChannel
