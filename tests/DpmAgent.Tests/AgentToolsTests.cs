@@ -9,11 +9,11 @@ public class AgentToolsTests
         new(new MockDpmGateway(new FixedClock(new DateTimeOffset(2026, 10, 26, 12, 0, 0, TimeSpan.FromHours(-4)))));
 
     [Fact]
-    public void Define_ocho_herramientas_sin_orientacion_clinica()
+    public void Define_nueve_herramientas_sin_orientacion_clinica()
     {
         var nombres = Crear().Definitions.Select(t => t!["function"]!["name"]!.ToString()).ToList();
 
-        Assert.Equal(8, nombres.Count);
+        Assert.Equal(9, nombres.Count);
         Assert.Contains("escalar_a_personal", nombres);
         Assert.DoesNotContain(nombres, n => n.Contains("diagnost") || n.Contains("medicamento"));
     }

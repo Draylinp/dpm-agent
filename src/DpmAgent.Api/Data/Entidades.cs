@@ -121,6 +121,39 @@ public sealed class Escalamiento
     public DateTime? AtendidoUtc { get; set; }
 }
 
+/// <summary>
+/// Datos leídos de la foto de un carnet de ARS, pendientes de confirmación.
+/// La imagen no se guarda: solo el resultado de la lectura.
+/// </summary>
+public sealed class CarnetPendiente
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string SesionId { get; set; }
+
+    public required string TelefonoCanal { get; set; }
+
+    public int? PacienteId { get; set; }
+
+    public string? Nombre { get; set; }
+
+    public string? Ars { get; set; }
+
+    public string? NumeroAfiliado { get; set; }
+
+    /// <summary>pendiente, confirmado o descartado.</summary>
+    public required string Estado { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+
+    /// <summary>paciente o secretaria.</summary>
+    public string? ResueltoPor { get; set; }
+
+    public DateTime? ResueltoUtc { get; set; }
+}
+
 public sealed class Conversacion
 {
     public int Id { get; set; }

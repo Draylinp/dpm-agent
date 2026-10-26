@@ -51,6 +51,8 @@
     <div id="chat"></div>
     <form id="form">
       <input id="input" autocomplete="off" placeholder="Ej.: Quiero una cita con la doctora para mañana en la mañana">
+      <button id="foto" type="button" title="Enviar foto del carnet de la ARS">📷</button>
+      <input id="archivoFoto" type="file" accept="image/jpeg,image/png,image/webp" hidden>
       <button id="grabar" type="button" title="Grabar nota de voz">🎤</button>
       <button id="send">Enviar</button>
     </form>
@@ -143,6 +145,31 @@
     } finally {
       send.disabled = false;
       input.focus();
+    }
+  });
+
+  // Foto del carnet de la ARS: se lee, queda pendiente y el agente pide confirmación.
+  const foto = document.getElementById('foto');
+  const archivoFoto = document.getElementById('archivoFoto');
+  foto.addEventListener('click', () => archivoFoto.click());
+  archivoFoto.addEventListener('change', async () => {
+    const archivo = archivoFoto.files[0];
+    archivoFoto.value = '';
+    if (!archivo) return;
+    add('user', archivo.name, '📷 Foto del carnet');
+    send.disabled = foto.disabled = true;
+    try {
+      const datos = new FormData();
+      datos.append('imagen', archivo);
+      if (sesionId) datos.append('sesionId', sesionId);
+      if (telefono.value.trim()) datos.append('telefono', telefono.value.trim());
+      const res = await fetch('/api/pacientes/carnet', { method: 'POST', body: datos });
+      if (!res.ok) throw new Error(await leerError(res));
+      mostrarRespuesta(await res.json());
+    } catch (err) {
+      add('err', 'Error: ' + err.message);
+    } finally {
+      send.disabled = foto.disabled = false;
     }
   });
 

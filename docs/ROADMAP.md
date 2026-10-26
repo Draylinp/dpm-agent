@@ -9,6 +9,8 @@ Entrega: **miércoles 4 de noviembre, 9:00 PM ET** (misma hora en República Dom
 | Lun 26 oct | F1: persistencia con EF Core (SQLite local, PostgreSQL en la nube), entidades con `ConsultorioId`, seed ficticio, historial persistente; se conserva todo al reiniciar | ✅ |
 | Lun 26 oct | F2: notas de voz (`/api/chat/audio`, límites de tamaño y duración, grabación en el panel) | ✅ |
 | Lun 26 oct | F2: confirmar en la documentación de Meta la ruta y los campos de Muse Voice Transcribe y probar con la clave real | ⬜ |
+| Lun 26 oct | F3: carnet de la ARS por foto, pendiente de confirmación del paciente o la secretaria, sin guardar la imagen | ✅ |
+| Lun 26 oct | F3: confirmar en la documentación de Meta el formato de imagen y `response_format` de Muse Spark y probar con un carnet ficticio | ⬜ |
 | Lun 26 oct | Primera llamada real a Muse Spark con la clave del evento | ⬜ |
 | Mar 27 oct | Workshop Meta P1. Ajustar prompt con conversaciones reales de prueba | ⬜ |
 | Mié 28 oct | Workshop Meta P2. Reprogramar citas y recordatorios | ⬜ |

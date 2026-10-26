@@ -165,6 +165,45 @@ public abstract class DpmGatewayContractTests
         Assert.Equal("pendiente", lista[0].Estado);
         Assert.Equal("PAC-001", lista[1].PacienteId);
     }
+    [Fact]
+    public async Task Guarda_y_resuelve_carnets_pendientes()
+    {
+        var dpm = Crear();
+        var primero = await dpm.GuardarCarnetPendienteAsync("s1", "8095550101", "PAC-001",
+            new DatosCarnet("María Rodríguez", "ARS Ejemplo", "AF-1"), CancellationToken.None);
+        var segundo = await dpm.GuardarCarnetPendienteAsync("s1", "8095550101", null,
+            new DatosCarnet("María Rodríguez", "ARS Ejemplo", "AF-2"), CancellationToken.None);
+        await dpm.GuardarCarnetPendienteAsync("s2", "8295550102", null,
+            new DatosCarnet(null, "ARS Otra", null), CancellationToken.None);
+
+        Assert.Equal("pendiente", primero.Estado);
+        Assert.Equal("PAC-001", primero.PacienteId);
+        Assert.Equal(segundo.Id, (await dpm.UltimoCarnetPendienteAsync("s1", CancellationToken.None))?.Id);
+        Assert.Equal(3, (await dpm.ListarCarnetsPendientesAsync(CancellationToken.None)).Count);
+
+        var resuelto = await dpm.ResolverCarnetAsync(segundo.Id, "confirmado",
+            new DatosCarnet("María Rodríguez", "ARS Ejemplo", "AF-22"), "PAC-001", "paciente", CancellationToken.None);
+
+        Assert.Equal("confirmado", resuelto.Estado);
+        Assert.Equal("AF-22", resuelto.Datos.NumeroAfiliado);
+        Assert.Equal("paciente", resuelto.ResueltoPor);
+        Assert.Equal(primero.Id, (await dpm.UltimoCarnetPendienteAsync("s1", CancellationToken.None))?.Id);
+        Assert.Equal("confirmado", (await dpm.ObtenerCarnetAsync(segundo.Id, CancellationToken.None))?.Estado);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => dpm.ResolverCarnetAsync(
+            segundo.Id, "descartado", resuelto.Datos, null, "secretaria", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Actualizar_seguro_no_borra_lo_que_no_viene()
+    {
+        var dpm = Crear();
+        await dpm.ActualizarSeguroAsync("PAC-001", null, "AF-555", CancellationToken.None);
+
+        var p = await dpm.BuscarPacienteAsync("PAC-001", CancellationToken.None);
+        Assert.Equal("ARS Ejemplo", p!.Ars);
+        Assert.Equal("AF-555", p.NumeroAfiliado);
+        await Assert.ThrowsAsync<ArgumentException>(() => dpm.ActualizarSeguroAsync("PAC-999", "X", null, CancellationToken.None));
+    }
 }
 
 public sealed class MockDpmGatewayTests : DpmGatewayContractTests

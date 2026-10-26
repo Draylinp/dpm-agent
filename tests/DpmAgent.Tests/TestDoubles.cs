@@ -123,3 +123,27 @@ public static class AudiosDePrueba
         return pagina;
     }
 }
+
+/// <summary>Lector de carnet falso con un resultado fijo.</summary>
+public sealed class FakeLectorCarnet(DpmAgent.Api.Carnet.LecturaCarnet resultado) : DpmAgent.Api.Carnet.ILectorCarnet
+{
+    public int Lecturas { get; private set; }
+
+    public Task<DpmAgent.Api.Carnet.LecturaCarnet> LeerAsync(DpmAgent.Api.Carnet.ImagenRecibida imagen, CancellationToken ct)
+    {
+        Lecturas++;
+        return Task.FromResult(resultado);
+    }
+}
+
+public static class ImagenesDePrueba
+{
+    public static byte[] Jpeg(int tamano = 64)
+    {
+        var datos = new byte[tamano];
+        datos[0] = 0xFF;
+        datos[1] = 0xD8;
+        datos[2] = 0xFF;
+        return datos;
+    }
+}

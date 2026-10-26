@@ -1,4 +1,5 @@
 using DpmAgent.Api.Agent;
+using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
@@ -10,6 +11,8 @@ builder.Services.Configure<MetaOptions>(builder.Configuration.GetSection(MetaOpt
 builder.Services.AddHttpClient<IChatModel, MetaModelClient>();
 builder.Services.Configure<TranscripcionOptions>(builder.Configuration.GetSection(TranscripcionOptions.SectionName));
 builder.Services.AddHttpClient<ITranscriber, MetaTranscriber>();
+builder.Services.Configure<CarnetOptions>(builder.Configuration.GetSection(CarnetOptions.SectionName));
+builder.Services.AddHttpClient<ILectorCarnet, MetaLectorCarnet>();
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddPersistencia(builder.Configuration);
@@ -41,6 +44,7 @@ app.MapPost("/api/chat", async (ChatRequest req, ReceptionAgent agent, Cancellat
 });
 
 app.MapAudioChat();
+app.MapCarnet();
 
 app.MapGet("/api/escalamientos", async (IDpmGateway dpm, CancellationToken ct) =>
     Results.Ok(await dpm.ListarEscalamientosAsync(ct)));

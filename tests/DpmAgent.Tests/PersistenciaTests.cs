@@ -127,6 +127,24 @@ public class PersistenciaTests
     }
 
     [Fact]
+    public async Task Dos_personas_no_pueden_resolver_el_mismo_carnet_a_la_vez()
+    {
+        using var db = new SqliteDePrueba(Reloj);
+        var carnet = await new DbDpmGateway(db.Contexto(), Reloj).GuardarCarnetPendienteAsync(
+            "s", "8095550101", null, new DatosCarnet("María", "ARS", "1"), CancellationToken.None);
+
+        // La secretaria tiene el carnet abierto mientras el paciente lo confirma.
+        var ctxSecretaria = db.Contexto();
+        var entidad = await ctxSecretaria.CarnetsPendientes.SingleAsync();
+
+        await new DbDpmGateway(db.Contexto(), Reloj).ResolverCarnetAsync(
+            carnet.Id, "confirmado", carnet.Datos, "PAC-001", "paciente", CancellationToken.None);
+
+        entidad.Estado = "descartado";
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => ctxSecretaria.SaveChangesAsync());
+    }
+
+    [Fact]
     public void Proveedor_desconocido_es_un_error_de_configuracion()
     {
         var config = new ConfigurationBuilder()

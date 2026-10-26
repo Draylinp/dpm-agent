@@ -17,6 +17,67 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.CarnetPendiente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Ars")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreadoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Estado")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nombre")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NumeroAfiliado")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PacienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ResueltoPor")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ResueltoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SesionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TelefonoCanal")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PacienteId");
+
+                    b.HasIndex("ConsultorioId", "Estado");
+
+                    b.HasIndex("ConsultorioId", "SesionId");
+
+                    b.ToTable("CarnetsPendientes", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Cita", b =>
                 {
                     b.Property<int>("Id")
@@ -308,6 +369,20 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.HasIndex("ConsultorioId", "Telefono");
 
                     b.ToTable("Pacientes");
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.CarnetPendiente", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Paciente", null)
+                        .WithMany()
+                        .HasForeignKey("PacienteId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Cita", b =>

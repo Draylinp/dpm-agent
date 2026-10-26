@@ -12,6 +12,7 @@ public sealed class MockDpmGateway : IDpmGateway
     private readonly ConcurrentDictionary<string, Paciente> _pacientes = new();
     private readonly ConcurrentDictionary<string, Cita> _citas = new();
     private readonly ConcurrentQueue<Escalamiento> _escalamientos = new();
+    private readonly ConcurrentDictionary<string, CarnetLeido> _carnets = new();
     private readonly List<Medico> _medicos =
     [
         new("MED-01", "Dra. Ana Valdez (ficticia)", "Medicina General"),
@@ -23,6 +24,7 @@ public sealed class MockDpmGateway : IDpmGateway
     private int _secPaciente = 100;
     private int _secCita = 1000;
     private int _secEscalamiento;
+    private int _secCarnet;
 
     public MockDpmGateway(TimeProvider? clock = null)
     {
@@ -131,6 +133,72 @@ public sealed class MockDpmGateway : IDpmGateway
 
     public Task<IReadOnlyList<Escalamiento>> ListarEscalamientosAsync(CancellationToken ct) =>
         Task.FromResult<IReadOnlyList<Escalamiento>>(_escalamientos.Reverse().ToList());
+
+    public Task<Paciente> ActualizarSeguroAsync(string pacienteId, string? ars, string? numeroAfiliado, CancellationToken ct)
+    {
+        lock (_lock)
+        {
+            if (!_pacientes.TryGetValue(pacienteId, out var p))
+                throw new ArgumentException($"No existe el paciente {pacienteId}.");
+
+            var actualizado = p with { Ars = ars ?? p.Ars, NumeroAfiliado = numeroAfiliado ?? p.NumeroAfiliado };
+            _pacientes[pacienteId] = actualizado;
+            return Task.FromResult(actualizado);
+        }
+    }
+
+    public Task<CarnetLeido> GuardarCarnetPendienteAsync(
+        string sesionId, string telefonoCanal, string? pacienteId, DatosCarnet datos, CancellationToken ct)
+    {
+        var carnet = new CarnetLeido(
+            $"CAR-{Interlocked.Increment(ref _secCarnet)}",
+            sesionId,
+            telefonoCanal,
+            pacienteId,
+            datos,
+            "pendiente",
+            _clock.GetUtcNow());
+
+        _carnets[carnet.Id] = carnet;
+        return Task.FromResult(carnet);
+    }
+
+    public Task<CarnetLeido?> ObtenerCarnetAsync(string carnetId, CancellationToken ct) =>
+        Task.FromResult(_carnets.GetValueOrDefault(carnetId.Trim().ToUpperInvariant()));
+
+    public Task<CarnetLeido?> UltimoCarnetPendienteAsync(string sesionId, CancellationToken ct) =>
+        Task.FromResult(_carnets.Values
+            .Where(c => c.SesionId == sesionId && c.Estado == "pendiente")
+            .MaxBy(c => IdsDpm.Leer(c.Id, "CAR")));
+
+    public Task<IReadOnlyList<CarnetLeido>> ListarCarnetsPendientesAsync(CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<CarnetLeido>>(_carnets.Values
+            .Where(c => c.Estado == "pendiente")
+            .OrderBy(c => IdsDpm.Leer(c.Id, "CAR"))
+            .ToList());
+
+    public Task<CarnetLeido> ResolverCarnetAsync(
+        string carnetId, string estado, DatosCarnet datos, string? pacienteId, string resueltoPor, CancellationToken ct)
+    {
+        lock (_lock)
+        {
+            if (!_carnets.TryGetValue(carnetId.Trim().ToUpperInvariant(), out var c))
+                throw new ArgumentException($"No existe el carnet {carnetId}.");
+            if (c.Estado != "pendiente")
+                throw new InvalidOperationException($"El carnet {c.Id} ya fue {c.Estado}.");
+
+            var resuelto = c with
+            {
+                Estado = estado,
+                Datos = datos,
+                PacienteId = pacienteId ?? c.PacienteId,
+                ResueltoPor = resueltoPor,
+                Resuelto = _clock.GetUtcNow(),
+            };
+            _carnets[c.Id] = resuelto;
+            return Task.FromResult(resuelto);
+        }
+    }
 
     public static DateTimeOffset EnHoraRd(DateOnly fecha, TimeOnly hora) => HorarioConsultorio.EnHoraRd(fecha, hora);
 }

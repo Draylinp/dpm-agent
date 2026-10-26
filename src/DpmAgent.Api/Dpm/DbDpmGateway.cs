@@ -176,12 +176,118 @@ public sealed class DbDpmGateway : IDpmGateway
         return lista.Select(AEscalamiento).ToList();
     }
 
+    public async Task<Paciente> ActualizarSeguroAsync(string pacienteId, string? ars, string? numeroAfiliado, CancellationToken ct)
+    {
+        var p = IdsDpm.Leer(pacienteId, "PAC") is { } id
+            ? await _db.Pacientes.FirstOrDefaultAsync(x => x.Id == id, ct)
+            : null;
+        if (p is null)
+            throw new ArgumentException($"No existe el paciente {pacienteId}.");
+
+        p.Ars = ars ?? p.Ars;
+        p.NumeroAfiliado = numeroAfiliado ?? p.NumeroAfiliado;
+        await _db.SaveChangesAsync(ct);
+        return APaciente(p);
+    }
+
+    public async Task<CarnetLeido> GuardarCarnetPendienteAsync(
+        string sesionId, string telefonoCanal, string? pacienteId, DatosCarnet datos, CancellationToken ct)
+    {
+        var c = new E.CarnetPendiente
+        {
+            ConsultorioId = _db.ConsultorioId,
+            SesionId = sesionId,
+            TelefonoCanal = telefonoCanal,
+            PacienteId = IdsDpm.Leer(pacienteId, "PAC"),
+            Nombre = datos.Nombre,
+            Ars = datos.Ars,
+            NumeroAfiliado = datos.NumeroAfiliado,
+            Estado = "pendiente",
+            CreadoUtc = AhoraUtc,
+        };
+
+        _db.CarnetsPendientes.Add(c);
+        await _db.SaveChangesAsync(ct);
+        return ACarnet(c);
+    }
+
+    public async Task<CarnetLeido?> ObtenerCarnetAsync(string carnetId, CancellationToken ct)
+    {
+        if (IdsDpm.Leer(carnetId, "CAR") is not { } id)
+            return null;
+
+        var c = await _db.CarnetsPendientes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
+        return c is null ? null : ACarnet(c);
+    }
+
+    public async Task<CarnetLeido?> UltimoCarnetPendienteAsync(string sesionId, CancellationToken ct)
+    {
+        var c = await _db.CarnetsPendientes.AsNoTracking()
+            .Where(x => x.SesionId == sesionId && x.Estado == "pendiente")
+            .OrderByDescending(x => x.Id)
+            .FirstOrDefaultAsync(ct);
+        return c is null ? null : ACarnet(c);
+    }
+
+    public async Task<IReadOnlyList<CarnetLeido>> ListarCarnetsPendientesAsync(CancellationToken ct)
+    {
+        var lista = await _db.CarnetsPendientes.AsNoTracking()
+            .Where(x => x.Estado == "pendiente")
+            .OrderBy(x => x.Id)
+            .ToListAsync(ct);
+        return lista.Select(ACarnet).ToList();
+    }
+
+    public async Task<CarnetLeido> ResolverCarnetAsync(
+        string carnetId, string estado, DatosCarnet datos, string? pacienteId, string resueltoPor, CancellationToken ct)
+    {
+        var c = IdsDpm.Leer(carnetId, "CAR") is { } id
+            ? await _db.CarnetsPendientes.FirstOrDefaultAsync(x => x.Id == id, ct)
+            : null;
+        if (c is null)
+            throw new ArgumentException($"No existe el carnet {carnetId}.");
+        if (c.Estado != "pendiente")
+            throw new InvalidOperationException($"El carnet {IdsDpm.Carnet(c.Id)} ya fue {c.Estado}.");
+
+        c.Estado = estado;
+        c.Nombre = datos.Nombre;
+        c.Ars = datos.Ars;
+        c.NumeroAfiliado = datos.NumeroAfiliado;
+        c.PacienteId = IdsDpm.Leer(pacienteId, "PAC") ?? c.PacienteId;
+        c.ResueltoPor = resueltoPor;
+        c.ResueltoUtc = AhoraUtc;
+
+        try
+        {
+            // Estado es token de concurrencia: si otra petición lo resolvió primero, esto falla.
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new InvalidOperationException($"El carnet {IdsDpm.Carnet(c.Id)} ya fue resuelto por otra persona.");
+        }
+
+        return ACarnet(c);
+    }
+
     private async Task<int> MedicoActivoAsync(string medicoId, CancellationToken ct) =>
         IdsDpm.Leer(medicoId, "MED") is { } id && await _db.Medicos.AnyAsync(m => m.Id == id && m.Activo, ct)
             ? id
             : throw new ArgumentException($"No existe el médico {medicoId}.");
 
-    private static Paciente APaciente(E.Paciente p) => new(IdsDpm.Paciente(p.Id), p.Nombre, p.Telefono, p.Ars);
+    private static Paciente APaciente(E.Paciente p) =>
+        new(IdsDpm.Paciente(p.Id), p.Nombre, p.Telefono, p.Ars, p.NumeroAfiliado);
+
+    private static CarnetLeido ACarnet(E.CarnetPendiente c) => new(
+        IdsDpm.Carnet(c.Id),
+        c.SesionId,
+        c.TelefonoCanal,
+        c.PacienteId is { } p ? IdsDpm.Paciente(p) : null,
+        new DatosCarnet(c.Nombre, c.Ars, c.NumeroAfiliado),
+        c.Estado,
+        new DateTimeOffset(c.CreadoUtc, TimeSpan.Zero),
+        c.ResueltoPor,
+        c.ResueltoUtc is { } r ? new DateTimeOffset(r, TimeSpan.Zero) : null);
 
     private static Cita ACita(E.Cita c) => new(
         IdsDpm.Cita(c.Id),

@@ -32,6 +32,8 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<Escalamiento> Escalamientos => Set<Escalamiento>();
 
+    public DbSet<CarnetPendiente> CarnetsPendientes => Set<CarnetPendiente>();
+
     public DbSet<Conversacion> Conversaciones => Set<Conversacion>();
 
     public DbSet<Mensaje> Mensajes => Set<Mensaje>();
@@ -106,6 +108,24 @@ public abstract class DpmDbContext : DbContext
             e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.SetNull);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasIndex(x => new { x.ConsultorioId, x.Estado });
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<CarnetPendiente>(e =>
+        {
+            e.ToTable("CarnetsPendientes");
+            e.Property(x => x.SesionId).HasMaxLength(100);
+            e.Property(x => x.TelefonoCanal).HasMaxLength(20);
+            e.Property(x => x.Nombre).HasMaxLength(Dpm.DatosCarnet.MaxNombre);
+            e.Property(x => x.Ars).HasMaxLength(Dpm.DatosCarnet.MaxArs);
+            e.Property(x => x.NumeroAfiliado).HasMaxLength(Dpm.DatosCarnet.MaxAfiliado);
+            e.Property(x => x.Estado).HasMaxLength(20);
+            e.Property(x => x.ResueltoPor).HasMaxLength(20);
+            e.Property(x => x.Estado).IsConcurrencyToken();
+            e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasIndex(x => new { x.ConsultorioId, x.Estado });
+            e.HasIndex(x => new { x.ConsultorioId, x.SesionId });
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
 

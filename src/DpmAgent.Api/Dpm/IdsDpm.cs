@@ -16,6 +16,8 @@ public static class IdsDpm
 
     public static string Escalamiento(int id) => $"ESC-{id}";
 
+    public static string Carnet(int id) => $"CAR-{id}";
+
     public static int? Leer(string? valor, string prefijo)
     {
         if (string.IsNullOrWhiteSpace(valor))

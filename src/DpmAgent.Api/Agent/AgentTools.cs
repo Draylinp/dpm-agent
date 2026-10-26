@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Dpm;
 
 namespace DpmAgent.Api.Agent;
@@ -21,8 +22,13 @@ public sealed class AgentTools
     private static readonly JsonArray Definiciones = BuildDefinitions();
 
     private readonly IDpmGateway _dpm;
+    private readonly ServicioCarnet _carnets;
 
-    public AgentTools(IDpmGateway dpm) => _dpm = dpm;
+    public AgentTools(IDpmGateway dpm)
+    {
+        _dpm = dpm;
+        _carnets = new ServicioCarnet(dpm);
+    }
 
     public JsonArray Definitions => Definiciones;
 
@@ -51,6 +57,7 @@ public sealed class AgentTools
                 "crear_cita" => await CrearCita(sesion, args, ct),
                 "citas_del_paciente" => await CitasDelPaciente(sesion, ct),
                 "cancelar_cita" => await CancelarCita(sesion, Req(args, "cita_id"), ct),
+                "confirmar_datos_carnet" => await ConfirmarCarnet(sesion, ct),
                 "escalar_a_personal" => await Escalar(sesion, args, ct),
                 _ => Error($"Herramienta desconocida: {name}"),
             };
@@ -142,6 +149,24 @@ public sealed class AgentTools
         return cita is null
             ? Error($"No encontré la cita {citaId} entre las citas de este paciente.")
             : Ok(new { cancelada = true, cita = Resumen(cita) });
+    }
+
+    private async Task<string> ConfirmarCarnet(Sesion sesion, CancellationToken ct)
+    {
+        var carnet = await _dpm.UltimoCarnetPendienteAsync(sesion.Id, ct);
+        if (carnet is null || !Telefono.Iguales(carnet.TelefonoCanal, sesion.TelefonoCanal))
+            return Error("No hay datos de carnet pendientes de confirmar en esta conversación.");
+
+        var r = await _carnets.ConfirmarAsync(
+            carnet, null, ServicioCarnet.PorPaciente, sesion.PacienteId, exigirMismoNombre: true, ct);
+        sesion.PacienteId = r.Paciente.Id;
+
+        return Ok(new
+        {
+            confirmado = true,
+            paciente_nuevo = r.PacienteNuevo,
+            paciente = new { id = r.Paciente.Id, nombre = r.Paciente.Nombre, ars = r.Paciente.Ars, numero_afiliado = r.Paciente.NumeroAfiliado },
+        });
     }
 
     private async Task<string> Escalar(Sesion sesion, JsonObject args, CancellationToken ct)
@@ -236,6 +261,9 @@ public sealed class AgentTools
             Tool("cancelar_cita", "Cancela una cita del paciente identificado. Confirmar con el paciente antes de usarla.",
                 new JsonObject { ["cita_id"] = Str("Id de la cita, por ejemplo CITA-1001.") },
                 "cita_id"),
+            Tool("confirmar_datos_carnet",
+                "Guarda los datos del carnet de ARS que el paciente envió en foto (ARS y número de afiliado; si es nuevo, lo registra). Usarla solo después de mostrarle los datos y que diga que están correctos.",
+                new JsonObject()),
             Tool("escalar_a_personal",
                 "Pasa la conversación al personal humano del consultorio. Usarla para cualquier pregunta clínica, síntomas, medicamentos, resultados, quejas o lo que no se pueda resolver.",
                 new JsonObject
