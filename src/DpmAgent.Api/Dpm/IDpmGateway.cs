@@ -30,5 +30,9 @@ public interface IDpmGateway
 
     Task<IReadOnlyList<Cita>> CitasDePacienteAsync(string pacienteId, CancellationToken ct);
 
-    Task<Cita?> CancelarCitaAsync(string citaId, CancellationToken ct);
+    /// <summary>
+    /// Cancela una cita solo si pertenece al paciente indicado.
+    /// Devuelve null si la cita no existe o es de otro paciente (no se distingue a propósito).
+    /// </summary>
+    Task<Cita?> CancelarCitaAsync(string citaId, string pacienteId, CancellationToken ct);
 }

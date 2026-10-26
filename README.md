@@ -77,8 +77,8 @@ export META_API_KEY="tu-clave"
 dotnet run --project src/DpmAgent.Api
 ```
 
-Abre la URL que muestra la consola (por ejemplo `http://localhost:5271`) y escribe algo como:
-*"Hola, quiero una cita con la doctora para mañana en la mañana. Mi teléfono es 809-555-0101."*
+Abre la URL que muestra la consola (por ejemplo `http://localhost:5271`). El campo *Número de WhatsApp (simulado)* hace de remitente: con `809-555-0101` el agente te reconoce como la paciente ficticia María Rodríguez. Escribe algo como:
+*"Hola, quiero una cita con la doctora para mañana en la mañana."*
 
 Pruebas:
 
@@ -96,6 +96,7 @@ Configuración opcional (`appsettings.json` o variables de entorno):
 
 ## Seguridad y límites
 
+- **Cada conversación solo actúa sobre su propio paciente.** El paciente se identifica por el teléfono que entrega el canal (el remitente de WhatsApp), nunca por lo que diga el modelo. Las herramientas de citas toman el paciente de la sesión, y cancelar una cita ajena devuelve el mismo error que una cita que no existe. Una sesión no puede cambiar de número.
 - **Sin orientación médica.** El prompt de sistema lo prohíbe y no existe ninguna herramienta clínica. Cualquier pregunta de salud se escala al personal.
 - **Solo datos ficticios.** Todos los pacientes y médicos del repositorio son inventados.
 - El motivo de la cita se guarda en términos administrativos ("control", "primera consulta"), sin detalles de salud.

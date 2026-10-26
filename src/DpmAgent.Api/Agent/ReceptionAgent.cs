@@ -37,11 +37,22 @@ public sealed class ReceptionAgent
         _clock = clock ?? TimeProvider.System;
     }
 
-    public async Task<AgentReply> RunAsync(string? sesionId, string mensaje, CancellationToken ct)
+    public Task<AgentReply> RunAsync(string? sesionId, string mensaje, CancellationToken ct) =>
+        RunAsync(sesionId, mensaje, telefonoCanal: null, ct);
+
+    /// <param name="telefonoCanal">
+    /// Teléfono que el canal garantiza (el remitente de WhatsApp o el número simulado del panel).
+    /// Es lo único que permite identificar al paciente.
+    /// </param>
+    public async Task<AgentReply> RunAsync(string? sesionId, string mensaje, string? telefonoCanal, CancellationToken ct)
     {
         sesionId = string.IsNullOrWhiteSpace(sesionId) ? Guid.NewGuid().ToString("N")[..12] : sesionId.Trim();
 
-        var historial = new List<JsonObject>(_store.Get(sesionId)) { Message("user", mensaje) };
+        var sesion = _store.Get(sesionId);
+        sesion.VincularTelefono(telefonoCanal);
+
+        var historial = sesion.Mensajes;
+        historial.Add(Message("user", mensaje));
         var pasos = new List<AgentStep>();
 
         for (var i = 0; i < MaxIteraciones; i++)
@@ -56,7 +67,7 @@ public sealed class ReceptionAgent
             if (respuesta["tool_calls"] is not JsonArray llamadas || llamadas.Count == 0)
             {
                 var texto = respuesta["content"]?.ToString()?.Trim();
-                _store.Save(sesionId, historial);
+                _store.Save(sesion);
                 return new AgentReply(sesionId, string.IsNullOrEmpty(texto) ? "¿En qué más le puedo ayudar?" : texto, pasos);
             }
 
@@ -66,7 +77,7 @@ public sealed class ReceptionAgent
                 var nombre = llamada["function"]?["name"]?.ToString() ?? "";
                 var args = llamada["function"]?["arguments"]?.ToString();
 
-                var resultado = await _tools.ExecuteAsync(sesionId, nombre, args, ct);
+                var resultado = await _tools.ExecuteAsync(sesion, nombre, args, ct);
                 _logger.LogInformation("Sesión {Sesion}: {Tool}({Args}) -> {Result}", sesionId, nombre, args, resultado);
 
                 pasos.Add(new AgentStep(nombre, args ?? "{}", resultado));
@@ -80,7 +91,7 @@ public sealed class ReceptionAgent
         }
 
         _logger.LogWarning("Sesión {Sesion}: se alcanzó el límite de {Max} iteraciones.", sesionId, MaxIteraciones);
-        _store.Save(sesionId, historial);
+        _store.Save(sesion);
         return new AgentReply(
             sesionId,
             "Disculpe, no pude completar la solicitud. Voy a pasar su caso al personal del consultorio.",
@@ -107,11 +118,14 @@ public sealed class ReceptionAgent
             2. Si el paciente describe algo que pueda ser una emergencia (dolor de pecho, dificultad para respirar,
                sangrado abundante, pérdida de conciencia, etc.), dile que llame al 911 o vaya a emergencias de inmediato
                y usa escalar_a_personal con urgente = true.
-            3. Antes de crear o cancelar una cita, confirma con el paciente el médico, el día y la hora.
-            4. Usa siempre las herramientas para obtener datos reales. Nunca inventes horarios, ids ni pacientes.
-            5. Para crear una cita, usa exactamente el valor fecha_hora que devolvió consultar_disponibilidad.
-            6. En el motivo de la cita escribe solo algo administrativo ("primera consulta", "control"), sin detalles de salud.
-            7. Responde en español dominicano neutro, cordial y breve, como un mensaje de WhatsApp.
+            3. El paciente se identifica por el número desde el que escribe: al empezar usa buscar_paciente
+               (no le pidas el teléfono). Si no aparece, pídele el nombre completo y usa registrar_paciente.
+               Solo puedes ver, crear o cancelar citas de ese paciente, nunca de otra persona.
+            4. Antes de crear o cancelar una cita, confirma con el paciente el médico, el día y la hora.
+            5. Usa siempre las herramientas para obtener datos reales. Nunca inventes horarios, ids ni pacientes.
+            6. Para crear una cita, usa exactamente el valor fecha_hora que devolvió consultar_disponibilidad.
+            7. En el motivo de la cita escribe solo algo administrativo ("primera consulta", "control"), sin detalles de salud.
+            8. Responde en español dominicano neutro, cordial y breve, como un mensaje de WhatsApp.
                Al ofrecer horarios, muestra como máximo 4 opciones.
             """;
     }

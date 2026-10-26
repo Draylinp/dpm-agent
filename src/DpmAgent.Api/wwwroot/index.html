@@ -22,6 +22,8 @@
     .user { align-self:flex-end; background:var(--me); }
     .bot { align-self:flex-start; background:var(--bg); }
     .err { align-self:center; color:#c0392b; font-size:13px; }
+    .canal { display:flex; gap:8px; align-items:center; padding:8px 16px; border-bottom:1px solid var(--line); font-size:13px; color:var(--muted); }
+    .canal input { flex:0 1 180px; padding:6px 8px; }
     form { display:flex; gap:8px; padding:12px; border-top:1px solid var(--line); }
     input { flex:1; padding:10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:14px; }
     button { padding:10px 16px; border:0; border-radius:8px; background:var(--brand); color:#fff; font-weight:600; cursor:pointer; }
@@ -39,6 +41,11 @@
       <h1>DPM Agent: recepción del consultorio</h1>
       <p>Prototipo con datos ficticios. Solo tareas administrativas, sin orientación médica.</p>
     </header>
+    <div class="canal">
+      <label for="telefono">Número de WhatsApp (simulado):</label>
+      <input id="telefono" value="809-555-0101" autocomplete="off">
+      <button id="nueva" type="button">Nueva conversación</button>
+    </div>
     <div id="chat"></div>
     <form id="form">
       <input id="input" autocomplete="off" placeholder="Ej.: Quiero una cita con la doctora para mañana en la mañana">
@@ -59,7 +66,15 @@
   const form = document.getElementById('form');
   const input = document.getElementById('input');
   const send = document.getElementById('send');
+  const telefono = document.getElementById('telefono');
   let sesionId = null;
+
+  document.getElementById('nueva').addEventListener('click', () => {
+    sesionId = null;
+    telefono.disabled = false;
+    chat.replaceChildren();
+    trace.replaceChildren();
+  });
 
   function add(cls, text) {
     const div = document.createElement('div');
@@ -92,11 +107,13 @@
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sesionId, mensaje })
+        body: JSON.stringify({ sesionId, mensaje, telefono: telefono.value.trim() || null })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || data.error || res.statusText);
       sesionId = data.sesionId;
+      // Una sesión queda atada a su número, igual que un chat de WhatsApp.
+      telefono.disabled = true;
       (data.pasos || []).forEach(addStep);
       add('bot', data.respuesta);
     } catch (err) {

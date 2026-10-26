@@ -21,34 +21,41 @@ public class AgentToolsTests
     [Fact]
     public async Task Parametro_faltante_devuelve_error()
     {
-        var r = await Crear().ExecuteAsync("s", "buscar_paciente", "{}", CancellationToken.None);
-        Assert.Contains("Falta el parámetro 'telefono_o_id'", r);
+        var r = await Crear().ExecuteAsync(new Sesion("s"), "consultar_disponibilidad", "{}", CancellationToken.None);
+        Assert.Contains("Falta el parámetro 'medico_id'", r);
     }
 
     [Fact]
     public async Task Herramienta_desconocida_devuelve_error()
     {
-        var r = await Crear().ExecuteAsync("s", "recetar", "{}", CancellationToken.None);
+        var r = await Crear().ExecuteAsync(new Sesion("s"), "recetar", "{}", CancellationToken.None);
         Assert.Contains("Herramienta desconocida", r);
     }
 
     [Fact]
     public async Task Json_invalido_devuelve_error()
     {
-        var r = await Crear().ExecuteAsync("s", "listar_medicos", "{no-json", CancellationToken.None);
+        var r = await Crear().ExecuteAsync(new Sesion("s"), "listar_medicos", "{no-json", CancellationToken.None);
         Assert.Contains("no son JSON válido", r);
     }
 
     [Fact]
-    public async Task Registra_y_luego_encuentra_un_paciente()
+    public async Task Registra_y_luego_encuentra_un_paciente_por_el_telefono_del_canal()
     {
         var tools = Crear();
-        await tools.ExecuteAsync("s", "registrar_paciente",
-            """{"nombre":"Pedro Gómez (ficticio)","telefono":"849-555-0199","ars":"ARS Ejemplo"}""",
-            CancellationToken.None);
+        var sesion = new Sesion("s");
+        sesion.VincularTelefono("+1 849-555-0199");
 
-        var r = await tools.ExecuteAsync("s", "buscar_paciente", """{"telefono_o_id":"8495550199"}""", CancellationToken.None);
+        var reg = await tools.ExecuteAsync(sesion, "registrar_paciente",
+            """{"nombre":"Pedro Gómez (ficticio)","ars":"ARS Ejemplo"}""", CancellationToken.None);
+        Assert.Contains("\"registrado\":true", reg);
+
+        var otraSesion = new Sesion("s2");
+        otraSesion.VincularTelefono("849 555 0199");
+        var r = await tools.ExecuteAsync(otraSesion, "buscar_paciente", "{}", CancellationToken.None);
+
         Assert.Contains("\"encontrado\":true", r);
         Assert.Contains("Pedro Gómez", r);
+        Assert.Equal(sesion.PacienteId, otraSesion.PacienteId);
     }
 }

@@ -59,7 +59,7 @@ public class MockDpmGatewayTests
         var cita = await dpm.CrearCitaAsync("PAC-001", "MED-01", slot, "control", CancellationToken.None);
         Assert.DoesNotContain(slot, await dpm.ConsultarDisponibilidadAsync("MED-01", fecha, CancellationToken.None));
 
-        await dpm.CancelarCitaAsync(cita.Id, CancellationToken.None);
+        await dpm.CancelarCitaAsync(cita.Id, "PAC-001", CancellationToken.None);
         Assert.Contains(slot, await dpm.ConsultarDisponibilidadAsync("MED-01", fecha, CancellationToken.None));
     }
 

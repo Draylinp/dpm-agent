@@ -110,9 +110,9 @@ public sealed class MockDpmGateway : IDpmGateway
             .OrderBy(c => c.FechaHora)
             .ToList());
 
-    public Task<Cita?> CancelarCitaAsync(string citaId, CancellationToken ct)
+    public Task<Cita?> CancelarCitaAsync(string citaId, string pacienteId, CancellationToken ct)
     {
-        if (!_citas.TryGetValue(citaId, out var cita))
+        if (!_citas.TryGetValue(citaId.Trim().ToUpperInvariant(), out var cita) || cita.PacienteId != pacienteId)
             return Task.FromResult<Cita?>(null);
 
         var cancelada = cita with { Estado = "cancelada" };

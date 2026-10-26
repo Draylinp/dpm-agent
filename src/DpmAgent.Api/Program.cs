@@ -33,8 +33,12 @@ app.MapPost("/api/chat", async (ChatRequest req, ReceptionAgent agent, Cancellat
 
     try
     {
-        var reply = await agent.RunAsync(req.SesionId, req.Mensaje, ct);
+        var reply = await agent.RunAsync(req.SesionId, req.Mensaje, req.Telefono, ct);
         return Results.Ok(reply);
+    }
+    catch (SesionInvalidaException ex)
+    {
+        return Results.Problem(ex.Message, statusCode: StatusCodes.Status409Conflict);
     }
     catch (InvalidOperationException ex) when (ex.Message.Contains("clave", StringComparison.OrdinalIgnoreCase))
     {
@@ -54,6 +58,9 @@ app.MapGet("/api/medicos", async (IDpmGateway dpm, CancellationToken ct) =>
 
 app.Run();
 
-public sealed record ChatRequest(string? SesionId, string Mensaje);
+/// <param name="Telefono">
+/// En el panel de prueba simula el número de WhatsApp del paciente. En WhatsApp lo pone el webhook.
+/// </param>
+public sealed record ChatRequest(string? SesionId, string Mensaje, string? Telefono = null);
 
 public partial class Program;

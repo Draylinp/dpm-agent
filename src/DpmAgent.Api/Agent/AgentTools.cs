@@ -12,6 +12,8 @@ public sealed record Escalamiento(string Id, string SesionId, string Motivo, boo
 /// <summary>
 /// Herramientas que el agente puede usar. Todas son administrativas:
 /// ninguna permite dar orientación clínica.
+/// El paciente sobre el que se actúa sale siempre de la sesión (identificado por el teléfono
+/// del canal), nunca de los argumentos del modelo.
 /// </summary>
 public sealed class AgentTools
 {
@@ -29,7 +31,7 @@ public sealed class AgentTools
 
     public JsonArray Definitions { get; } = BuildDefinitions();
 
-    public async Task<string> ExecuteAsync(string sesionId, string name, string? argumentsJson, CancellationToken ct)
+    public async Task<string> ExecuteAsync(Sesion sesion, string name, string? argumentsJson, CancellationToken ct)
     {
         JsonObject args;
         try
@@ -48,13 +50,13 @@ public sealed class AgentTools
             return name switch
             {
                 "listar_medicos" => await ListarMedicos(ct),
-                "buscar_paciente" => await BuscarPaciente(Req(args, "telefono_o_id"), ct),
-                "registrar_paciente" => await RegistrarPaciente(args, ct),
+                "buscar_paciente" => await BuscarPaciente(sesion, ct),
+                "registrar_paciente" => await RegistrarPaciente(sesion, args, ct),
                 "consultar_disponibilidad" => await ConsultarDisponibilidad(args, ct),
-                "crear_cita" => await CrearCita(args, ct),
-                "citas_del_paciente" => await CitasDelPaciente(Req(args, "paciente_id"), ct),
-                "cancelar_cita" => await CancelarCita(Req(args, "cita_id"), ct),
-                "escalar_a_personal" => Escalar(sesionId, args),
+                "crear_cita" => await CrearCita(sesion, args, ct),
+                "citas_del_paciente" => await CitasDelPaciente(sesion, ct),
+                "cancelar_cita" => await CancelarCita(sesion, Req(args, "cita_id"), ct),
+                "escalar_a_personal" => Escalar(sesion.Id, args),
                 _ => Error($"Herramienta desconocida: {name}"),
             };
         }
@@ -64,23 +66,48 @@ public sealed class AgentTools
         }
     }
 
+    private const string SinTelefono =
+        "Esta conversación no tiene un teléfono verificado, así que no se puede identificar al paciente. Usa escalar_a_personal.";
+
+    private const string SinPaciente =
+        "Primero hay que identificar al paciente con buscar_paciente (o registrar_paciente si no aparece).";
+
+    private static string PacienteDeSesion(Sesion sesion) =>
+        sesion.PacienteId ?? throw new InvalidOperationException(SinPaciente);
+
     private async Task<string> ListarMedicos(CancellationToken ct)
     {
         var medicos = await _dpm.ListarMedicosAsync(ct);
         return Ok(new { medicos = medicos.Select(m => new { id = m.Id, nombre = m.Nombre, especialidad = m.Especialidad }) });
     }
 
-    private async Task<string> BuscarPaciente(string clave, CancellationToken ct)
+    private async Task<string> BuscarPaciente(Sesion sesion, CancellationToken ct)
     {
-        var p = await _dpm.BuscarPacienteAsync(clave, ct);
-        return p is null
-            ? Ok(new { encontrado = false })
-            : Ok(new { encontrado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars } });
+        if (sesion.TelefonoCanal is null)
+            return Error(SinTelefono);
+
+        var p = await _dpm.BuscarPacienteAsync(sesion.TelefonoCanal, ct);
+        if (p is null || !Telefono.Iguales(p.Telefono, sesion.TelefonoCanal))
+            return Ok(new { encontrado = false });
+
+        sesion.PacienteId = p.Id;
+        return Ok(new { encontrado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars } });
     }
 
-    private async Task<string> RegistrarPaciente(JsonObject args, CancellationToken ct)
+    private async Task<string> RegistrarPaciente(Sesion sesion, JsonObject args, CancellationToken ct)
     {
-        var p = await _dpm.RegistrarPacienteAsync(Req(args, "nombre"), Req(args, "telefono"), Opt(args, "ars"), ct);
+        if (sesion.TelefonoCanal is null)
+            return Error(SinTelefono);
+
+        if (sesion.PacienteId is not null)
+            return Error($"Esta conversación ya está vinculada al paciente {sesion.PacienteId}.");
+
+        var existente = await _dpm.BuscarPacienteAsync(sesion.TelefonoCanal, ct);
+        if (existente is not null && Telefono.Iguales(existente.Telefono, sesion.TelefonoCanal))
+            return Error("Ya hay un paciente registrado con este teléfono. Usa buscar_paciente.");
+
+        var p = await _dpm.RegistrarPacienteAsync(Req(args, "nombre"), sesion.TelefonoCanal, Opt(args, "ars"), ct);
+        sesion.PacienteId = p.Id;
         return Ok(new { registrado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars } });
     }
 
@@ -99,25 +126,27 @@ public sealed class AgentTools
         });
     }
 
-    private async Task<string> CrearCita(JsonObject args, CancellationToken ct)
+    private async Task<string> CrearCita(Sesion sesion, JsonObject args, CancellationToken ct)
     {
+        var pacienteId = PacienteDeSesion(sesion);
         var fechaHora = DateTimeOffset.Parse(Req(args, "fecha_hora"), CultureInfo.InvariantCulture);
-        var cita = await _dpm.CrearCitaAsync(
-            Req(args, "paciente_id"), Req(args, "medico_id"), fechaHora, Req(args, "motivo"), ct);
+        var cita = await _dpm.CrearCitaAsync(pacienteId, Req(args, "medico_id"), fechaHora, Req(args, "motivo"), ct);
 
         return Ok(new { creada = true, cita = Resumen(cita) });
     }
 
-    private async Task<string> CitasDelPaciente(string pacienteId, CancellationToken ct)
+    private async Task<string> CitasDelPaciente(Sesion sesion, CancellationToken ct)
     {
-        var citas = await _dpm.CitasDePacienteAsync(pacienteId, ct);
+        var citas = await _dpm.CitasDePacienteAsync(PacienteDeSesion(sesion), ct);
         return Ok(new { citas = citas.Select(Resumen) });
     }
 
-    private async Task<string> CancelarCita(string citaId, CancellationToken ct)
+    private async Task<string> CancelarCita(Sesion sesion, string citaId, CancellationToken ct)
     {
-        var cita = await _dpm.CancelarCitaAsync(citaId, ct);
-        return cita is null ? Error($"No existe la cita {citaId}.") : Ok(new { cancelada = true, cita = Resumen(cita) });
+        var cita = await _dpm.CancelarCitaAsync(citaId, PacienteDeSesion(sesion), ct);
+        return cita is null
+            ? Error($"No encontré la cita {citaId} entre las citas de este paciente.")
+            : Ok(new { cancelada = true, cita = Resumen(cita) });
     }
 
     private string Escalar(string sesionId, JsonObject args)
@@ -189,17 +218,17 @@ public sealed class AgentTools
         return
         [
             Tool("listar_medicos", "Lista los médicos del consultorio con su id y especialidad.", new JsonObject()),
-            Tool("buscar_paciente", "Busca un paciente registrado por número de teléfono o id de paciente.",
-                new JsonObject { ["telefono_o_id"] = Str("Teléfono (solo dígitos) o id tipo PAC-001.") },
-                "telefono_o_id"),
-            Tool("registrar_paciente", "Registra un paciente nuevo. Pedir nombre completo y teléfono antes de usarla.",
+            Tool("buscar_paciente",
+                "Identifica al paciente por el número de teléfono desde el que escribe (lo pone el sistema, no hay que pedirlo). Usarla al inicio de la conversación.",
+                new JsonObject()),
+            Tool("registrar_paciente",
+                "Registra como paciente nuevo a quien escribe desde este número. Usarla solo si buscar_paciente no lo encontró y después de pedir el nombre completo.",
                 new JsonObject
                 {
                     ["nombre"] = Str("Nombre completo."),
-                    ["telefono"] = Str("Teléfono de contacto."),
                     ["ars"] = Str("Nombre de la ARS (seguro), si tiene."),
                 },
-                "nombre", "telefono"),
+                "nombre"),
             Tool("consultar_disponibilidad", "Devuelve los horarios libres de un médico para una fecha.",
                 new JsonObject
                 {
@@ -207,19 +236,16 @@ public sealed class AgentTools
                     ["fecha"] = Str("Fecha en formato YYYY-MM-DD."),
                 },
                 "medico_id", "fecha"),
-            Tool("crear_cita", "Crea una cita. Solo usarla después de que el paciente confirme el horario.",
+            Tool("crear_cita", "Crea una cita para el paciente identificado. Solo usarla después de que confirme el horario.",
                 new JsonObject
                 {
-                    ["paciente_id"] = Str("Id del paciente."),
                     ["medico_id"] = Str("Id del médico."),
                     ["fecha_hora"] = Str("Valor fecha_hora exacto devuelto por consultar_disponibilidad."),
                     ["motivo"] = Str("Motivo administrativo breve, por ejemplo 'consulta de control' o 'primera consulta'. Sin detalles clínicos."),
                 },
-                "paciente_id", "medico_id", "fecha_hora", "motivo"),
-            Tool("citas_del_paciente", "Lista las citas confirmadas de un paciente.",
-                new JsonObject { ["paciente_id"] = Str("Id del paciente.") },
-                "paciente_id"),
-            Tool("cancelar_cita", "Cancela una cita existente. Confirmar con el paciente antes de usarla.",
+                "medico_id", "fecha_hora", "motivo"),
+            Tool("citas_del_paciente", "Lista las citas confirmadas del paciente identificado.", new JsonObject()),
+            Tool("cancelar_cita", "Cancela una cita del paciente identificado. Confirmar con el paciente antes de usarla.",
                 new JsonObject { ["cita_id"] = Str("Id de la cita, por ejemplo CITA-1001.") },
                 "cita_id"),
             Tool("escalar_a_personal",
