@@ -1,8 +1,10 @@
 using DpmAgent.Api.Agent;
 using DpmAgent.Api.Data;
+using DpmAgent.Api.Demo;
 using DpmAgent.Api.Dpm;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace DpmAgent.Tests;
 
@@ -51,5 +53,14 @@ public class PostgresTests
         var sesion = await otroScope.ServiceProvider.GetRequiredService<IConversationStore>().ObtenerAsync(r.SesionId, CancellationToken.None);
         Assert.Equal("PAC-001", sesion.PacienteId);
         Assert.Equal(6, sesion.Mensajes.Count);
+
+        // Reinicio de la demo: borra en orden (claves foráneas reales de PostgreSQL) y vuelve a sembrar.
+        await using var demoScope = sp.CreateAsyncScope();
+        var demo = ActivatorUtilities.CreateInstance<ServicioDemo>(demoScope.ServiceProvider, Options.Create(new DemoOptions { Habilitado = true }));
+        await demo.ReiniciarAsync(CancellationToken.None);
+        var dbDemo = demoScope.ServiceProvider.GetRequiredService<DpmDbContext>();
+        Assert.Equal(2, await dbDemo.Pacientes.CountAsync());
+        Assert.Equal(2, await dbDemo.Conversaciones.CountAsync());
+        Assert.Equal(1, await dbDemo.Citas.CountAsync());
     }
 }

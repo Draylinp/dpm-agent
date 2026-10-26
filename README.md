@@ -130,6 +130,8 @@ The PostgreSQL test only runs when `DPM_TEST_POSTGRES` holds the connection stri
 
 Deployment to Azure App Service with PostgreSQL, Key Vault and GitHub Actions: see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). There is also a multi-stage `Dockerfile`.
 
+Public demo mode (banner, example buttons, reset, daily limit per IP): see [docs/DEMO.md](docs/DEMO.md).
+
 Main settings (`appsettings.json` or environment variables):
 
 | Variable | Default |

@@ -21,6 +21,8 @@
     header h1, header h2 { margin:0; font-size:16px; }
     header p { margin:4px 0 0; color:var(--muted); font-size:13px; }
     #ejemplos { padding:10px 16px; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:13px; }
+    #notaDemo { margin:0; padding:8px 16px; border-bottom:1px solid var(--line); font-size:13px; color:var(--muted); background:var(--aviso); }
+    .banner a { color:inherit; }
     #ejemplos button { background:transparent; color:var(--text); border:1px solid var(--line); padding:6px 10px; font-weight:500; font-size:13px; }
     #chat { height:56vh; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; }
     .msg { max-width:85%; padding:8px 12px; border-radius:10px; white-space:pre-wrap; line-height:1.4; font-size:14px; }
@@ -47,6 +49,7 @@
 <body>
 <div id="banner" class="banner" hidden>
   <strong data-i18n="demo.banner"></strong>
+  <span id="panelDemo" hidden><a href="panel.html" data-i18n="demo.panel"></a>: <code id="credencialesDemo"></code></span>
   <button id="reiniciar" type="button" data-i18n="demo.reiniciar"></button>
 </div>
 <div class="barra">
@@ -60,6 +63,7 @@
       <p data-i18n="chat.subtitulo"></p>
     </header>
     <div id="ejemplos" hidden><span data-i18n="demo.probar"></span></div>
+    <p id="notaDemo" hidden></p>
     <div class="canal">
       <label for="telefono" data-i18n="chat.telefono"></label>
       <input id="telefono" value="809-555-0101" autocomplete="off">
@@ -151,7 +155,16 @@
     }
   }
 
+  // En la demo cada número tiene una conversación fija ("demo-" + número): así la oferta automática
+  // de un turno liberado aparece al escribir con el número de quien está en la lista de espera.
+  function asegurarSesion() {
+    if (sesionId || !demo) return;
+    const digitos = telefono.value.replace(/\D/g, '');
+    if (digitos.length >= 7) sesionId = 'demo-' + digitos.slice(-10);
+  }
+
   async function enviarTexto(mensaje) {
+    asegurarSesion();
     add('user', mensaje);
     send.disabled = true;
     try {
@@ -216,6 +229,7 @@
   });
 
   function formulario(campo, archivo) {
+    asegurarSesion();
     const datos = new FormData();
     datos.append(campo, archivo, archivo.name || 'archivo');
     if (sesionId) datos.append('sesionId', sesionId);
@@ -292,7 +306,17 @@
   // Modo demo: banner, reinicio y ejemplos para probar en 30 segundos.
   let demo = null;
 
+  let notaActual = null;
+
+  function pintarNota() {
+    const p = document.getElementById('notaDemo');
+    const texto = notaActual && (notaActual[I18N.idioma] || notaActual.en);
+    p.hidden = !texto;
+    p.textContent = texto || '';
+  }
+
   function pintarEjemplos() {
+    pintarNota();
     const caja = document.getElementById('ejemplos');
     caja.querySelectorAll('button').forEach(b => b.remove());
     if (!demo) return;
@@ -305,6 +329,8 @@
           nuevaConversacion();
           telefono.value = ej.telefono;
         }
+        notaActual = ej.nota || null;
+        pintarNota();
         await enviarTexto(ej.mensaje[I18N.idioma] || ej.mensaje.en);
       });
       caja.appendChild(b);
@@ -319,6 +345,10 @@
       if (!demo.habilitado) { demo = null; return; }
       document.getElementById('banner').hidden = false;
       document.getElementById('ejemplos').hidden = false;
+      if (demo.usuarioPanel) {
+        document.getElementById('panelDemo').hidden = false;
+        document.getElementById('credencialesDemo').textContent = `${demo.usuarioPanel} / ${demo.clavePanel}`;
+      }
       pintarEjemplos();
     } catch {
       demo = null;
@@ -328,6 +358,8 @@
   document.getElementById('reiniciar').addEventListener('click', async () => {
     const res = await fetch('/api/demo/reiniciar', { method: 'POST' });
     nuevaConversacion();
+    notaActual = null;
+    pintarNota();
     add(res.ok ? 'bot' : 'err', res.ok ? t('demo.reiniciada') : t('chat.error') + await leerError(res));
   });
 

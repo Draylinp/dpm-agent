@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using DpmAgent.Api.Data;
+using DpmAgent.Api.Demo;
 using DpmAgent.Api.Model;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -55,8 +56,23 @@ public static class ProduccionExtensions
             });
         }
 
+        var demo = config.GetSection(DemoOptions.SectionName).Get<DemoOptions>() ?? new DemoOptions();
+
         services.AddRateLimiter(o =>
         {
+            // Demo pública: además del límite por minuto, un tope diario por IP en todo lo que llama al modelo.
+            if (demo.Habilitado)
+            {
+                o.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(http => LlamaAlModelo(http.Request)
+                    ? RateLimitPartition.GetFixedWindowLimiter("demo-dia:" + Ip(http), _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = Math.Max(1, demo.MensajesPorDiaPorIp),
+                        Window = TimeSpan.FromDays(1),
+                        QueueLimit = 0,
+                    })
+                    : RateLimitPartition.GetNoLimiter(""));
+            }
+
             o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             o.OnRejected = async (contexto, ct) =>
             {
@@ -69,6 +85,13 @@ public static class ProduccionExtensions
             {
                 PermitLimit = Math.Max(1, limites.PeticionesPorMinutoPorIp),
                 Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
+
+            o.AddPolicy(DemoEndpoints.PoliticaReinicio, http => RateLimitPartition.GetFixedWindowLimiter(Ip(http), _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = Math.Max(1, demo.ReiniciosPorHoraPorIp),
+                Window = TimeSpan.FromHours(1),
                 QueueLimit = 0,
             }));
 
@@ -156,6 +179,10 @@ public static class ProduccionExtensions
             componentes = reporte.Entries.ToDictionary(e => e.Key, e => new { estado = e.Value.Status.ToString(), detalle = e.Value.Description }),
         }));
     }
+
+    /// <summary>Endpoints públicos que gastan llamadas al modelo (texto, voz y foto del carnet).</summary>
+    internal static bool LlamaAlModelo(HttpRequest r) =>
+        HttpMethods.IsPost(r.Method) && (r.Path.Equals("/api/chat") || r.Path.Equals("/api/chat/audio") || r.Path.Equals("/api/pacientes/carnet"));
 
     private static string Ip(HttpContext http) => http.Connection.RemoteIpAddress?.ToString() ?? "desconocida";
 }

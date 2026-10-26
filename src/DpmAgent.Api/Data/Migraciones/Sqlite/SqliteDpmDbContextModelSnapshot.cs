@@ -201,6 +201,9 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("EsDemo")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("IdiomaPredeterminado")
                         .IsRequired()
                         .ValueGeneratedOnAdd()

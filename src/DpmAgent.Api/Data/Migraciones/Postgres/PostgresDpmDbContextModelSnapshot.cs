@@ -214,6 +214,9 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("EsDemo")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("IdiomaPredeterminado")
                         .IsRequired()
                         .ValueGeneratedOnAdd()

@@ -22,6 +22,9 @@ public sealed class Consultorio
     /// <summary>Idioma del primer saludo cuando todavía no se sabe el del paciente (es o en).</summary>
     public string IdiomaPredeterminado { get; set; } = "es";
 
+    /// <summary>Consultorio de demostración con datos ficticios: el único que el botón "Reiniciar demo" puede borrar.</summary>
+    public bool EsDemo { get; set; }
+
     public DateTime CreadoUtc { get; set; }
 }
 

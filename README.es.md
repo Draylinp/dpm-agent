@@ -126,6 +126,8 @@ La prueba contra PostgreSQL solo corre si se define `DPM_TEST_POSTGRES` con la c
 
 Despliegue en Azure App Service con PostgreSQL, Key Vault y GitHub Actions: ver [docs/es/DESPLIEGUE.md](docs/es/DESPLIEGUE.md). También hay un `Dockerfile` multi-stage.
 
+Modo demo pública (banner, botones de ejemplo, reinicio, límite diario por IP): ver [docs/es/DEMO.md](docs/es/DEMO.md).
+
 Configuración opcional (`appsettings.json` o variables de entorno):
 
 | Variable | Valor por defecto |
