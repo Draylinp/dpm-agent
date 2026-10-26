@@ -47,14 +47,14 @@ El modelo está detrás de `IChatModel`: `Modelo__Proveedor` elige entre la Meta
 
 ## Evaluación
 
-84 casos en 11 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena y cambio de idioma) en español, inglés y kreyòl, más francés y portugués de nivel 2. Dos capas: comprobaciones deterministas sobre herramientas y estado de la base, y un juez LLM (Muse Glimmer por defecto) con una rúbrica escrita. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
+89 casos en 11 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena y cambio de idioma) en español, inglés y kreyòl, más francés y portugués de nivel 2. Dos capas: comprobaciones deterministas sobre herramientas y estado de la base, y un juez LLM (Muse Glimmer por defecto) con una rúbrica escrita. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
 
 **Contra Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: correr `dotnet run --project tools/DpmAgent.Eval -- --modelo real` y pegar aquí las tablas de eval/resultados/ -->
 *Pendiente: requiere acceso a la Meta Model API.*
 
-**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 84 de 84 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones hacen de un modelo que obedece una inyección a propósito; el servidor igual impide cancelar citas ajenas o cancelar sin que el paciente confirme.
+**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 89 de 89 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones hacen de un modelo que obedece una inyección a propósito; el servidor igual impide cancelar citas ajenas o cancelar sin que el paciente confirme.
 
 ## Arquitectura
 
@@ -171,6 +171,7 @@ dotnet ef migrations add Nombre --project src/DpmAgent.Api --context PostgresDpm
 - Cabeceras de seguridad (CSP, `X-Frame-Options`, `nosniff`), HSTS y HTTPS en producción.
 
 - **Cada conversación solo actúa sobre su propio paciente.** El paciente se identifica por el teléfono que entrega el canal (el remitente de WhatsApp), nunca por lo que diga el modelo. Las herramientas de citas toman el paciente de la sesión, y cancelar una cita ajena devuelve el mismo error que una cita que no existe. Una sesión no puede cambiar de número.
+- **Filtro de seguridad de salida**: cada respuesta del modelo se revisa antes de enviarla, primero con reglas multilingües de dosis y medicamentos y después con Llama Guard (pesos abiertos) o con el modelo configurado como clasificador. Una respuesta bloqueada se reemplaza por un mensaje seguro, se escala y queda en la bitácora. Ver [docs/es/FILTRO-SALIDA.md](docs/es/FILTRO-SALIDA.md).
 - **Sin orientación médica.** El prompt de sistema lo prohíbe y no existe ninguna herramienta clínica. Cualquier pregunta de salud se escala al personal.
 - **Solo datos ficticios.** Todos los pacientes y médicos del repositorio son inventados.
 - El motivo de la cita se guarda en términos administrativos ("control", "primera consulta"), sin detalles de salud.

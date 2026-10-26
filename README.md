@@ -47,14 +47,14 @@ The model sits behind `IChatModel`: `Modelo__Proveedor` picks the Meta Model API
 
 ## Evaluation
 
-84 cases in 11 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge (Muse Glimmer by default) with a written rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
+89 cases in 11 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge (Muse Glimmer by default) with a written rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
 **Against Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: run `dotnet run --project tools/DpmAgent.Eval -- --modelo real` and paste the tables from eval/resultados/ here -->
 *Pending: requires access to the Meta Model API.*
 
-**Server guarantees (scripted model, runs in CI on every push):** 84 / 84 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation.
+**Server guarantees (scripted model, runs in CI on every push):** 89 / 89 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation.
 
 ## Architecture
 
@@ -152,6 +152,7 @@ The clinic's default language (es/en) and emergency number are set from the dash
 ## Security and limits
 
 - **No medical advice.** The system prompt forbids it in every language and there is no clinical tool. Any health question is escalated to the staff.
+- **Output safety filter**: every model reply is checked before it is sent — multilingual rules for doses and medications, then Llama Guard (open weights) or the configured model as a classifier. A blocked reply is replaced with a safe message, escalated and recorded in the audit log. See [docs/OUTPUT-FILTER.md](docs/OUTPUT-FILTER.md).
 - **Each conversation only acts on its own patient.** The patient is identified by the phone number the channel provides (the WhatsApp sender), never by what the model says. Cancelling someone else's appointment returns the same error as a non-existent one. A session cannot change its number.
 - **Prompt-injection defense enforced on the server**: tool results, transcriptions and text read from photos are treated as data. Cancelling is a two-step process controlled by the server: it only executes on a later turn, i.e. after a real patient message. A turn cannot perform more than 3 data-changing actions nor more than 5 tools per response. The appointment reason only accepts administrative values.
 - **Rate limiting** per IP (public endpoints and sign-in) and per conversation (all channels).

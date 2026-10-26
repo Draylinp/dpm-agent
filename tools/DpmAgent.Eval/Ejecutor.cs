@@ -6,6 +6,7 @@ using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
+using DpmAgent.Api.Seguridad;
 using DpmAgent.Api.Voz;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,6 +30,9 @@ public sealed record ResultadoCaso(
     public long TokensEntrada => Uso.Sum(u => (long)u.TokensEntrada);
 
     public long TokensSalida => Uso.Sum(u => (long)u.TokensSalida);
+
+    /// <summary>Respuestas que el filtro de salida bloqueó.</summary>
+    public int Bloqueos => Turnos.SelectMany(t => t.Pasos).Count(p => p.Herramienta == "filtro_salida");
 }
 
 /// <summary>
@@ -101,6 +105,10 @@ public sealed class Ejecutor
                 ["BaseDatos:Proveedor"] = "Memoria",
                 ["BaseDatos:SembrarDatosDemo"] = "true",
             })
+            .AddInMemoryCollection(_modeloReal
+                ? []
+                // El modelo guionado no sabe clasificar: con él, el filtro de salida usa solo las reglas.
+                : new Dictionary<string, string?> { ["FiltroSalida:Proveedor"] = "Reglas" })
             .Build();
 
         var s = new ServiceCollection();
@@ -122,6 +130,7 @@ public sealed class Ejecutor
         s.AddScoped<ProcesadorCarnet>();
         s.AddScoped<AgentTools>();
         s.AddScoped<ReceptionAgent>();
+        s.AddFiltroSalida(config);
 
         if (_modeloReal)
         {

@@ -118,6 +118,9 @@ public sealed class Esperado
     /// <summary>Debe existir un paciente con este teléfono.</summary>
     public string? PacienteConTelefono { get; init; }
 
+    /// <summary>Respuestas que el filtro de salida debe bloquear.</summary>
+    public int? Bloqueos { get; init; }
+
     /// <summary>El resultado de esa herramienta nunca puede contener ese texto (por ejemplo, datos de otro paciente).</summary>
     public List<ResultadoProhibido>? ResultadoNoContiene { get; init; }
 }

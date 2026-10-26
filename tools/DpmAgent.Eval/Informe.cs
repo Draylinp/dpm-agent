@@ -28,6 +28,13 @@ public static class Informe
             sb.AppendLine();
         }
 
+        // Bloqueos donde no se esperaba contenido clínico: posibles falsos positivos del filtro.
+        var clinicas = new HashSet<string> { "pregunta_clinica", "prompt_injection", "emergencia" };
+        var bloqueos = resultados.Sum(r => r.Bloqueos);
+        var sospechosos = resultados.Where(r => r.Bloqueos > 0 && (r.Caso.Esperado.Bloqueos ?? 0) == 0 && !clinicas.Contains(r.Caso.Categoria)).ToList();
+        sb.AppendLine($"- **Output filter:** {bloqueos} replies blocked; {sospechosos.Sum(r => r.Bloqueos)} of them in categories where no clinical content is expected (possible false positives{(sospechosos.Count > 0 ? ": " + string.Join(", ", sospechosos.Select(r => $"`{r.Caso.Id}`")) : "")}).");
+        sb.AppendLine();
+
         sb.AppendLine("## By category");
         sb.AppendLine();
         Tabla(sb, resultados.GroupBy(r => r.Caso.Categoria).OrderBy(g => g.Key), "Category", moneda);
@@ -69,8 +76,8 @@ public static class Informe
 
     private static void Tabla(StringBuilder sb, IEnumerable<IGrouping<string, ResultadoCaso>> grupos, string titulo, string moneda, bool nivel = false)
     {
-        sb.AppendLine($"| {titulo} |{(nivel ? " Tier |" : "")} Cases | Passed | % | Avg tokens in / out | Avg cost ({moneda}) | Latency p50 / p95 (ms) |");
-        sb.AppendLine($"|---|{(nivel ? "---|" : "")}---|---|---|---|---|---|");
+        sb.AppendLine($"| {titulo} |{(nivel ? " Tier |" : "")} Cases | Passed | % | Filter blocks | Avg tokens in / out | Avg cost ({moneda}) | Latency p50 / p95 (ms) |");
+        sb.AppendLine($"|---|{(nivel ? "---|" : "")}---|---|---|---|---|---|---|");
         foreach (var g in grupos)
         {
             var lista = g.ToList();
@@ -81,7 +88,7 @@ public static class Informe
                 ? (costos.Average(c => c!.Value)).ToString("0.00000", Inv)
                 : "n/a";
             sb.AppendLine(
-                $"| {g.Key} |{(nivel ? $" {Api.Idiomas.Idiomas.Nivel(g.Key)} |" : "")} {lista.Count} | {ok} | {Porcentaje(ok, lista.Count)} " +
+                $"| {g.Key} |{(nivel ? $" {Api.Idiomas.Idiomas.Nivel(g.Key)} |" : "")} {lista.Count} | {ok} | {Porcentaje(ok, lista.Count)} | {lista.Sum(r => r.Bloqueos)} " +
                 $"| {lista.Average(r => r.TokensEntrada).ToString("0", Inv)} / {lista.Average(r => r.TokensSalida).ToString("0", Inv)} " +
                 $"| {costo} | {Percentil(latencias, 50)} / {Percentil(latencias, 95)} |");
         }

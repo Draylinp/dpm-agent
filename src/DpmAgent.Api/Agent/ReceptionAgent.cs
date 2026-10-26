@@ -38,6 +38,7 @@ public sealed class ReceptionAgent
     private readonly TimeProvider _clock;
     private readonly ILogger<ReceptionAgent> _logger;
     private readonly LimitadorSesiones? _limitador;
+    private readonly IFiltroSalida? _filtro;
 
     public ReceptionAgent(
         IChatModel model,
@@ -45,9 +46,11 @@ public sealed class ReceptionAgent
         IConversationStore store,
         ILogger<ReceptionAgent> logger,
         TimeProvider? clock = null,
-        LimitadorSesiones? limitador = null)
+        LimitadorSesiones? limitador = null,
+        IFiltroSalida? filtro = null)
     {
         _limitador = limitador;
+        _filtro = filtro;
         _model = model;
         _tools = tools;
         _store = store;
@@ -97,9 +100,24 @@ public sealed class ReceptionAgent
             if (respuesta["tool_calls"] is not JsonArray llamadas || llamadas.Count == 0)
             {
                 var texto = respuesta["content"]?.ToString()?.Trim();
+                if (string.IsNullOrEmpty(texto))
+                {
+                    texto = Textos.Obtener("agente.sin_respuesta", sesion.Idioma);
+                }
+                else if (_filtro is not null && await _filtro.RevisarAsync(texto, sesion.UltimoMensajePaciente, ct) is { Bloquear: true } veredicto)
+                {
+                    // Nunca llega al paciente ni queda en el historial: el modelo no la verá en el siguiente turno.
+                    var seguro = Textos.Obtener("agente.respuesta_bloqueada", sesion.Idioma, consultorio.TelefonoEmergencias);
+                    respuesta["content"] = seguro;
+                    await _tools.RegistrarBloqueoAsync(sesion, texto, veredicto.Fuente, veredicto.Motivo, ct);
+                    _logger.LogWarning("El filtro de salida bloqueó una respuesta ({Fuente}).", veredicto.Fuente);
+                    pasos.Add(new AgentStep("filtro_salida", "{}",
+                        System.Text.Json.JsonSerializer.Serialize(new { bloqueada = true, fuente = veredicto.Fuente, motivo = veredicto.Motivo })));
+                    texto = seguro;
+                }
+
                 await _store.GuardarAsync(sesion, ct);
-                return new AgentReply(
-                    sesionId, string.IsNullOrEmpty(texto) ? Textos.Obtener("agente.sin_respuesta", sesion.Idioma) : texto, pasos, sesion.Idioma);
+                return new AgentReply(sesionId, texto, pasos, sesion.Idioma);
             }
 
             var numero = 0;

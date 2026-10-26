@@ -17,7 +17,8 @@ Entrega: **miércoles 4 de noviembre, 9:00 PM ET** (misma hora en República Dom
 | Lun 26 oct | F9: Dockerfile, despliegue a Azure con OIDC, rate limiting, health checks, logs JSON con correlación, defensa contra prompt injection en el servidor y retención | ✅ |
 | Lun 26 oct | F10: multilingüe. Nivel 1 garantizado (es, en, ht): detección por mensaje, idioma en la sesión y el paciente, textos fijos y plantillas en los tres idiomas. Nivel 2 abierto con respaldo en inglés. Número de emergencias e idioma predeterminado por consultorio; escalamientos y bitácora con mensaje original y resúmenes es/en | ✅ |
 | Lun 26 oct | F10b: chat y panel con selector español/inglés (recordado en el navegador), resúmenes del panel en el idioma elegido, README y guías en inglés con versión en español (`README.es.md`, `docs/es/`) | ✅ |
-| Lun 26 oct | F11: banco de evaluación (84 casos, 11 categorías, es/en/ht + fr/pt), verificador determinista, juez LLM con rúbrica, evaluador `tools/DpmAgent.Eval` con tablas por categoría e idioma, tokens y latencia p50/p95; corre en CI con el modelo guionado | ✅ |
+| Lun 26 oct | F11: banco de evaluación (84 casos, 89 con F12, 11 categorías, es/en/ht + fr/pt), verificador determinista, juez LLM con rúbrica, evaluador `tools/DpmAgent.Eval` con tablas por categoría e idioma, tokens y latencia p50/p95; corre en CI con el modelo guionado | ✅ |
+| Lun 26 oct | F12: filtro de seguridad de salida (reglas multilingües + Llama Guard con pesos abiertos o el modelo como clasificador); reemplaza, escala y registra en la bitácora; medido en el banco (5 casos con dosis bloqueados) | ✅ |
 | Pendiente | F11: correr el banco contra Muse Spark y pegar la tabla en el README | ⬜ |
 | Lun 26 oct | Pruebas de integración opcionales contra la Meta Model API, script con curl y guía de ajustes | ✅ |
 | Mar 27 oct | Workshop Meta P1. Primera llamada real (`docs/es/PRUEBAS-META.md`) y ajuste del prompt con conversaciones de prueba | ⬜ |

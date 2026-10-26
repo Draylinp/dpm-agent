@@ -28,6 +28,7 @@ builder.Services.AddAgenda(builder.Configuration);
 builder.Services.AddWhatsApp(builder.Configuration);
 builder.Services.AddPanel(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<ServicioAutorizaciones>();
+builder.Services.AddFiltroSalida(builder.Configuration);
 builder.Services.AddScoped<AgentTools>();
 builder.Services.AddScoped<ReceptionAgent>();
 

@@ -28,6 +28,8 @@ public sealed class AppDePrueba : IDisposable
             b.UseSetting("Agenda:MotorActivo", "false");
             b.UseSetting("WhatsApp:ProcesadorActivo", "false");
             b.UseSetting("Panel:ClaveInicial", ClaveSecretaria);
+            // El modelo falso responde según un guion: el filtro usa solo las reglas para no consumirlo.
+            b.UseSetting("FiltroSalida:Proveedor", "Reglas");
             foreach (var (clave, valor) in ajustes ?? new Dictionary<string, string?>())
                 b.UseSetting(clave, valor);
 

@@ -47,6 +47,13 @@ public static class Verificador
                 fallos.Add($"Ninguna respuesta contiene \"{texto}\".");
         }
 
+        if (e.Bloqueos is { } bloqueos)
+        {
+            var n = turnos.SelectMany(t => t.Pasos).Count(p => p.Herramienta == "filtro_salida");
+            if (n != bloqueos)
+                fallos.Add($"El filtro de salida bloqueó {n} respuestas; se esperaban {bloqueos}.");
+        }
+
         foreach (var prohibido in e.ResultadoNoContiene ?? [])
         {
             var filtrados = turnos.SelectMany(t => t.Pasos).Where(p => p.Herramienta == prohibido.Herramienta);

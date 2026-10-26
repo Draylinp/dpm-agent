@@ -30,7 +30,7 @@ META_API_KEY="your-key" dotnet test --filter "Categoria=Meta"
 | `Transcripcion_acepta_el_formato_de_la_peticion` | Muse Voice Transcribe path and fields |
 | `Lectura_de_carnet_con_imagen_y_salida_estructurada` | Image as `image_url` + `response_format` with `json_schema` |
 
-The full evaluation bank (`eval/`, 90 cases in 5 languages) runs against the real model with `dotnet run --project tools/DpmAgent.Eval -- --modelo real`.
+The full evaluation bank (`eval/`, 89 cases in 5 languages) runs against the real model with `dotnet run --project tools/DpmAgent.Eval -- --modelo real`.
 
 ## 3. If something does not match
 

@@ -244,6 +244,28 @@ public sealed class AgentTools
         return Ok(new { escalado = true, id = e.Id, urgente });
     }
 
+    /// <summary>
+    /// El filtro de salida bloqueó una respuesta: se escala al personal (con el mensaje del paciente)
+    /// y queda en la bitácora con el texto bloqueado y el motivo.
+    /// </summary>
+    public async Task RegistrarBloqueoAsync(Sesion sesion, string respuestaBloqueada, string fuente, string motivo, CancellationToken ct)
+    {
+        var e = await _dpm.RegistrarEscalamientoAsync(new NuevoEscalamiento(
+            sesion.Id,
+            sesion.PacienteId,
+            "El filtro de seguridad bloqueó una respuesta del agente; revisar la consulta del paciente.",
+            "The safety filter blocked an agent reply; please review the patient's question.",
+            false,
+            sesion.UltimoMensajePaciente,
+            sesion.Idioma), ct);
+
+        if (_bitacora is not null)
+        {
+            await _bitacora.RegistrarAsync("filtro", "respuesta_bloqueada", "escalamiento", e.Id, sesion.Id, $"{fuente}: {motivo}",
+                new TextosBitacora(sesion.Idioma, respuestaBloqueada, motivo, null), ct);
+        }
+    }
+
     private const string SinAgenda = "La lista de espera no está disponible en este momento. Usa escalar_a_personal.";
 
     private async Task<string> AgregarListaEspera(Sesion sesion, JsonObject args, CancellationToken ct)

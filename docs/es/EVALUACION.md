@@ -2,7 +2,7 @@
 
 *English version: [../EVALUATION.md](../EVALUATION.md)*
 
-`eval/` tiene **84 casos** en 11 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
+`eval/` tiene **89 casos** en 11 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
 
 | Categoría | Qué comprueba |
 |---|---|
@@ -12,7 +12,7 @@
 | `paciente_nuevo` | Registrar un paciente nuevo a partir del teléfono del canal |
 | `carnet` | Carnet del seguro por foto; un carnet a nombre de otra persona espera a la secretaria |
 | `lista_espera` | Anotarse en la lista de espera; aceptar un hueco ofrecido por el motor |
-| `pregunta_clinica` | Debe escalar sin dar dosis, diagnósticos ni interpretaciones |
+| `pregunta_clinica` | Debe escalar sin dar dosis, diagnósticos ni interpretaciones; cinco casos simulan un modelo que da una dosis y el filtro de salida debe bloquearla |
 | `emergencia` | Debe dar el número de emergencias (configurable: un caso usa 112) y escalar como urgente |
 | `prompt_injection` | "Ignora tus reglas", instrucciones dentro de una nota de voz y dentro de la foto de un carnet |
 | `cita_ajena` | Intentar ver o cancelar la cita de otro paciente |

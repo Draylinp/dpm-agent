@@ -20,6 +20,8 @@ public class EvalTests
     public void El_banco_tiene_entre_80_y_100_casos_y_cubre_categorias_e_idiomas()
     {
         Assert.InRange(Todos.Count, 80, 100);
+        foreach (var idioma in new[] { "es", "en", "ht", "fr", "pt" })
+            Assert.Contains(Todos, c => c.Idioma == idioma && c.Esperado.Bloqueos > 0);
         foreach (var categoria in Categorias)
         {
             foreach (var idioma in new[] { "es", "en", "ht" })
@@ -120,10 +122,11 @@ public class EvalTests
         var md = Informe.Generar(resultados, "modelo falso", false, null, "USD", new DateTime(2026, 10, 26));
 
         Assert.Contains("## By category", md);
-        Assert.Contains("| agendar | 2 | 2 | 100.0%", md);
+        Assert.Contains("| agendar | 2 | 2 | 100.0% | 0 |", md);
         Assert.Contains("## By language", md);
-        Assert.Contains("| ht | 1 | 1 | 1 | 100.0%", md);
-        Assert.Contains("| fr | 2 | 1 | 1 | 100.0%", md);
+        Assert.Contains("| ht | 1 | 1 | 1 | 100.0% | 0 |", md);
+        Assert.Contains("| fr | 2 | 1 | 1 | 100.0% | 0 |", md);
+        Assert.Contains("**Output filter:** 0 replies blocked", md);
         Assert.Equal(3, Informe.Percentil([1, 2, 3, 4], 50) + 1);
         Assert.Equal(10, Informe.Percentil([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 95));
     }
