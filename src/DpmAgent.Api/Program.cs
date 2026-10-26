@@ -2,11 +2,14 @@ using DpmAgent.Api.Agent;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
+using DpmAgent.Api.Voz;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<MetaOptions>(builder.Configuration.GetSection(MetaOptions.SectionName));
 builder.Services.AddHttpClient<IChatModel, MetaModelClient>();
+builder.Services.Configure<TranscripcionOptions>(builder.Configuration.GetSection(TranscripcionOptions.SectionName));
+builder.Services.AddHttpClient<ITranscriber, MetaTranscriber>();
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddPersistencia(builder.Configuration);
@@ -33,24 +36,11 @@ app.MapPost("/api/chat", async (ChatRequest req, ReceptionAgent agent, Cancellat
     if (req.Mensaje.Length > 2000)
         return Results.BadRequest(new { error = "El mensaje es demasiado largo." });
 
-    try
-    {
-        var reply = await agent.RunAsync(req.SesionId, req.Mensaje, req.Telefono, ct);
-        return Results.Ok(reply);
-    }
-    catch (SesionInvalidaException ex)
-    {
-        return Results.Problem(ex.Message, statusCode: StatusCodes.Status409Conflict);
-    }
-    catch (InvalidOperationException ex) when (ex.Message.Contains("clave", StringComparison.OrdinalIgnoreCase))
-    {
-        return Results.Problem(ex.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
-    }
-    catch (HttpRequestException ex)
-    {
-        return Results.Problem($"El modelo no respondió: {ex.Message}", statusCode: StatusCodes.Status502BadGateway);
-    }
+    return await RespuestasAgente.EjecutarAsync(async () =>
+        Results.Ok(await agent.RunAsync(req.SesionId, req.Mensaje, req.Telefono, ct)));
 });
+
+app.MapAudioChat();
 
 app.MapGet("/api/escalamientos", async (IDpmGateway dpm, CancellationToken ct) =>
     Results.Ok(await dpm.ListarEscalamientosAsync(ct)));

@@ -19,6 +19,7 @@ DPM Agent se encarga de esa conversación repetitiva y deja al personal lo que d
 - Conversación en español dominicano, breve, como un mensaje de WhatsApp.
 - **Tool calling de varios pasos**: el modelo decide qué herramientas usar y en qué orden (buscar paciente → ver disponibilidad → confirmar → crear cita).
 - Validación en el servidor: no se puede reservar un horario ocupado ni en el pasado, aunque el modelo lo intente.
+- **Notas de voz**: `POST /api/chat/audio` recibe el audio (OGG/Opus de WhatsApp, WebM, MP3, M4A o WAV), lo transcribe con Muse Voice Transcribe y se lo pasa al agente. El formato se valida por los bytes, hay límite de tamaño y de duración, y el audio nunca se guarda. El panel tiene un botón para grabar desde el navegador.
 - **Persistencia y multi-consultorio**: citas, pacientes, escalamientos y conversaciones se guardan con EF Core (SQLite en local, PostgreSQL en la nube). Cada registro lleva su `ConsultorioId` y cada consulta se filtra por el consultorio actual.
 - **Escalamiento al personal**: preguntas clínicas, quejas o posibles emergencias se pasan a un humano y quedan registradas en `/api/escalamientos`. En una posible emergencia el agente indica llamar al 911.
 - Panel de prueba que muestra, al lado del chat, cada herramienta que el modelo usó y lo que devolvió.
@@ -29,7 +30,7 @@ DPM Agent se encarga de esa conversación repetitiva y deja al personal lo que d
 |---|---|
 | Razonamiento y tool calling | **Muse Spark** vía Meta Model API (`/v1/chat/completions`) |
 | Lectura de carnet de ARS (planificado) | Muse Spark, entrada de imagen |
-| Transcripción de notas de voz (planificado) | Muse Voice Transcribe |
+| Transcripción de notas de voz | Muse Voice Transcribe (`/api/chat/audio`) |
 | Ejecución local, sin enviar datos fuera del consultorio (planificado) | **Muse Glimmer**, pesos abiertos |
 
 El modelo está detrás de la interfaz `IChatModel`, así que cambiar entre la API de Meta y un servidor propio con Muse Glimmer es cuestión de configuración.
@@ -41,8 +42,9 @@ Navegador / WhatsApp
         │
         ▼
  ASP.NET Core 8 (Minimal API)
-   POST /api/chat
-        │
+   POST /api/chat        POST /api/chat/audio ──► ITranscriber ──► Muse Voice Transcribe
+        │                        │ (texto transcrito)
+        ├────────────────────────┘
    ReceptionAgent ──► IChatModel ──► Meta Model API (Muse Spark)
         │                             o servidor propio (Muse Glimmer)
         ▼
@@ -59,6 +61,7 @@ src/DpmAgent.Api/
   Agent/   ReceptionAgent, AgentTools, Sesion, IConversationStore (memoria y base de datos)
   Data/    DpmDbContext, entidades, migraciones por proveedor, datos de demo
   Model/   IChatModel, MetaModelClient, MetaOptions
+  Voz/     ITranscriber, MetaTranscriber, validación de audio, endpoint de notas de voz
   Dpm/     IDpmGateway, DbDpmGateway, MockDpmGateway, horario del consultorio
   wwwroot/ panel de prueba
 tests/DpmAgent.Tests/   pruebas con un modelo simulado (sin llamadas reales)
@@ -100,6 +103,10 @@ Configuración opcional (`appsettings.json` o variables de entorno):
 | `Meta__Model` | `muse-spark-1.2` |
 | `Meta__BaseUrl` | `https://api.meta.ai/v1/` |
 | `Meta__Temperature` | `0.2` |
+| `Transcripcion__Modelo` | `muse-voice-transcribe-1.0` |
+| `Transcripcion__Ruta` | `audio/transcriptions` (relativa a `Meta__BaseUrl`) |
+| `Transcripcion__MaxBytes` | `2097152` (2 MB) |
+| `Transcripcion__MaxDuracionSegundos` | `120` |
 | `BaseDatos__Proveedor` | `Sqlite` (también `Postgres` o `Memoria`) |
 | `ConnectionStrings__Dpm` | `Data Source=dpm-agent.db` (en la nube, la cadena de PostgreSQL por variable de entorno) |
 | `BaseDatos__MigrarAlIniciar` | `true` |

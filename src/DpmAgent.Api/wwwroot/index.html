@@ -28,6 +28,8 @@
     input { flex:1; padding:10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:14px; }
     button { padding:10px 16px; border:0; border-radius:8px; background:var(--brand); color:#fff; font-weight:600; cursor:pointer; }
     button:disabled { opacity:.5; }
+    #grabar.activo { background:#c0392b; }
+    .voz { font-size:12px; color:var(--muted); display:block; margin-bottom:2px; }
     #trace { height:60vh; overflow-y:auto; padding:12px 16px; font-family:ui-monospace,Consolas,monospace; font-size:12px; }
     .step { border-left:3px solid var(--brand); padding:4px 8px; margin-bottom:10px; }
     .step b { color:var(--brand); }
@@ -49,6 +51,7 @@
     <div id="chat"></div>
     <form id="form">
       <input id="input" autocomplete="off" placeholder="Ej.: Quiero una cita con la doctora para mañana en la mañana">
+      <button id="grabar" type="button" title="Grabar nota de voz">🎤</button>
       <button id="send">Enviar</button>
     </form>
   </section>
@@ -76,12 +79,36 @@
     trace.replaceChildren();
   });
 
-  function add(cls, text) {
+  function add(cls, text, etiqueta) {
     const div = document.createElement('div');
     div.className = 'msg ' + cls;
-    div.textContent = text;
+    if (etiqueta) {
+      const small = document.createElement('small');
+      small.className = 'voz';
+      small.textContent = etiqueta;
+      div.appendChild(small);
+    }
+    div.appendChild(document.createTextNode(text));
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  function mostrarRespuesta(data) {
+    sesionId = data.sesionId;
+    // Una sesión queda atada a su número, igual que un chat de WhatsApp.
+    telefono.disabled = true;
+    (data.pasos || []).forEach(addStep);
+    add('bot', data.respuesta);
+  }
+
+  async function leerError(res) {
+    try {
+      const data = await res.json();
+      return data.detail || data.error || res.statusText;
+    } catch {
+      return res.statusText;
+    }
   }
 
   function addStep(p) {
@@ -109,13 +136,8 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sesionId, mensaje, telefono: telefono.value.trim() || null })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || data.error || res.statusText);
-      sesionId = data.sesionId;
-      // Una sesión queda atada a su número, igual que un chat de WhatsApp.
-      telefono.disabled = true;
-      (data.pasos || []).forEach(addStep);
-      add('bot', data.respuesta);
+      if (!res.ok) throw new Error(await leerError(res));
+      mostrarRespuesta(await res.json());
     } catch (err) {
       add('err', 'Error: ' + err.message);
     } finally {
@@ -123,6 +145,75 @@
       input.focus();
     }
   });
+
+  // Notas de voz: se graban en el navegador y se envían a /api/chat/audio.
+  const grabar = document.getElementById('grabar');
+  const MAX_SEGUNDOS = 120;
+  let grabadora = null;
+  let corte = null;
+
+  function formatoGrabacion() {
+    const opciones = ['audio/ogg;codecs=opus', 'audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+    return opciones.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+  }
+
+  if (!navigator.mediaDevices || !window.MediaRecorder) {
+    grabar.disabled = true;
+    grabar.title = 'Este navegador no permite grabar audio';
+  }
+
+  grabar.addEventListener('click', async () => {
+    if (grabadora) {
+      grabadora.stop();
+      return;
+    }
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      add('err', 'No se pudo usar el micrófono: ' + err.message);
+      return;
+    }
+    const partes = [];
+    const tipo = formatoGrabacion();
+    grabadora = new MediaRecorder(stream, tipo ? { mimeType: tipo } : undefined);
+    grabadora.ondataavailable = (e) => { if (e.data.size) partes.push(e.data); };
+    grabadora.onstop = async () => {
+      clearTimeout(corte);
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(partes, { type: grabadora.mimeType });
+      grabadora = null;
+      grabar.classList.remove('activo');
+      grabar.textContent = '🎤';
+      await enviarAudio(blob);
+    };
+    grabadora.start();
+    grabar.classList.add('activo');
+    grabar.textContent = '■';
+    corte = setTimeout(() => grabadora && grabadora.stop(), MAX_SEGUNDOS * 1000);
+  });
+
+  async function enviarAudio(blob) {
+    if (!blob.size) return;
+    const pendiente = add('user', '…', '🎤 Nota de voz');
+    send.disabled = grabar.disabled = true;
+    try {
+      const datos = new FormData();
+      datos.append('audio', blob, 'nota');
+      if (sesionId) datos.append('sesionId', sesionId);
+      if (telefono.value.trim()) datos.append('telefono', telefono.value.trim());
+      const res = await fetch('/api/chat/audio', { method: 'POST', body: datos });
+      if (!res.ok) throw new Error(await leerError(res));
+      const data = await res.json();
+      pendiente.lastChild.textContent = data.transcripcion;
+      mostrarRespuesta(data);
+    } catch (err) {
+      pendiente.lastChild.textContent = '(no se pudo procesar)';
+      add('err', 'Error: ' + err.message);
+    } finally {
+      send.disabled = grabar.disabled = false;
+    }
+  }
 </script>
 </body>
 </html>

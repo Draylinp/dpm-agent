@@ -56,3 +56,70 @@ public sealed class ScriptedChatModel : IChatModel
         }),
     };
 }
+
+/// <summary>Transcriptor falso: devuelve un texto fijo y guarda el audio que recibió.</summary>
+public sealed class FakeTranscriber(string texto, double? duracion = null) : DpmAgent.Api.Voz.ITranscriber
+{
+    public List<DpmAgent.Api.Voz.AudioRecibido> Recibidos { get; } = [];
+
+    public Task<DpmAgent.Api.Voz.Transcripcion> TranscribirAsync(DpmAgent.Api.Voz.AudioRecibido audio, CancellationToken ct)
+    {
+        Recibidos.Add(audio);
+        return Task.FromResult(new DpmAgent.Api.Voz.Transcripcion(texto, duracion));
+    }
+}
+
+/// <summary>Genera audios mínimos válidos para las pruebas.</summary>
+public static class AudiosDePrueba
+{
+    /// <summary>Ogg Opus de la duración indicada (solo cabeceras; el contenido no importa).</summary>
+    public static byte[] OggOpus(double segundos, ushort preSkip = 312)
+    {
+        var opusHead = new byte[19];
+        "OpusHead"u8.CopyTo(opusHead);
+        opusHead[8] = 1;
+        opusHead[9] = 1;
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(opusHead.AsSpan(10), preSkip);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(opusHead.AsSpan(12), 48000);
+
+        var granulo = (long)(segundos * 48000) + preSkip;
+        return [.. PaginaOgg(0, 0, opusHead), .. PaginaOgg(4, granulo, [0xF8])];
+    }
+
+    /// <summary>WAV PCM mono de 16 kHz y 16 bits con la duración indicada.</summary>
+    public static byte[] Wav(double segundos)
+    {
+        const int bytesPorSegundo = 16000 * 2;
+        var datos = (int)(segundos * bytesPorSegundo);
+        var wav = new byte[44 + datos];
+        var s = wav.AsSpan();
+        "RIFF"u8.CopyTo(s);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(s[4..], 36 + datos);
+        "WAVE"u8.CopyTo(s[8..]);
+        "fmt "u8.CopyTo(s[12..]);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(s[16..], 16);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt16LittleEndian(s[20..], 1);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt16LittleEndian(s[22..], 1);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(s[24..], 16000);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(s[28..], bytesPorSegundo);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt16LittleEndian(s[32..], 2);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt16LittleEndian(s[34..], 16);
+        "data"u8.CopyTo(s[36..]);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(s[40..], datos);
+        return wav;
+    }
+
+    public static byte[] WebM() => [0x1A, 0x45, 0xDF, 0xA3, 0x9F, 0x42, 0x86, 0x81, 0x01, 0x42, 0xF7, 0x81, 0x01];
+
+    private static byte[] PaginaOgg(byte tipo, long granulo, byte[] carga)
+    {
+        var pagina = new byte[27 + 1 + carga.Length];
+        "OggS"u8.CopyTo(pagina);
+        pagina[5] = tipo;
+        System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(pagina.AsSpan(6), granulo);
+        pagina[26] = 1;
+        pagina[27] = (byte)carga.Length;
+        carga.CopyTo(pagina, 28);
+        return pagina;
+    }
+}
