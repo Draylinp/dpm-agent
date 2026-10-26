@@ -27,13 +27,32 @@ Con varios consultorios, guarda el `WhatsAppPhoneNumberId` de cada uno en la tab
 
 ## 3. Plantillas para mensajes que inicia el consultorio
 
-WhatsApp solo deja enviar texto libre si el paciente escribió en las últimas 24 horas. Las ofertas de turnos y los recordatorios pueden caer fuera de esa ventana, así que en producción necesitan **plantillas aprobadas** (categoría *Utility*, idioma español). Crea estas en *WhatsApp Manager → Message templates* y pon sus nombres en la configuración:
+WhatsApp solo deja enviar texto libre si el paciente escribió en las últimas 24 horas. Las ofertas de turnos y los recordatorios pueden caer fuera de esa ventana, así que en producción necesitan **plantillas aprobadas** (categoría *Utility*). Cada plantilla tiene un nombre y una traducción por idioma; el agente elige la traducción según el idioma del paciente (español, inglés o kreyòl) y usa la de inglés para cualquier otro idioma.
 
-| Clave | Variable | Cuerpo sugerido |
-|---|---|---|
-| `recordatorio` | `WhatsApp__Plantillas__recordatorio` | Hola, {{1}}. Le recordamos su cita con {{2}} el {{3}} a las {{4}} (cita {{5}}). Responda CONFIRMO para confirmar su asistencia o CANCELAR si no puede ir. |
-| `oferta` | `WhatsApp__Plantillas__oferta` | Hola, {{1}}. Se liberó un turno con {{2}} el {{3}} a las {{4}}. ¿Lo quiere? Responda SÍ para reservarlo o NO para dejarlo pasar. La oferta vence a las {{5}}. |
-| `oferta_vencida` | `WhatsApp__Plantillas__oferta_vencida` | El turno del {{1}} a las {{2}} ya no está disponible porque venció el tiempo para aceptarlo. Sigue en la lista de espera y le avisaremos si se libera otro. |
+| Clave | Variable con el nombre |
+|---|---|
+| `recordatorio` | `WhatsApp__Plantillas__recordatorio` |
+| `oferta` | `WhatsApp__Plantillas__oferta` |
+| `oferta_vencida` | `WhatsApp__Plantillas__oferta_vencida` |
+
+Códigos de idioma de cada traducción (`WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht`; por defecto `es`, `en`, `ht`). Verifique en *WhatsApp Manager* qué códigos acepta su cuenta; si un idioma no está disponible, apúntelo al de inglés.
+
+Cuerpos sugeridos (los mismos textos que usa el sistema, en `src/DpmAgent.Api/Idiomas/Recursos/`):
+
+**recordatorio**
+- es: Hola, {{1}}. Le recordamos su cita con {{2}} el {{3}} a las {{4}} (cita {{5}}). Responda CONFIRMO para confirmar su asistencia o CANCELAR si no puede ir.
+- en: Hi, {{1}}. This is a reminder of your appointment with {{2}} on {{3}} at {{4}} (appointment {{5}}). Reply CONFIRM to confirm or CANCEL if you can't make it.
+- ht: Bonjou {{1}}. Nou raple ou randevou ou ak {{2}} {{3}} a {{4}} (randevou {{5}}). Reponn KONFIME pou konfime oswa ANILE si ou pa ka vini.
+
+**oferta**
+- es: Hola, {{1}}. Se liberó un turno con {{2}} el {{3}} a las {{4}}. ¿Lo quiere? Responda SÍ para reservarlo o NO para dejarlo pasar. La oferta vence a las {{5}}.
+- en: Hi, {{1}}. A slot opened up with {{2}} on {{3}} at {{4}}. Would you like it? Reply YES to book it or NO to let it go. This offer expires at {{5}}.
+- ht: Bonjou {{1}}. Gen yon randevou ki libere ak {{2}} {{3}} a {{4}}. Èske ou vle l? Reponn WI pou pran l oswa NON pou kite l. Òf la ap fini a {{5}}.
+
+**oferta_vencida**
+- es: El turno del {{1}} a las {{2}} ya no está disponible porque venció el tiempo para aceptarlo. Sigue en la lista de espera y le avisaremos si se libera otro.
+- en: The slot on {{1}} at {{2}} is no longer available because the time to accept it ran out. You are still on the waiting list and we will let you know if another one opens up.
+- ht: Randevou {{1}} a {{2}} pa disponib ankò paske tan pou aksepte l la fini. Ou toujou sou lis datant lan e n ap fè ou konnen si gen yon lòt ki libere.
 
 Si una clave no tiene plantilla, se envía como texto (sirve para pruebas dentro de la ventana de 24 horas).
 

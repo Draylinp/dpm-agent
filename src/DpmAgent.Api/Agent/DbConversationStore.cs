@@ -44,6 +44,7 @@ public sealed class DbConversationStore : IConversationStore
         {
             TelefonoCanal = conv.TelefonoCanal,
             PacienteId = conv.PacienteId is { } p ? IdsDpm.Paciente(p) : null,
+            Idioma = conv.Idioma,
             Turno = conv.Turno,
             CancelacionPropuesta = conv.CancelacionPropuesta,
             CancelacionPropuestaTurno = conv.CancelacionPropuestaTurno,
@@ -64,6 +65,8 @@ public sealed class DbConversationStore : IConversationStore
 
         conv.TelefonoCanal = sesion.TelefonoCanal;
         conv.PacienteId = IdsDpm.Leer(sesion.PacienteId, "PAC");
+        conv.Idioma = sesion.Idioma;
+        conv.NivelIdioma = sesion.Idioma is null ? 0 : sesion.NivelIdioma;
         conv.Turno = sesion.Turno;
         conv.CancelacionPropuesta = sesion.CancelacionPropuesta;
         conv.CancelacionPropuestaTurno = sesion.CancelacionPropuestaTurno;
@@ -81,5 +84,12 @@ public sealed class DbConversationStore : IConversationStore
 
         await _db.SaveChangesAsync(ct);
         sesion.MensajesGuardados = sesion.Mensajes.Count;
+
+        // El idioma del paciente sirve para los mensajes automáticos aunque la conversación se borre.
+        if (conv.PacienteId is { } paciente && sesion.Idioma is { } idioma)
+        {
+            await _db.Pacientes.Where(p => p.Id == paciente && p.Idioma != idioma)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.Idioma, idioma), ct);
+        }
     }
 }

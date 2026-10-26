@@ -214,10 +214,24 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("IdiomaPredeterminado")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasDefaultValue("es");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("TelefonoEmergencias")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("911");
 
                     b.Property<string>("TelefonoWhatsApp")
                         .HasMaxLength(20)
@@ -258,6 +272,13 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
 
                     b.Property<DateTime>("CreadaUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Idioma")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("NivelIdioma")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("PacienteId")
                         .HasColumnType("integer");
@@ -312,8 +333,20 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("Idioma")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("MensajeOriginal")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<string>("Motivo")
                         .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("MotivoEn")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
@@ -546,6 +579,10 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("Idioma")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<int>("Intentos")
                         .HasColumnType("integer");
 
@@ -653,6 +690,10 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Idioma")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -710,9 +751,25 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime>("FechaUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Idioma")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("ResumenEn")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ResumenEs")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<string>("SesionId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<string>("TextoOriginal")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.HasKey("Id");
 

@@ -8,7 +8,7 @@ using DpmAgent.Api.Voz;
 
 namespace DpmAgent.Api.Carnet;
 
-public sealed record CarnetReply(string SesionId, CarnetLeido? Carnet, string Respuesta, IReadOnlyList<AgentStep> Pasos);
+public sealed record CarnetReply(string SesionId, CarnetLeido? Carnet, string Respuesta, IReadOnlyList<AgentStep> Pasos, string? Idioma = null);
 
 /// <summary>Corrección de la secretaria antes de confirmar. Los campos vacíos se dejan como se leyeron.</summary>
 public sealed record CorreccionCarnet(string? Nombre, string? Ars, string? NumeroAfiliado);
@@ -25,7 +25,8 @@ public static class CarnetEndpoints
                 return archivo.Error;
 
             return await RespuestasAgente.EjecutarAsync(async () => Results.Ok(await procesador.ProcesarAsync(
-                archivo.Datos!, http.Form()["sesionId"].ToString(), http.Form()["telefono"].ToString(), ct)));
+                archivo.Datos!, http.Form()["sesionId"].ToString(), http.Form()["telefono"].ToString(), ct)),
+                RespuestasAgente.IdiomaDe(http, http.Form()["idioma"]));
         }).RequireRateLimiting(ProduccionExtensions.PoliticaPublica);
 
         // Acciones de la secretaria: requieren sesión en el panel.

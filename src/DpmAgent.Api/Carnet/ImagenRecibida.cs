@@ -21,13 +21,13 @@ public sealed class ImagenRecibida
     public static ImagenRecibida Validar(byte[] datos, long maxBytes)
     {
         if (datos.Length == 0)
-            throw new ImagenInvalidaException("La imagen está vacía.");
+            throw new ImagenInvalidaException("entrada.imagen_vacia");
 
         if (datos.Length > maxBytes)
-            throw new ImagenInvalidaException($"La imagen pasa del límite de {maxBytes / 1024 / 1024.0:0.#} MB.");
+            throw new ImagenInvalidaException("entrada.imagen_grande", Agent.EntradaRechazadaException.Megas(maxBytes));
 
         var tipo = DetectarTipo(datos)
-                   ?? throw new ImagenInvalidaException("Formato de imagen no soportado. Envíe una foto JPG, PNG o WebP.");
+                   ?? throw new ImagenInvalidaException("entrada.imagen_formato");
 
         return new ImagenRecibida(datos, tipo);
     }
@@ -44,4 +44,5 @@ public sealed class ImagenRecibida
     }
 }
 
-public sealed class ImagenInvalidaException(string message) : Agent.EntradaRechazadaException(message);
+public sealed class ImagenInvalidaException(string clave, params object[] argumentos)
+    : Agent.EntradaRechazadaException(clave, StatusCodes.Status400BadRequest, argumentos);

@@ -46,6 +46,9 @@ public sealed class AgentTools
 
     public JsonArray Definitions => Definiciones;
 
+    /// <summary>Datos del consultorio de la conversación (número de emergencias, idioma predeterminado).</summary>
+    public Task<InfoConsultorio> ConsultorioAsync(CancellationToken ct) => _dpm.ObtenerConsultorioAsync(ct);
+
     public async Task<string> ExecuteAsync(Sesion sesion, string name, string? argumentsJson, CancellationToken ct)
     {
         JsonObject args;
@@ -221,8 +224,23 @@ public sealed class AgentTools
     private async Task<string> Escalar(Sesion sesion, JsonObject args, CancellationToken ct)
     {
         var urgente = args["urgente"]?.GetValueKind() == JsonValueKind.True;
-        var e = await _dpm.RegistrarEscalamientoAsync(sesion.Id, sesion.PacienteId, Req(args, "motivo"), urgente, ct);
-        await Registrar(sesion, "escalamiento", "escalamiento", e.Id, urgente ? "urgente" : null, ct);
+
+        // Escalar nunca debe fallar por un argumento: si falta un resumen se usa el otro, y si faltan ambos,
+        // el panel verá el mensaje original del paciente.
+        var resumenEs = Opt(args, "resumen_es") ?? Opt(args, "motivo");
+        var resumenEn = Opt(args, "resumen_en");
+        var original = sesion.UltimoMensajePaciente;
+        var resumen = resumenEs ?? resumenEn ?? original ?? "Sin resumen";
+
+        var e = await _dpm.RegistrarEscalamientoAsync(
+            new NuevoEscalamiento(sesion.Id, sesion.PacienteId, resumen, resumenEn ?? resumenEs, urgente, original, sesion.Idioma), ct);
+
+        if (_bitacora is not null)
+        {
+            await _bitacora.RegistrarAsync(Bitacora.Agente, "escalamiento", "escalamiento", e.Id, sesion.Id, urgente ? "urgente" : null,
+                new TextosBitacora(sesion.Idioma, original, e.Motivo, e.MotivoEn), ct);
+        }
+
         return Ok(new { escalado = true, id = e.Id, urgente });
     }
 
@@ -417,10 +435,11 @@ public sealed class AgentTools
                 "Pasa la conversación al personal humano del consultorio. Usarla para cualquier pregunta clínica, síntomas, medicamentos, resultados, quejas o lo que no se pueda resolver.",
                 new JsonObject
                 {
-                    ["motivo"] = Str("Resumen breve de lo que necesita el paciente."),
+                    ["resumen_es"] = Str("Resumen breve en español de lo que necesita el paciente, para el panel."),
+                    ["resumen_en"] = Str("El mismo resumen en inglés."),
                     ["urgente"] = new JsonObject { ["type"] = "boolean", ["description"] = "true si el paciente describe una posible emergencia." },
                 },
-                "motivo", "urgente"),
+                "resumen_es", "resumen_en", "urgente"),
         ];
     }
 }

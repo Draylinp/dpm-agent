@@ -41,6 +41,14 @@ public sealed class ServicioRetencion(DpmDbContext db, IOptions<RetencionOptions
             var viejas = db.Conversaciones.IgnoreQueryFilters().Where(c => c.ActualizadaUtc < limite).Select(c => c.Id);
             await db.Mensajes.Where(m => viejas.Contains(m.ConversacionId)).ExecuteDeleteAsync(ct);
             conversaciones = await db.Conversaciones.IgnoreQueryFilters().Where(c => c.ActualizadaUtc < limite).ExecuteDeleteAsync(ct);
+
+            // El texto del paciente copiado en la bitácora y en escalamientos ya atendidos sigue la misma regla;
+            // los resúmenes para el panel se conservan.
+            await db.Bitacora.IgnoreQueryFilters().Where(b => b.TextoOriginal != null && b.FechaUtc < limite)
+                .ExecuteUpdateAsync(u => u.SetProperty(b => b.TextoOriginal, (string?)null), ct);
+            await db.Escalamientos.IgnoreQueryFilters()
+                .Where(e => e.MensajeOriginal != null && e.Estado == "atendido" && e.CreadoUtc < limite)
+                .ExecuteUpdateAsync(u => u.SetProperty(e => e.MensajeOriginal, (string?)null), ct);
         }
 
         var mensajesCanal = 0;

@@ -14,7 +14,7 @@ public sealed class TranscripcionOptions
     public string Ruta { get; set; } = "audio/transcriptions";
 
     /// <summary>Idioma esperado (ISO 639-1). Vacío para que el servicio lo detecte.</summary>
-    public string? Idioma { get; set; } = "es";
+    public string? Idioma { get; set; }
 
     /// <summary>Tamaño máximo del audio. WhatsApp manda Opus a ~16 kbps: 2 MB son varios minutos.</summary>
     public long MaxBytes { get; set; } = 2 * 1024 * 1024;

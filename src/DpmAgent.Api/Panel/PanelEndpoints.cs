@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Seguridad;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -10,6 +11,10 @@ namespace DpmAgent.Api.Panel;
 public sealed record LoginRequest(string Usuario, string Clave);
 
 public sealed record NuevoUsuarioRequest(string Usuario, string Nombre, string Clave, string Rol);
+
+/// <param name="IdiomaPredeterminado">Idioma del primer saludo: es o en.</param>
+/// <param name="TelefonoEmergencias">Número que el agente indica ante una posible emergencia.</param>
+public sealed record ConfiguracionConsultorio(string? IdiomaPredeterminado, string? TelefonoEmergencias);
 
 public static class PanelEndpoints
 {
@@ -69,6 +74,30 @@ public static class PanelEndpoints
             await bitacora.RegistrarAsync(user.Actor(), "escalamiento_atendido", "escalamiento", id, null, null, ct);
             return Results.Ok();
         });
+
+        panel.MapGet("/consultorio", async (Dpm.IDpmGateway dpm, CancellationToken ct) =>
+            Results.Ok(await dpm.ObtenerConsultorioAsync(ct)));
+
+        panel.MapPut("/consultorio", async (
+            ConfiguracionConsultorio req, ClaimsPrincipal user, Data.DpmDbContext db, Bitacora bitacora, CancellationToken ct) =>
+        {
+            var idioma = req.IdiomaPredeterminado?.Trim().ToLowerInvariant();
+            if (idioma is not null and not ("es" or "en"))
+                return Results.BadRequest(new { error = "El idioma predeterminado debe ser 'es' o 'en'." });
+
+            var telefono = req.TelefonoEmergencias?.Trim();
+            if (telefono is not null && (telefono.Length is < 2 or > 15 || !telefono.All(char.IsAsciiDigit)))
+                return Results.BadRequest(new { error = "El número de emergencias debe tener de 2 a 15 dígitos." });
+
+            var consultorio = await db.Consultorios.FirstAsync(c => c.Id == db.ConsultorioId, ct);
+            consultorio.IdiomaPredeterminado = idioma ?? consultorio.IdiomaPredeterminado;
+            consultorio.TelefonoEmergencias = telefono ?? consultorio.TelefonoEmergencias;
+            await db.SaveChangesAsync(ct);
+
+            await bitacora.RegistrarAsync(user.Actor(), "consultorio_configurado", "consultorio", consultorio.Id.ToString(CultureInfo.InvariantCulture),
+                $"idioma={consultorio.IdiomaPredeterminado}, emergencias={consultorio.TelefonoEmergencias}", null, ct);
+            return Results.Ok(new Dpm.InfoConsultorio(consultorio.Nombre, consultorio.TelefonoEmergencias, consultorio.IdiomaPredeterminado));
+        }).RequireAuthorization(PanelExtensions.PoliticaAdmin);
 
         panel.MapPost("/usuarios", async (
             NuevoUsuarioRequest req, ClaimsPrincipal user, ServicioUsuarios usuarios, Bitacora bitacora, CancellationToken ct) =>

@@ -10,6 +10,13 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="DpmAgent.Tests" />
+    <InternalsVisibleTo Include="DpmAgent.Eval" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Textos fijos del sistema por idioma (es, en, ht). -->
+    <EmbeddedResource Include="Idiomas\Recursos\*.json" LogicalName="DpmAgent.Api.Idiomas.Recursos.%(Filename)%(Extension)" WithCulture="false" />
+    <Content Remove="Idiomas\Recursos\*.json" />
   </ItemGroup>
 
   <ItemGroup>

@@ -11,7 +11,8 @@ public sealed record MensajeParaEnviar(
     string Tipo,
     string? RemitenteId = null,
     string? Plantilla = null,
-    IReadOnlyList<string>? Parametros = null);
+    IReadOnlyList<string>? Parametros = null,
+    string? Idioma = null);
 
 /// <summary>Canal por el que se entregan los mensajes que el sistema envía por iniciativa propia.</summary>
 public interface IMessageChannel

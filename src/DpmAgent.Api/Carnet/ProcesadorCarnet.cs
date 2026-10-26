@@ -49,7 +49,7 @@ public sealed class ProcesadorCarnet
         var sesion = await _conversaciones.ObtenerAsync(sesionId, ct);
         sesion.VincularTelefono(telefono);
         if (sesion.TelefonoCanal is null)
-            throw new EntradaRechazadaException("Se necesita el teléfono del paciente para asociar el carnet.");
+            throw new EntradaRechazadaException("entrada.carnet_sin_telefono");
 
         var lectura = await _lector.LeerAsync(imagen, ct);
 
@@ -71,6 +71,6 @@ public sealed class ProcesadorCarnet
         }
 
         var reply = await _agent.RunAsync(sesion.Id, mensaje, telefono, ct);
-        return new CarnetReply(reply.SesionId, carnet, reply.Respuesta, reply.Pasos);
+        return new CarnetReply(reply.SesionId, carnet, reply.Respuesta, reply.Pasos, reply.Idioma);
     }
 }

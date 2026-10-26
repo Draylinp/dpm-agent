@@ -156,4 +156,4 @@ public sealed class WhatsAppCloudApi : IWhatsAppCloudApi
 }
 
 public sealed class ArchivoDemasiadoGrandeException()
-    : Agent.EntradaRechazadaException("El archivo es demasiado grande. Envíe uno más pequeño.", StatusCodes.Status413PayloadTooLarge);
+    : Agent.EntradaRechazadaException("entrada.archivo_grande", StatusCodes.Status413PayloadTooLarge);

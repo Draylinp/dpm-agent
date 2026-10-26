@@ -60,7 +60,7 @@ public sealed class DespachadorMensajes
                 var parametros = m.ParametrosJson is null ? null : JsonSerializer.Deserialize<string[]>(m.ParametrosJson);
                 await canal.EnviarAsync(new MensajeParaEnviar(
                     m.Id, m.SesionId, m.Destino, m.Texto, m.Tipo,
-                    remitentes.GetValueOrDefault(m.ConsultorioId), m.Plantilla, parametros), ct);
+                    remitentes.GetValueOrDefault(m.ConsultorioId), m.Plantilla, parametros, m.Idioma), ct);
                 m.Estado = "enviado";
                 m.EnviadoUtc = _clock.GetUtcNow().UtcDateTime;
                 m.Error = null;

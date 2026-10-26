@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http.Features;
 namespace DpmAgent.Api.Voz;
 
 /// <param name="Transcripcion">Lo que se entendió de la nota de voz, para mostrárselo al paciente.</param>
-public sealed record AudioChatReply(string SesionId, string Transcripcion, string Respuesta, IReadOnlyList<AgentStep> Pasos);
+public sealed record AudioChatReply(string SesionId, string Transcripcion, string Respuesta, IReadOnlyList<AgentStep> Pasos, string? Idioma = null);
 
 public static class AudioChatEndpoint
 {
@@ -22,7 +22,8 @@ public static class AudioChatEndpoint
                 return archivo.Error;
 
             return await RespuestasAgente.EjecutarAsync(async () => Results.Ok(await procesador.ProcesarAsync(
-                archivo.Datos!, http.Form()["sesionId"].ToString(), http.Form()["telefono"].ToString(), ct)));
+                archivo.Datos!, http.Form()["sesionId"].ToString(), http.Form()["telefono"].ToString(), ct)),
+                RespuestasAgente.IdiomaDe(http, http.Form()["idioma"]));
         }).RequireRateLimiting(ProduccionExtensions.PoliticaPublica);
 
         return app;

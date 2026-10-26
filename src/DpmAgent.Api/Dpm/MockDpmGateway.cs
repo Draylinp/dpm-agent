@@ -116,20 +116,28 @@ public sealed class MockDpmGateway : IDpmGateway
         return Task.FromResult<Cita?>(cancelada);
     }
 
-    public Task<Escalamiento> RegistrarEscalamientoAsync(string sesionId, string? pacienteId, string motivo, bool urgente, CancellationToken ct)
+    public Task<Escalamiento> RegistrarEscalamientoAsync(NuevoEscalamiento nuevo, CancellationToken ct)
     {
         var e = new Escalamiento(
             $"ESC-{Interlocked.Increment(ref _secEscalamiento)}",
-            sesionId,
-            pacienteId,
-            motivo.Trim(),
-            urgente,
+            nuevo.SesionId,
+            nuevo.PacienteId,
+            nuevo.ResumenEs.Trim(),
+            nuevo.Urgente,
             "pendiente",
-            _clock.GetUtcNow());
+            _clock.GetUtcNow(),
+            nuevo.ResumenEn?.Trim(),
+            nuevo.MensajeOriginal,
+            nuevo.Idioma);
 
         _escalamientos.Enqueue(e);
         return Task.FromResult(e);
     }
+
+    /// <summary>Datos del consultorio simulado; las pruebas pueden cambiarlos.</summary>
+    public InfoConsultorio Consultorio { get; set; } = new("Consultorio Ejemplo (ficticio)", "911", "es");
+
+    public Task<InfoConsultorio> ObtenerConsultorioAsync(CancellationToken ct) => Task.FromResult(Consultorio);
 
     public Task<IReadOnlyList<Escalamiento>> ListarEscalamientosAsync(CancellationToken ct) =>
         Task.FromResult<IReadOnlyList<Escalamiento>>(_escalamientos.Reverse().ToList());

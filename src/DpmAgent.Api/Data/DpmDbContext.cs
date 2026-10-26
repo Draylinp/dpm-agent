@@ -63,6 +63,8 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.Nombre).HasMaxLength(200);
             e.Property(x => x.TelefonoWhatsApp).HasMaxLength(20);
             e.Property(x => x.WhatsAppPhoneNumberId).HasMaxLength(40);
+            e.Property(x => x.TelefonoEmergencias).HasMaxLength(20).HasDefaultValue("911");
+            e.Property(x => x.IdiomaPredeterminado).HasMaxLength(10).HasDefaultValue("es");
             e.HasIndex(x => x.WhatsAppPhoneNumberId).IsUnique();
         });
 
@@ -92,6 +94,7 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.Telefono).HasMaxLength(20);
             e.Property(x => x.Ars).HasMaxLength(100);
             e.Property(x => x.NumeroAfiliado).HasMaxLength(50);
+            e.Property(x => x.Idioma).HasMaxLength(10);
             e.HasIndex(x => new { x.ConsultorioId, x.Telefono });
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
@@ -132,6 +135,9 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.Motivo).HasMaxLength(1000);
             e.Property(x => x.Estado).HasMaxLength(20);
             e.Property(x => x.AtendidoPor).HasMaxLength(60);
+            e.Property(x => x.MotivoEn).HasMaxLength(1000);
+            e.Property(x => x.MensajeOriginal).HasMaxLength(2000);
+            e.Property(x => x.Idioma).HasMaxLength(10);
             e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.SetNull);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasIndex(x => new { x.ConsultorioId, x.Estado });
@@ -162,6 +168,7 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.Estado).HasMaxLength(20);
             e.Property(x => x.Error).HasMaxLength(500);
             e.Property(x => x.Plantilla).HasMaxLength(40);
+            e.Property(x => x.Idioma).HasMaxLength(10);
             e.Property(x => x.ParametrosJson).HasMaxLength(2000);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasIndex(x => x.Estado);
@@ -194,6 +201,10 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.EntidadId).HasMaxLength(30);
             e.Property(x => x.SesionId).HasMaxLength(100);
             e.Property(x => x.Detalle).HasMaxLength(500);
+            e.Property(x => x.Idioma).HasMaxLength(10);
+            e.Property(x => x.TextoOriginal).HasMaxLength(2000);
+            e.Property(x => x.ResumenEs).HasMaxLength(1000);
+            e.Property(x => x.ResumenEn).HasMaxLength(1000);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasIndex(x => new { x.ConsultorioId, x.FechaUtc });
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
@@ -239,6 +250,7 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.SesionId).HasMaxLength(100);
             e.Property(x => x.TelefonoCanal).HasMaxLength(20);
             e.Property(x => x.CancelacionPropuesta).HasMaxLength(30);
+            e.Property(x => x.Idioma).HasMaxLength(10);
             e.HasIndex(x => new { x.ConsultorioId, x.SesionId }).IsUnique();
             e.HasIndex(x => x.ActualizadaUtc);
             e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.SetNull);

@@ -34,18 +34,18 @@ public sealed class ProcesadorNotaVoz
         var transcripcion = await _transcriber.TranscribirAsync(audio, ct);
 
         if (transcripcion.DuracionSegundos > _limites.MaxDuracionSegundos)
-            throw new EntradaRechazadaException($"La nota de voz dura más de {_limites.MaxDuracionSegundos:0} segundos.");
+            throw new EntradaRechazadaException("entrada.audio_largo", StatusCodes.Status400BadRequest,
+                _limites.MaxDuracionSegundos.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
 
         if (string.IsNullOrWhiteSpace(transcripcion.Texto))
         {
-            throw new EntradaRechazadaException(
-                "No se entendió la nota de voz. ¿Puede repetirla o escribir el mensaje?", StatusCodes.Status422UnprocessableEntity);
+            throw new EntradaRechazadaException("entrada.audio_no_entendido", StatusCodes.Status422UnprocessableEntity);
         }
 
         if (transcripcion.Texto.Length > MaxCaracteres)
-            throw new EntradaRechazadaException("La nota de voz es demasiado larga. Envíe un mensaje más corto.");
+            throw new EntradaRechazadaException("entrada.audio_texto_largo");
 
         var reply = await _agent.RunAsync(sesionId, PrefijoNotaDeVoz + transcripcion.Texto, telefono, ct);
-        return new AudioChatReply(reply.SesionId, transcripcion.Texto, reply.Respuesta, reply.Pasos);
+        return new AudioChatReply(reply.SesionId, transcripcion.Texto, reply.Respuesta, reply.Pasos, reply.Idioma);
     }
 }

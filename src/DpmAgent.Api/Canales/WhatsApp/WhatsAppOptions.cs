@@ -31,7 +31,16 @@ public sealed class WhatsAppOptions
     /// </summary>
     public Dictionary<string, string> Plantillas { get; set; } = [];
 
-    public string IdiomaPlantillas { get; set; } = "es";
+    /// <summary>
+    /// Código de idioma de WhatsApp para cada idioma de texto (las traducciones de una plantilla comparten nombre).
+    /// Lo que no esté aquí usa el código de "en". Verifique en WhatsApp Manager que cada idioma esté aprobado.
+    /// </summary>
+    public Dictionary<string, string> IdiomasPlantillas { get; set; } = new()
+    {
+        ["es"] = "es",
+        ["en"] = "en",
+        ["ht"] = "ht",
+    };
 
     public bool ProcesadorActivo { get; set; } = true;
 

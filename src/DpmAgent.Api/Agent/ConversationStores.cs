@@ -19,6 +19,15 @@ public sealed class Sesion
 
     public string? PacienteId { get; set; }
 
+    /// <summary>Idioma del paciente (BCP-47). Se actualiza con cada mensaje en que se detecta con claridad.</summary>
+    public string? Idioma { get; set; }
+
+    /// <summary>1 si el idioma es español, inglés o kreyòl; 2 si es otro.</summary>
+    public int NivelIdioma => Idiomas.Idiomas.Nivel(Idioma);
+
+    /// <summary>Texto del último mensaje del paciente en este turno (sin guardar), para los escalamientos.</summary>
+    public string? UltimoMensajePaciente { get; internal set; }
+
     /// <summary>Cuántos mensajes del paciente lleva la conversación. Sube al empezar cada turno.</summary>
     public int Turno { get; internal set; }
 
@@ -60,6 +69,7 @@ public sealed class Sesion
     {
         TelefonoCanal = TelefonoCanal,
         PacienteId = PacienteId,
+        Idioma = Idioma,
         Turno = Turno,
         CancelacionPropuesta = CancelacionPropuesta,
         CancelacionPropuestaTurno = CancelacionPropuestaTurno,

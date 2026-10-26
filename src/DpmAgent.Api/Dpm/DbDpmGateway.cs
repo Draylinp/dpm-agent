@@ -151,16 +151,18 @@ public sealed class DbDpmGateway : IDpmGateway
         return ACita(cita);
     }
 
-    public async Task<Escalamiento> RegistrarEscalamientoAsync(
-        string sesionId, string? pacienteId, string motivo, bool urgente, CancellationToken ct)
+    public async Task<Escalamiento> RegistrarEscalamientoAsync(NuevoEscalamiento nuevo, CancellationToken ct)
     {
         var e = new E.Escalamiento
         {
             ConsultorioId = _db.ConsultorioId,
-            SesionId = sesionId,
-            PacienteId = IdsDpm.Leer(pacienteId, "PAC"),
-            Motivo = motivo.Trim(),
-            Urgente = urgente,
+            SesionId = nuevo.SesionId,
+            PacienteId = IdsDpm.Leer(nuevo.PacienteId, "PAC"),
+            Motivo = Recortar(nuevo.ResumenEs.Trim(), 1000),
+            MotivoEn = nuevo.ResumenEn is null ? null : Recortar(nuevo.ResumenEn.Trim(), 1000),
+            MensajeOriginal = nuevo.MensajeOriginal is null ? null : Recortar(nuevo.MensajeOriginal, 2000),
+            Idioma = nuevo.Idioma,
+            Urgente = nuevo.Urgente,
             Estado = "pendiente",
             CreadoUtc = AhoraUtc,
         };
@@ -169,6 +171,16 @@ public sealed class DbDpmGateway : IDpmGateway
         await _db.SaveChangesAsync(ct);
         return AEscalamiento(e);
     }
+
+    public async Task<InfoConsultorio> ObtenerConsultorioAsync(CancellationToken ct)
+    {
+        var c = await _db.Consultorios.AsNoTracking().FirstOrDefaultAsync(x => x.Id == _db.ConsultorioId, ct);
+        return c is null
+            ? new InfoConsultorio("", "911", "es")
+            : new InfoConsultorio(c.Nombre, c.TelefonoEmergencias, c.IdiomaPredeterminado);
+    }
+
+    private static string Recortar(string s, int max) => s.Length <= max ? s : s[..max];
 
     public async Task<IReadOnlyList<Escalamiento>> ListarEscalamientosAsync(CancellationToken ct)
     {
@@ -304,5 +316,8 @@ public sealed class DbDpmGateway : IDpmGateway
         e.Motivo,
         e.Urgente,
         e.Estado,
-        new DateTimeOffset(e.CreadoUtc, TimeSpan.Zero));
+        new DateTimeOffset(e.CreadoUtc, TimeSpan.Zero),
+        e.MotivoEn,
+        e.MensajeOriginal,
+        e.Idioma);
 }

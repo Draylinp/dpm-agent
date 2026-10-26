@@ -2,6 +2,7 @@ using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Agent;
 using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Data;
+using DpmAgent.Api.Idiomas;
 using DpmAgent.Api.Voz;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -15,12 +16,6 @@ namespace DpmAgent.Api.Canales.WhatsApp;
 /// </summary>
 public sealed class ProcesadorWhatsApp
 {
-    public const string SoloTextoVozYCarnet =
-        "Por ahora solo puedo leer mensajes de texto, notas de voz y fotos del carnet de la ARS.";
-
-    public const string Disculpa =
-        "Disculpe, tuvimos un problema para procesar su mensaje. Ya avisamos al personal del consultorio.";
-
     private const int Lote = 20;
     private const int MaxCaracteres = 2000;
 
@@ -55,8 +50,8 @@ public sealed class ProcesadorWhatsApp
             var sesionId = CanalesConocidos.SesionWhatsApp(m.Telefono);
             try
             {
-                var respuesta = await ResponderAsync(m, sesionId, ct);
-                await EncolarAsync(m.ConsultorioId, sesionId, m.Telefono, respuesta, ct);
+                var (respuesta, idioma) = await ResponderAsync(m, sesionId, ct);
+                await EncolarAsync(m.ConsultorioId, sesionId, m.Telefono, respuesta, idioma, ct);
                 m.Estado = "procesado";
                 m.ProcesadoUtc = _clock.GetUtcNow().UtcDateTime;
                 m.Error = null;
@@ -72,7 +67,7 @@ public sealed class ProcesadorWhatsApp
                 {
                     m.Estado = "fallido";
                     procesados++;
-                    await AvisarFalloAsync(m.ConsultorioId, sesionId, m.Telefono, ct);
+                    await AvisarFalloAsync(m.ConsultorioId, sesionId, m.Telefono, m.Texto, ct);
                 }
             }
 
@@ -82,7 +77,7 @@ public sealed class ProcesadorWhatsApp
         return procesados;
     }
 
-    private async Task<string> ResponderAsync(Data.Entidades.MensajeEntrante m, string sesionId, CancellationToken ct)
+    private async Task<(string Texto, string? Idioma)> ResponderAsync(Data.Entidades.MensajeEntrante m, string sesionId, CancellationToken ct)
     {
         await using var scope = Ambito(m.ConsultorioId);
         var sp = scope.ServiceProvider;
@@ -91,53 +86,77 @@ public sealed class ProcesadorWhatsApp
         {
             switch (m.Tipo)
             {
-                case "text":
-                    if (string.IsNullOrWhiteSpace(m.Texto))
-                        return SoloTextoVozYCarnet;
-                    if (m.Texto.Length > MaxCaracteres)
-                        return "Su mensaje es muy largo. ¿Puede enviarlo más corto?";
-                    return (await sp.GetRequiredService<ReceptionAgent>().RunAsync(sesionId, m.Texto, m.Telefono, ct)).Respuesta;
+                case "text" when !string.IsNullOrWhiteSpace(m.Texto) && m.Texto.Length > MaxCaracteres:
+                    return await TextoFijoAsync(sp, "entrada.mensaje_largo", sesionId, m.Texto, ct);
+
+                case "text" when !string.IsNullOrWhiteSpace(m.Texto):
+                {
+                    var r = await sp.GetRequiredService<ReceptionAgent>().RunAsync(sesionId, m.Texto, m.Telefono, ct);
+                    return (r.Respuesta, r.Idioma);
+                }
 
                 case "audio":
                 {
                     var voz = sp.GetRequiredService<ProcesadorNotaVoz>();
                     var audio = await sp.GetRequiredService<IWhatsAppCloudApi>().DescargarMediaAsync(m.MediaId!, voz.Limites.MaxBytes, ct);
-                    return (await voz.ProcesarAsync(audio.Datos, sesionId, m.Telefono, ct)).Respuesta;
+                    var r = await voz.ProcesarAsync(audio.Datos, sesionId, m.Telefono, ct);
+                    return (r.Respuesta, r.Idioma);
                 }
 
                 case "image":
                 {
                     var carnet = sp.GetRequiredService<ProcesadorCarnet>();
                     var imagen = await sp.GetRequiredService<IWhatsAppCloudApi>().DescargarMediaAsync(m.MediaId!, carnet.MaxBytes, ct);
-                    return (await carnet.ProcesarAsync(imagen.Datos, sesionId, m.Telefono, ct)).Respuesta;
+                    var r = await carnet.ProcesarAsync(imagen.Datos, sesionId, m.Telefono, ct);
+                    return (r.Respuesta, r.Idioma);
                 }
 
                 default:
-                    return SoloTextoVozYCarnet;
+                    return await TextoFijoAsync(sp, "canal.solo_texto_voz_carnet", sesionId, m.Texto, ct);
             }
         }
         catch (EntradaRechazadaException ex)
         {
-            // Audio muy largo, foto ilegible, etc.: se le explica al paciente.
-            return ex.Message;
+            // Audio muy largo, foto ilegible, demasiados mensajes...: se le explica en su idioma.
+            var idioma = await IdiomaAsync(sp, sesionId, m.Texto, ct);
+            return (ex.MensajePara(idioma), idioma);
         }
     }
 
-    private async Task EncolarAsync(int consultorioId, string sesionId, string telefono, string texto, CancellationToken ct)
+    private static async Task<(string, string?)> TextoFijoAsync(IServiceProvider sp, string clave, string sesionId, string? texto, CancellationToken ct)
     {
-        await using var scope = Ambito(consultorioId);
-        await scope.ServiceProvider.GetRequiredService<Notificador>().EncolarRespuestaAsync(sesionId, telefono, texto, ct);
+        var idioma = await IdiomaAsync(sp, sesionId, texto, ct);
+        return (Textos.Obtener(clave, idioma), idioma);
     }
 
-    private async Task AvisarFalloAsync(int consultorioId, string sesionId, string telefono, CancellationToken ct)
+    /// <summary>Idioma para un texto fijo: el de la conversación, el del propio mensaje o el del consultorio.</summary>
+    private static async Task<string> IdiomaAsync(IServiceProvider sp, string sesionId, string? texto, CancellationToken ct)
+    {
+        var sesion = await sp.GetRequiredService<IConversationStore>().ObtenerAsync(sesionId, ct);
+        return sesion.Idioma
+               ?? DetectorIdioma.Detectar(texto)?.Codigo
+               ?? (await sp.GetRequiredService<Dpm.IDpmGateway>().ObtenerConsultorioAsync(ct)).IdiomaPredeterminado;
+    }
+
+    private async Task EncolarAsync(int consultorioId, string sesionId, string telefono, string texto, string? idioma, CancellationToken ct)
+    {
+        await using var scope = Ambito(consultorioId);
+        await scope.ServiceProvider.GetRequiredService<Notificador>().EncolarRespuestaAsync(sesionId, telefono, texto, idioma, ct);
+    }
+
+    private async Task AvisarFalloAsync(int consultorioId, string sesionId, string telefono, string? texto, CancellationToken ct)
     {
         try
         {
             await using var scope = Ambito(consultorioId);
             var sp = scope.ServiceProvider;
-            await sp.GetRequiredService<Dpm.IDpmGateway>().RegistrarEscalamientoAsync(
-                sesionId, null, "No se pudo procesar un mensaje de WhatsApp después de varios intentos.", false, ct);
-            await sp.GetRequiredService<Notificador>().EncolarRespuestaAsync(sesionId, telefono, Disculpa, ct);
+            var idioma = await IdiomaAsync(sp, sesionId, texto, ct);
+            await sp.GetRequiredService<Dpm.IDpmGateway>().RegistrarEscalamientoAsync(new Dpm.NuevoEscalamiento(
+                sesionId, null,
+                "No se pudo procesar un mensaje de WhatsApp después de varios intentos.",
+                "A WhatsApp message could not be processed after several attempts.",
+                false, texto, idioma), ct);
+            await sp.GetRequiredService<Notificador>().EncolarRespuestaAsync(sesionId, telefono, Textos.Obtener("canal.disculpa", idioma), idioma, ct);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

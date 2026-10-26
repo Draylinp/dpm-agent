@@ -5,6 +5,7 @@ using DpmAgent.Api.Canales.WhatsApp;
 using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
+using DpmAgent.Api.Idiomas;
 using DpmAgent.Api.Model;
 using DpmAgent.Api.Panel;
 using DpmAgent.Api.Seguridad;
@@ -45,16 +46,17 @@ app.UsePanel();
 
 app.MapSalud();
 
-app.MapPost("/api/chat", async (ChatRequest req, ReceptionAgent agent, CancellationToken ct) =>
+app.MapPost("/api/chat", async (ChatRequest req, HttpRequest http, ReceptionAgent agent, CancellationToken ct) =>
 {
+    var idioma = RespuestasAgente.IdiomaDe(http, req.Idioma);
     if (string.IsNullOrWhiteSpace(req.Mensaje))
-        return Results.BadRequest(new { error = "El mensaje está vacío." });
+        return Results.BadRequest(new { error = Textos.Obtener("entrada.mensaje_vacio", idioma) });
 
     if (req.Mensaje.Length > 2000)
-        return Results.BadRequest(new { error = "El mensaje es demasiado largo." });
+        return Results.BadRequest(new { error = Textos.Obtener("entrada.mensaje_largo", idioma) });
 
     return await RespuestasAgente.EjecutarAsync(async () =>
-        Results.Ok(await agent.RunAsync(req.SesionId, req.Mensaje, req.Telefono, ct)));
+        Results.Ok(await agent.RunAsync(req.SesionId, req.Mensaje, req.Telefono, ct)), idioma);
 }).RequireRateLimiting(ProduccionExtensions.PoliticaPublica);
 
 app.MapAudioChat();
@@ -75,6 +77,7 @@ app.Run();
 /// <param name="Telefono">
 /// En el panel de prueba simula el número de WhatsApp del paciente. En WhatsApp lo pone el webhook.
 /// </param>
-public sealed record ChatRequest(string? SesionId, string Mensaje, string? Telefono = null);
+/// <param name="Idioma">Idioma de la interfaz, para los mensajes de error.</param>
+public sealed record ChatRequest(string? SesionId, string Mensaje, string? Telefono = null, string? Idioma = null);
 
 public partial class Program;

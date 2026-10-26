@@ -30,9 +30,18 @@ public sealed class WhatsAppCloudChannel : IMessageChannel
         if (mensaje.Plantilla is not null && _options.Plantillas.TryGetValue(mensaje.Plantilla, out var plantilla) &&
             !string.IsNullOrWhiteSpace(plantilla))
         {
-            return _api.EnviarPlantillaAsync(remitente, destino, plantilla, _options.IdiomaPlantillas, mensaje.Parametros ?? [], ct);
+            return _api.EnviarPlantillaAsync(remitente, destino, plantilla, IdiomaPlantilla(mensaje.Idioma), mensaje.Parametros ?? [], ct);
         }
 
         return _api.EnviarTextoAsync(remitente, destino, mensaje.Texto, ct);
+    }
+
+    /// <summary>Código de idioma de la plantilla; nivel 2 o sin mapeo, el de inglés.</summary>
+    internal string IdiomaPlantilla(string? idioma)
+    {
+        var texto = Idiomas.Idiomas.ParaTextos(idioma);
+        return _options.IdiomasPlantillas.TryGetValue(texto, out var codigo) && !string.IsNullOrWhiteSpace(codigo)
+            ? codigo
+            : _options.IdiomasPlantillas.GetValueOrDefault(Idiomas.Idiomas.Respaldo) ?? Idiomas.Idiomas.Respaldo;
     }
 }

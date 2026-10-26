@@ -16,6 +16,12 @@ public sealed class Consultorio
     /// <summary>phone_number_id de WhatsApp Cloud API: identifica a qué consultorio llega cada mensaje.</summary>
     public string? WhatsAppPhoneNumberId { get; set; }
 
+    /// <summary>Número que el agente indica ante una posible emergencia (911 en República Dominicana y EE. UU.).</summary>
+    public string TelefonoEmergencias { get; set; } = "911";
+
+    /// <summary>Idioma del primer saludo cuando todavía no se sabe el del paciente (es o en).</summary>
+    public string IdiomaPredeterminado { get; set; } = "es";
+
     public DateTime CreadoUtc { get; set; }
 }
 
@@ -74,6 +80,9 @@ public sealed class Paciente
     public string? Ars { get; set; }
 
     public string? NumeroAfiliado { get; set; }
+
+    /// <summary>Último idioma en que escribió (BCP-47), para los mensajes automáticos.</summary>
+    public string? Idioma { get; set; }
 
     public DateTime CreadoUtc { get; set; }
 }
@@ -191,6 +200,9 @@ public sealed class MensajeSaliente
     /// <summary>oferta, recordatorio, aviso o respuesta.</summary>
     public required string Tipo { get; set; }
 
+    /// <summary>Idioma del texto (BCP-47); decide el idioma de la plantilla de WhatsApp.</summary>
+    public string? Idioma { get; set; }
+
     /// <summary>Clave de la plantilla de WhatsApp a usar fuera de la ventana de 24 horas (oferta, recordatorio...).</summary>
     public string? Plantilla { get; set; }
 
@@ -264,6 +276,16 @@ public sealed class RegistroBitacora
     public string? SesionId { get; set; }
 
     public string? Detalle { get; set; }
+
+    /// <summary>Idioma del paciente en ese momento.</summary>
+    public string? Idioma { get; set; }
+
+    /// <summary>Mensaje original del paciente (o respuesta bloqueada). Se borra al vencer la retención de conversaciones.</summary>
+    public string? TextoOriginal { get; set; }
+
+    public string? ResumenEs { get; set; }
+
+    public string? ResumenEn { get; set; }
 }
 
 public sealed class Escalamiento
@@ -276,7 +298,16 @@ public sealed class Escalamiento
 
     public int? PacienteId { get; set; }
 
+    /// <summary>Resumen en español para el panel.</summary>
     public required string Motivo { get; set; }
+
+    /// <summary>Resumen en inglés para el panel.</summary>
+    public string? MotivoEn { get; set; }
+
+    /// <summary>Lo que escribió (o dijo) el paciente, tal cual, en su idioma.</summary>
+    public string? MensajeOriginal { get; set; }
+
+    public string? Idioma { get; set; }
 
     public bool Urgente { get; set; }
 
@@ -363,6 +394,11 @@ public sealed class Conversacion
     public string? TelefonoCanal { get; set; }
 
     public int? PacienteId { get; set; }
+
+    /// <summary>Idioma del paciente (BCP-47) y si es de nivel 1 (es, en, ht) o 2 (cualquier otro).</summary>
+    public string? Idioma { get; set; }
+
+    public int NivelIdioma { get; set; }
 
     public int Turno { get; set; }
 

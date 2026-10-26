@@ -72,7 +72,7 @@ public sealed class MotorAgenda
             await _bitacora.RegistrarAsync(Bitacora.Sistema, "oferta_vencida", "oferta", $"OF-{o.Id}", null,
                 $"{IdsDpm.Paciente(o.PacienteId)} no respondió a tiempo", ct);
             await _notificador.NotificarPacienteAsync(o.PacienteId,
-                TextosAgenda.OfertaVencida(new DateTimeOffset(o.FechaHoraUtc, TimeSpan.Zero)), "aviso", ct);
+                idioma => TextosAgenda.OfertaVencida(idioma, new DateTimeOffset(o.FechaHoraUtc, TimeSpan.Zero)), "aviso", ct);
         }
 
         return total;
@@ -164,8 +164,8 @@ public sealed class MotorAgenda
 
         var paciente = await _db.Pacientes.AsNoTracking().FirstAsync(p => p.Id == entrada.PacienteId, ct);
         var medico = await _db.Medicos.AsNoTracking().FirstAsync(m => m.Id == entrada.MedicoId, ct);
-        await _notificador.NotificarPacienteAsync(entrada.PacienteId, TextosAgenda.Oferta(
-            paciente.Nombre, medico.Nombre, new DateTimeOffset(fechaUtc, TimeSpan.Zero), new DateTimeOffset(vence, TimeSpan.Zero)), "oferta", ct);
+        await _notificador.NotificarPacienteAsync(entrada.PacienteId, idioma => TextosAgenda.Oferta(
+            idioma, paciente.Nombre, medico.Nombre, new DateTimeOffset(fechaUtc, TimeSpan.Zero), new DateTimeOffset(vence, TimeSpan.Zero)), "oferta", ct);
 
         await _bitacora.RegistrarAsync(Bitacora.Sistema, "oferta_enviada", "oferta", $"OF-{oferta.Id}", null,
             $"{IdsDpm.Paciente(entrada.PacienteId)} para {IdsDpm.Medico(entrada.MedicoId)} {fechaUtc:yyyy-MM-dd HH:mm} UTC", ct);
@@ -202,9 +202,8 @@ public sealed class MotorAgenda
             c.RecordatorioEnviadoUtc = ahora;
             await _db.SaveChangesAsync(ct);
 
-            var mensaje = TextosAgenda.Recordatorio(
-                c.Paciente!.Nombre, c.Medico!.Nombre, new DateTimeOffset(c.FechaHoraUtc, TimeSpan.Zero), IdsDpm.Cita(c.Id));
-            await _notificador.NotificarPacienteAsync(c.PacienteId, mensaje, "recordatorio", ct);
+            await _notificador.NotificarPacienteAsync(c.PacienteId, idioma => TextosAgenda.Recordatorio(
+                idioma, c.Paciente!.Nombre, c.Medico!.Nombre, new DateTimeOffset(c.FechaHoraUtc, TimeSpan.Zero), IdsDpm.Cita(c.Id)), "recordatorio", ct);
             await _bitacora.RegistrarAsync(Bitacora.Sistema, "recordatorio_enviado", "cita", IdsDpm.Cita(c.Id), null, null, ct);
         }
 

@@ -22,13 +22,14 @@ public class MetaTranscriberTests
         }
     }
 
-    private static (MetaTranscriber, HandlerGrabador) Crear(HttpStatusCode status, string respuesta, string? apiKey = "clave-de-prueba")
+    private static (MetaTranscriber, HandlerGrabador) Crear(
+        HttpStatusCode status, string respuesta, string? apiKey = "clave-de-prueba", string? idioma = "es")
     {
         var handler = new HandlerGrabador(status, respuesta);
         var t = new MetaTranscriber(
             new HttpClient(handler),
             Options.Create(new MetaOptions { ApiKey = apiKey, BaseUrl = "https://api.ejemplo.test/v1" }),
-            Options.Create(new TranscripcionOptions()),
+            Options.Create(new TranscripcionOptions { Idioma = idioma }),
             NullLogger<MetaTranscriber>.Instance);
         return (t, handler);
     }
@@ -53,6 +54,16 @@ public class MetaTranscriberTests
         Assert.Contains("name=language", handler.Cuerpo);
         Assert.Contains("name=file; filename=nota.ogg", handler.Cuerpo);
         Assert.Contains("Content-Type: audio/ogg", handler.Cuerpo);
+    }
+
+    [Fact]
+    public async Task Sin_idioma_configurado_el_servicio_detecta_el_idioma()
+    {
+        var (t, handler) = Crear(HttpStatusCode.OK, """{"text":"I need an appointment"}""", idioma: null);
+
+        await t.TranscribirAsync(Audio(), CancellationToken.None);
+
+        Assert.DoesNotContain("name=language", handler.Cuerpo);
     }
 
     [Fact]

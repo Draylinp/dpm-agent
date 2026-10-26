@@ -5,11 +5,16 @@ using Microsoft.EntityFrameworkCore;
 namespace DpmAgent.Api.Agenda;
 
 public sealed record EntradaBitacora(
-    long Id, DateTimeOffset Fecha, string Actor, string Accion, string? Entidad, string? EntidadId, string? SesionId, string? Detalle);
+    long Id, DateTimeOffset Fecha, string Actor, string Accion, string? Entidad, string? EntidadId, string? SesionId, string? Detalle,
+    string? Idioma = null, string? TextoOriginal = null, string? ResumenEs = null, string? ResumenEn = null);
+
+/// <summary>Texto del paciente y resúmenes para el panel (es/en) que acompañan una entrada de la bitácora.</summary>
+public sealed record TextosBitacora(string? Idioma, string? TextoOriginal, string? ResumenEs, string? ResumenEn);
 
 /// <summary>
-/// Registro de quién hizo qué y cuándo. Solo datos administrativos: nunca se copia
-/// el texto del paciente ni el motivo de un escalamiento.
+/// Registro de quién hizo qué y cuándo. El detalle es administrativo; el texto original del paciente
+/// solo se guarda en las entradas que lo necesitan (escalamientos, respuestas bloqueadas) y se borra
+/// al vencer la retención de conversaciones.
 /// </summary>
 public sealed class Bitacora
 {
@@ -25,11 +30,20 @@ public sealed class Bitacora
         _clock = clock;
     }
 
+    public Task RegistrarAsync(
+        string actor, string accion, string? entidad, string? entidadId, string? sesionId, string? detalle, CancellationToken ct) =>
+        RegistrarAsync(actor, accion, entidad, entidadId, sesionId, detalle, null, ct);
+
     public async Task RegistrarAsync(
-        string actor, string accion, string? entidad, string? entidadId, string? sesionId, string? detalle, CancellationToken ct)
+        string actor, string accion, string? entidad, string? entidadId, string? sesionId, string? detalle,
+        TextosBitacora? textos, CancellationToken ct)
     {
         _db.Bitacora.Add(new RegistroBitacora
         {
+            Idioma = textos?.Idioma,
+            TextoOriginal = Recortar(textos?.TextoOriginal, 2000),
+            ResumenEs = Recortar(textos?.ResumenEs, 1000),
+            ResumenEn = Recortar(textos?.ResumenEn, 1000),
             ConsultorioId = _db.ConsultorioId,
             FechaUtc = _clock.GetUtcNow().UtcDateTime,
             Actor = Recortar(actor, 60)!,
@@ -63,7 +77,8 @@ public sealed class Bitacora
             .ToListAsync(ct);
 
         return filas.Select(b => new EntradaBitacora(
-            b.Id, new DateTimeOffset(b.FechaUtc, TimeSpan.Zero), b.Actor, b.Accion, b.Entidad, b.EntidadId, b.SesionId, b.Detalle))
+            b.Id, new DateTimeOffset(b.FechaUtc, TimeSpan.Zero), b.Actor, b.Accion, b.Entidad, b.EntidadId, b.SesionId, b.Detalle,
+            b.Idioma, b.TextoOriginal, b.ResumenEs, b.ResumenEn))
             .ToList();
     }
 

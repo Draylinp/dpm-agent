@@ -63,7 +63,7 @@ public sealed class ServicioPanel
         var lista = await query.OrderByDescending(e => e.Urgente).ThenByDescending(e => e.Id).Take(200).ToListAsync(ct);
         return lista.Select(e => new Escalamiento(
             IdsDpm.Escalamiento(e.Id), e.SesionId, e.PacienteId is { } p ? IdsDpm.Paciente(p) : null,
-            e.Motivo, e.Urgente, e.Estado, new DateTimeOffset(e.CreadoUtc, TimeSpan.Zero))).ToList();
+            e.Motivo, e.Urgente, e.Estado, new DateTimeOffset(e.CreadoUtc, TimeSpan.Zero), e.MotivoEn, e.MensajeOriginal, e.Idioma)).ToList();
     }
 
     /// <returns>false si no existe en este consultorio.</returns>

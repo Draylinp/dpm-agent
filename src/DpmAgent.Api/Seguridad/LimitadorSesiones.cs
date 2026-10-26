@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 namespace DpmAgent.Api.Seguridad;
 
 public sealed class LimiteExcedidoException()
-    : EntradaRechazadaException("Está enviando muchos mensajes seguidos. Espere un momento y vuelva a escribir.", StatusCodes.Status429TooManyRequests);
+    : EntradaRechazadaException("entrada.limite_mensajes", StatusCodes.Status429TooManyRequests);
 
 /// <summary>
 /// Límite de mensajes por conversación, aplicado en el agente: cubre el chat web,

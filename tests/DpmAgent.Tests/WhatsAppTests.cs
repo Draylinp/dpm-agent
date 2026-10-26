@@ -7,6 +7,7 @@ using DpmAgent.Api.Canales.WhatsApp;
 using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
+using DpmAgent.Api.Idiomas;
 using DpmAgent.Api.Voz;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -338,7 +339,7 @@ public class WhatsAppFlujoTests
         await Procesar(app);
 
         Assert.Empty(modelo.Llamadas);
-        Assert.Equal(ProcesadorWhatsApp.SoloTextoVozYCarnet, Assert.Single(api.Textos).Texto);
+        Assert.Equal(Textos.Obtener("canal.solo_texto_voz_carnet", "es"), Assert.Single(api.Textos).Texto);
     }
 
     [Fact]
@@ -359,7 +360,7 @@ public class WhatsAppFlujoTests
         var entrante = Assert.Single(await Entrantes(app));
         Assert.Equal("fallido", entrante.Estado);
         Assert.Equal(3, entrante.Intentos);
-        Assert.Equal(ProcesadorWhatsApp.Disculpa, Assert.Single(api.Textos).Texto);
+        Assert.Equal(Textos.Obtener("canal.disculpa", "es"), Assert.Single(api.Textos).Texto);
         Assert.Single(await app.ConGateway(g => g.ListarEscalamientosAsync(CancellationToken.None)));
     }
 

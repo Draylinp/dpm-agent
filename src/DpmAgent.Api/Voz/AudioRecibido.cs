@@ -59,14 +59,14 @@ public sealed class AudioRecibido
     public static AudioRecibido Validar(byte[] datos, TranscripcionOptions limites)
     {
         if (datos.Length == 0)
-            throw new AudioInvalidoException("La nota de voz está vacía.");
+            throw new AudioInvalidoException("entrada.audio_vacio");
 
         if (datos.Length > limites.MaxBytes)
-            throw new AudioInvalidoException($"La nota de voz pasa del límite de {limites.MaxBytes / 1024 / 1024.0:0.#} MB.");
+            throw new AudioInvalidoException("entrada.audio_grande", Agent.EntradaRechazadaException.Megas(limites.MaxBytes));
 
         var formato = DetectarFormato(datos);
         if (formato == FormatoAudio.Desconocido)
-            throw new AudioInvalidoException("Formato de audio no soportado. Use OGG/Opus, WebM, MP3, M4A o WAV.");
+            throw new AudioInvalidoException("entrada.audio_formato");
 
         var duracion = formato switch
         {
@@ -76,7 +76,7 @@ public sealed class AudioRecibido
         };
 
         if (duracion > limites.MaxDuracionSegundos)
-            throw new AudioInvalidoException($"La nota de voz dura más de {limites.MaxDuracionSegundos:0} segundos.");
+            throw new AudioInvalidoException("entrada.audio_largo", limites.MaxDuracionSegundos.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
 
         return new AudioRecibido(datos, formato, duracion);
     }
@@ -167,4 +167,5 @@ public sealed class AudioRecibido
     }
 }
 
-public sealed class AudioInvalidoException(string message) : Agent.EntradaRechazadaException(message);
+public sealed class AudioInvalidoException(string clave, params object[] argumentos)
+    : Agent.EntradaRechazadaException(clave, StatusCodes.Status400BadRequest, argumentos);

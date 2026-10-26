@@ -28,18 +28,26 @@ public sealed class Notificador
         _clock = clock;
     }
 
-    /// <summary>Encola un mensaje para el paciente en su conversación más reciente (o en WhatsApp si no tiene).</summary>
-    public async Task<string> NotificarPacienteAsync(int pacienteId, MensajeAgenda mensaje, string tipo, CancellationToken ct)
+    /// <summary>
+    /// Encola un mensaje para el paciente en su conversación más reciente (o en WhatsApp si no tiene),
+    /// en su idioma: el de esa conversación, si no el último que usó, si no el del consultorio.
+    /// </summary>
+    /// <param name="crear">Arma el mensaje en el idioma que se le indique.</param>
+    public async Task<string> NotificarPacienteAsync(int pacienteId, Func<string, MensajeAgenda> crear, string tipo, CancellationToken ct)
     {
-        var texto = mensaje.Texto;
         var paciente = await _db.Pacientes.AsNoTracking().FirstAsync(p => p.Id == pacienteId, ct);
 
-        var sesionId = await _db.Conversaciones.AsNoTracking()
-                           .Where(c => c.PacienteId == pacienteId)
-                           .OrderByDescending(c => c.ActualizadaUtc)
-                           .Select(c => c.SesionId)
-                           .FirstOrDefaultAsync(ct)
-                       ?? CanalesConocidos.SesionWhatsApp(paciente.Telefono);
+        var ultima = await _db.Conversaciones.AsNoTracking()
+            .Where(c => c.PacienteId == pacienteId)
+            .OrderByDescending(c => c.ActualizadaUtc)
+            .Select(c => new { c.SesionId, c.Idioma })
+            .FirstOrDefaultAsync(ct);
+        var sesionId = ultima?.SesionId ?? CanalesConocidos.SesionWhatsApp(paciente.Telefono);
+
+        var idioma = ultima?.Idioma ?? paciente.Idioma ?? await _db.Consultorios.AsNoTracking()
+            .Where(c => c.Id == _db.ConsultorioId).Select(c => c.IdiomaPredeterminado).FirstOrDefaultAsync(ct);
+        var mensaje = crear(idioma ?? Idiomas.Idiomas.Espanol);
+        var texto = mensaje.Texto;
 
         var sesion = await _conversaciones.ObtenerAsync(sesionId, ct);
         sesion.VincularTelefono(paciente.Telefono);
@@ -55,6 +63,7 @@ public sealed class Notificador
             Destino = paciente.Telefono,
             Texto = texto,
             Tipo = tipo,
+            Idioma = mensaje.Idioma,
             Plantilla = mensaje.Plantilla,
             ParametrosJson = JsonSerializer.Serialize(mensaje.Parametros),
             Estado = "pendiente",
@@ -70,7 +79,7 @@ public sealed class Notificador
     /// Encola la respuesta del agente a un mensaje que llegó por un canal externo (WhatsApp).
     /// No se agrega al historial: el agente ya la guardó.
     /// </summary>
-    public async Task EncolarRespuestaAsync(string sesionId, string telefono, string texto, CancellationToken ct)
+    public async Task EncolarRespuestaAsync(string sesionId, string telefono, string texto, string? idioma, CancellationToken ct)
     {
         _db.MensajesSalientes.Add(new MensajeSaliente
         {
@@ -80,6 +89,7 @@ public sealed class Notificador
             Destino = Telefono.Normalizar(telefono) ?? telefono,
             Texto = texto.Length > 2000 ? texto[..2000] : texto,
             Tipo = "respuesta",
+            Idioma = idioma,
             Estado = "pendiente",
             CreadoUtc = _clock.GetUtcNow().UtcDateTime,
         });

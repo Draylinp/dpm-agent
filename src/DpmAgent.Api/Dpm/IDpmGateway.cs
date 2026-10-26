@@ -12,6 +12,9 @@ public sealed record Cita(
     string Motivo,
     string Estado);
 
+/// <param name="Motivo">Resumen en español.</param>
+/// <param name="MotivoEn">Resumen en inglés.</param>
+/// <param name="MensajeOriginal">Lo que escribió el paciente, en su idioma.</param>
 public sealed record Escalamiento(
     string Id,
     string SesionId,
@@ -19,7 +22,23 @@ public sealed record Escalamiento(
     string Motivo,
     bool Urgente,
     string Estado,
-    DateTimeOffset Creado);
+    DateTimeOffset Creado,
+    string? MotivoEn = null,
+    string? MensajeOriginal = null,
+    string? Idioma = null);
+
+/// <summary>Datos para crear un escalamiento: resúmenes para el panel (es/en) y el mensaje original.</summary>
+public sealed record NuevoEscalamiento(
+    string SesionId,
+    string? PacienteId,
+    string ResumenEs,
+    string? ResumenEn,
+    bool Urgente,
+    string? MensajeOriginal = null,
+    string? Idioma = null);
+
+/// <summary>Lo que el agente necesita saber del consultorio.</summary>
+public sealed record InfoConsultorio(string Nombre, string TelefonoEmergencias, string IdiomaPredeterminado);
 
 /// <summary>
 /// Datos leídos de la foto de un carnet de ARS. Quedan en estado "pendiente" hasta que
@@ -61,7 +80,13 @@ public interface IDpmGateway
     /// </summary>
     Task<Cita?> CancelarCitaAsync(string citaId, string pacienteId, CancellationToken ct);
 
-    Task<Escalamiento> RegistrarEscalamientoAsync(string sesionId, string? pacienteId, string motivo, bool urgente, CancellationToken ct);
+    Task<Escalamiento> RegistrarEscalamientoAsync(NuevoEscalamiento escalamiento, CancellationToken ct);
+
+    /// <summary>Escalamiento con un solo resumen (sin mensaje original): para avisos internos.</summary>
+    Task<Escalamiento> RegistrarEscalamientoAsync(string sesionId, string? pacienteId, string motivo, bool urgente, CancellationToken ct) =>
+        RegistrarEscalamientoAsync(new NuevoEscalamiento(sesionId, pacienteId, motivo, null, urgente), ct);
+
+    Task<InfoConsultorio> ObtenerConsultorioAsync(CancellationToken ct);
 
     Task<IReadOnlyList<Escalamiento>> ListarEscalamientosAsync(CancellationToken ct);
 
