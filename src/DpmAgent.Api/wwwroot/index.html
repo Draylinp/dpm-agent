@@ -74,8 +74,11 @@
   const telefono = document.getElementById('telefono');
   let sesionId = null;
 
+  let ultimoSaliente = 0;
+
   document.getElementById('nueva').addEventListener('click', () => {
     sesionId = null;
+    ultimoSaliente = 0;
     telefono.disabled = false;
     chat.replaceChildren();
     trace.replaceChildren();
@@ -147,6 +150,22 @@
       input.focus();
     }
   });
+
+  // Mensajes que el sistema envía solo (ofertas de turnos liberados, recordatorios).
+  async function revisarSalientes() {
+    if (!sesionId) return;
+    try {
+      const res = await fetch(`/api/chat/${encodeURIComponent(sesionId)}/salientes?despuesDe=${ultimoSaliente}`);
+      if (!res.ok) return;
+      for (const m of await res.json()) {
+        ultimoSaliente = Math.max(ultimoSaliente, m.id);
+        add('bot', m.texto, m.tipo === 'recordatorio' ? '🔔 Recordatorio' : '🔔 Mensaje automático');
+      }
+    } catch {
+      // Sin conexión: se intenta en la siguiente vuelta.
+    }
+  }
+  setInterval(revisarSalientes, 5000);
 
   // Foto del carnet de la ARS: se lee, queda pendiente y el agente pide confirmación.
   const foto = document.getElementById('foto');

@@ -70,6 +70,15 @@ public sealed class Cita
     public DateTime CreadaUtc { get; set; }
 
     public DateTime? CanceladaUtc { get; set; }
+
+    /// <summary>Cuándo se envió el recordatorio de 24 horas.</summary>
+    public DateTime? RecordatorioEnviadoUtc { get; set; }
+
+    /// <summary>Cuándo el paciente confirmó que asistirá.</summary>
+    public DateTime? AsistenciaConfirmadaUtc { get; set; }
+
+    /// <summary>En una cita cancelada: cuándo terminó el intento de llenar el hueco con la lista de espera.</summary>
+    public DateTime? HuecoProcesadoUtc { get; set; }
 }
 
 /// <summary>Paciente que espera un hueco con un médico en un rango de días y horas (F4).</summary>
@@ -95,9 +104,95 @@ public sealed class ListaEspera
 
     public TimeOnly HoraHasta { get; set; }
 
+    /// <summary>activa, atendida o cancelada.</summary>
     public required string Estado { get; set; }
 
     public DateTime CreadaUtc { get; set; }
+}
+
+/// <summary>Hueco liberado que se le ofrece a un paciente de la lista de espera.</summary>
+public sealed class OfertaHueco
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int ListaEsperaId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public DateTime FechaHoraUtc { get; set; }
+
+    /// <summary>pendiente, aceptada, rechazada, vencida o invalida (el hueco ya no estaba libre).</summary>
+    public required string Estado { get; set; }
+
+    public DateTime CreadaUtc { get; set; }
+
+    public DateTime VenceUtc { get; set; }
+
+    public DateTime? RespondidaUtc { get; set; }
+
+    /// <summary>Cita creada al aceptar.</summary>
+    public int? CitaId { get; set; }
+}
+
+/// <summary>
+/// Mensaje que el sistema envía por iniciativa propia (oferta, recordatorio).
+/// Se encola y un despachador lo entrega por el canal que corresponde.
+/// </summary>
+public sealed class MensajeSaliente
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string SesionId { get; set; }
+
+    /// <summary>web o whatsapp.</summary>
+    public required string Canal { get; set; }
+
+    public required string Destino { get; set; }
+
+    public required string Texto { get; set; }
+
+    /// <summary>oferta, recordatorio o aviso.</summary>
+    public required string Tipo { get; set; }
+
+    /// <summary>pendiente, enviado o fallido.</summary>
+    public required string Estado { get; set; }
+
+    public int Intentos { get; set; }
+
+    public string? Error { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+
+    public DateTime? EnviadoUtc { get; set; }
+}
+
+/// <summary>Bitácora: quién hizo qué y cuándo. Sin detalles clínicos.</summary>
+public sealed class RegistroBitacora
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public DateTime FechaUtc { get; set; }
+
+    /// <summary>agente, sistema o secretaria:usuario.</summary>
+    public required string Actor { get; set; }
+
+    public required string Accion { get; set; }
+
+    public string? Entidad { get; set; }
+
+    public string? EntidadId { get; set; }
+
+    public string? SesionId { get; set; }
+
+    public string? Detalle { get; set; }
 }
 
 public sealed class Escalamiento

@@ -93,6 +93,9 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("AsistenciaConfirmadaUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("CanceladaUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -110,6 +113,9 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime>("FechaHoraUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("HuecoProcesadoUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("MedicoId")
                         .HasColumnType("integer");
 
@@ -120,6 +126,9 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
 
                     b.Property<int>("PacienteId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("RecordatorioEnviadoUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -355,6 +364,123 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.ToTable("Mensajes");
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeSaliente", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Canal")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreadoUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Destino")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("EnviadoUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Intentos")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SesionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Estado");
+
+                    b.HasIndex("ConsultorioId", "SesionId");
+
+                    b.ToTable("MensajesSalientes", (string)null);
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.OfertaHueco", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CitaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreadaUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Estado")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("FechaHoraUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ListaEsperaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MedicoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PacienteId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("RespondidaUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("VenceUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListaEsperaId");
+
+                    b.HasIndex("PacienteId");
+
+                    b.HasIndex("ConsultorioId", "Estado");
+
+                    b.HasIndex("MedicoId", "FechaHoraUtc");
+
+                    b.ToTable("OfertasHueco", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Paciente", b =>
                 {
                     b.Property<int>("Id")
@@ -392,6 +518,53 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.HasIndex("ConsultorioId", "Telefono");
 
                     b.ToTable("Pacientes");
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroBitacora", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Detalle")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Entidad")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("EntidadId")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SesionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId", "FechaUtc");
+
+                    b.ToTable("Bitacora", (string)null);
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.CarnetPendiente", b =>
@@ -504,7 +677,52 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeSaliente", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.OfertaHueco", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DpmAgent.Api.Data.Entidades.ListaEspera", null)
+                        .WithMany()
+                        .HasForeignKey("ListaEsperaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Medico", null)
+                        .WithMany()
+                        .HasForeignKey("MedicoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Paciente", null)
+                        .WithMany()
+                        .HasForeignKey("PacienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Paciente", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroBitacora", b =>
                 {
                     b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
                         .WithMany()

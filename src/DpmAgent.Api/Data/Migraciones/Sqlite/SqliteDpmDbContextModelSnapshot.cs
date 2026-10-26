@@ -84,6 +84,9 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime?>("AsistenciaConfirmadaUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("CanceladaUtc")
                         .HasColumnType("TEXT");
 
@@ -101,6 +104,9 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.Property<DateTime>("FechaHoraUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("HuecoProcesadoUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("MedicoId")
                         .HasColumnType("INTEGER");
 
@@ -111,6 +117,9 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
 
                     b.Property<int>("PacienteId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("RecordatorioEnviadoUtc")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -334,6 +343,119 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.ToTable("Mensajes");
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeSaliente", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Canal")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreadoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Destino")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EnviadoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Intentos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SesionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Estado");
+
+                    b.HasIndex("ConsultorioId", "SesionId");
+
+                    b.ToTable("MensajesSalientes", (string)null);
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.OfertaHueco", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CitaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreadaUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Estado")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FechaHoraUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ListaEsperaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MedicoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PacienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("RespondidaUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("VenceUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListaEsperaId");
+
+                    b.HasIndex("PacienteId");
+
+                    b.HasIndex("ConsultorioId", "Estado");
+
+                    b.HasIndex("MedicoId", "FechaHoraUtc");
+
+                    b.ToTable("OfertasHueco", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Paciente", b =>
                 {
                     b.Property<int>("Id")
@@ -369,6 +491,51 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.HasIndex("ConsultorioId", "Telefono");
 
                     b.ToTable("Pacientes");
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroBitacora", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Detalle")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Entidad")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntidadId")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SesionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId", "FechaUtc");
+
+                    b.ToTable("Bitacora", (string)null);
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.CarnetPendiente", b =>
@@ -481,7 +648,52 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.MensajeSaliente", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.OfertaHueco", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DpmAgent.Api.Data.Entidades.ListaEspera", null)
+                        .WithMany()
+                        .HasForeignKey("ListaEsperaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Medico", null)
+                        .WithMany()
+                        .HasForeignKey("MedicoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Paciente", null)
+                        .WithMany()
+                        .HasForeignKey("PacienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Paciente", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroBitacora", b =>
                 {
                     b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
                         .WithMany()

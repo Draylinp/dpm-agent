@@ -1,3 +1,4 @@
+using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Agent;
 using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Data;
@@ -16,6 +17,7 @@ builder.Services.AddHttpClient<ILectorCarnet, MetaLectorCarnet>();
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddPersistencia(builder.Configuration);
+builder.Services.AddAgenda(builder.Configuration);
 builder.Services.AddScoped<AgentTools>();
 builder.Services.AddScoped<ReceptionAgent>();
 
@@ -45,6 +47,7 @@ app.MapPost("/api/chat", async (ChatRequest req, ReceptionAgent agent, Cancellat
 
 app.MapAudioChat();
 app.MapCarnet();
+app.MapAgenda();
 
 app.MapGet("/api/escalamientos", async (IDpmGateway dpm, CancellationToken ct) =>
     Results.Ok(await dpm.ListarEscalamientosAsync(ct)));

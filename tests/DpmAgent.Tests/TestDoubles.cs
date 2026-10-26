@@ -147,3 +147,31 @@ public static class ImagenesDePrueba
         return datos;
     }
 }
+
+/// <summary>Reloj que se puede mover, para probar vencimientos y recordatorios.</summary>
+public sealed class RelojAjustable(DateTimeOffset inicio) : TimeProvider
+{
+    public DateTimeOffset Ahora { get; set; } = inicio;
+
+    public void Avanzar(TimeSpan tiempo) => Ahora += tiempo;
+
+    public override DateTimeOffset GetUtcNow() => Ahora.ToUniversalTime();
+}
+
+/// <summary>Canal de WhatsApp falso: guarda lo enviado o falla a propósito.</summary>
+public sealed class CanalWhatsAppFalso : DpmAgent.Api.Canales.IMessageChannel
+{
+    public string Canal => DpmAgent.Api.Canales.CanalesConocidos.WhatsApp;
+
+    public bool Fallar { get; set; }
+
+    public List<DpmAgent.Api.Canales.MensajeParaEnviar> Enviados { get; } = [];
+
+    public Task EnviarAsync(DpmAgent.Api.Canales.MensajeParaEnviar mensaje, CancellationToken ct)
+    {
+        if (Fallar)
+            throw new HttpRequestException("WhatsApp no respondió");
+        Enviados.Add(mensaje);
+        return Task.CompletedTask;
+    }
+}

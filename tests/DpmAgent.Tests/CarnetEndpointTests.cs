@@ -5,8 +5,6 @@ using System.Text.Json.Nodes;
 using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -18,24 +16,30 @@ public class CarnetEndpointTests
     private static readonly LecturaCarnet CarnetDeMaria =
         new(true, new DatosCarnet("María Rodríguez", "ARS Nueva", "AF-777"));
 
-    private static (HttpClient Cliente, ScriptedChatModel Modelo, FakeLectorCarnet Lector, IDpmGateway Dpm) Crear(
-        LecturaCarnet lectura, ScriptedChatModel? modelo = null, long maxBytes = 4 * 1024 * 1024)
+    private sealed record Contexto(HttpClient Cliente, ScriptedChatModel Modelo, FakeLectorCarnet Lector, GatewayDeApp Dpm);
+
+    /// <summary>Acceso al gateway de la app: cada llamada usa un ámbito nuevo.</summary>
+    private sealed class GatewayDeApp(AppDePrueba app)
     {
-        modelo ??= new ScriptedChatModel();
+        public Task<IReadOnlyList<CarnetLeido>> ListarCarnetsPendientesAsync(CancellationToken ct) =>
+            app.ConGateway(g => g.ListarCarnetsPendientesAsync(ct));
+
+        public Task<Paciente?> BuscarPacienteAsync(string clave, CancellationToken ct) =>
+            app.ConGateway(g => g.BuscarPacienteAsync(clave, ct));
+    }
+
+    private static Contexto Crear(LecturaCarnet lectura, ScriptedChatModel? modelo = null, long maxBytes = 4 * 1024 * 1024)
+    {
         var lector = new FakeLectorCarnet(lectura);
-        var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(b =>
-        {
-            b.UseSetting("BaseDatos:Proveedor", "Memoria");
-            b.UseSetting("Carnet:MaxBytes", maxBytes.ToString());
-            b.ConfigureServices(s =>
+        var app = new AppDePrueba(
+            modelo,
+            s =>
             {
-                s.RemoveAll<IChatModel>();
-                s.AddSingleton<IChatModel>(modelo);
                 s.RemoveAll<ILectorCarnet>();
                 s.AddSingleton<ILectorCarnet>(lector);
-            });
-        });
-        return (factory.CreateClient(), modelo, lector, factory.Services.GetRequiredService<IDpmGateway>());
+            },
+            new Dictionary<string, string?> { ["Carnet:MaxBytes"] = maxBytes.ToString() });
+        return new Contexto(app.Cliente, app.Modelo, lector, new GatewayDeApp(app));
     }
 
     private static MultipartFormDataContent Form(byte[] imagen, string? telefono = "809-555-0101", string? sesionId = null)

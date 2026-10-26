@@ -1,5 +1,6 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Agent;
 using DpmAgent.Api.Dpm;
 using Microsoft.AspNetCore.Http.Features;
@@ -106,7 +107,8 @@ public static class CarnetEndpoints
         app.MapGet("/api/carnets", async (IDpmGateway dpm, CancellationToken ct) =>
             Results.Ok(await dpm.ListarCarnetsPendientesAsync(ct)));
 
-        app.MapPost("/api/carnets/{id}/confirmar", async (string id, CorreccionCarnet? correccion, IDpmGateway dpm, CancellationToken ct) =>
+        app.MapPost("/api/carnets/{id}/confirmar", async (
+            string id, CorreccionCarnet? correccion, IDpmGateway dpm, Bitacora bitacora, CancellationToken ct) =>
         {
             var carnet = await dpm.ObtenerCarnetAsync(id, ct);
             if (carnet is null)
@@ -127,6 +129,8 @@ public static class CarnetEndpoints
             {
                 var r = await new ServicioCarnet(dpm).ConfirmarAsync(
                     carnet, datos, ServicioCarnet.PorSecretaria, null, exigirMismoNombre: false, ct);
+                await bitacora.RegistrarAsync(ServicioCarnet.PorSecretaria, "carnet_confirmado", "carnet", carnet.Id,
+                    $"para {r.Paciente.Id}{(datos is null ? "" : ", con correcciones")}", null, ct);
                 return Results.Ok(r);
             }
             catch (InvalidOperationException ex)
@@ -135,7 +139,7 @@ public static class CarnetEndpoints
             }
         });
 
-        app.MapPost("/api/carnets/{id}/descartar", async (string id, IDpmGateway dpm, CancellationToken ct) =>
+        app.MapPost("/api/carnets/{id}/descartar", async (string id, IDpmGateway dpm, Bitacora bitacora, CancellationToken ct) =>
         {
             var carnet = await dpm.ObtenerCarnetAsync(id, ct);
             if (carnet is null)
@@ -143,7 +147,9 @@ public static class CarnetEndpoints
 
             try
             {
-                return Results.Ok(await new ServicioCarnet(dpm).DescartarAsync(carnet, ServicioCarnet.PorSecretaria, ct));
+                var r = await new ServicioCarnet(dpm).DescartarAsync(carnet, ServicioCarnet.PorSecretaria, ct);
+                await bitacora.RegistrarAsync(ServicioCarnet.PorSecretaria, "carnet_descartado", "carnet", carnet.Id, null, null, ct);
+                return Results.Ok(r);
             }
             catch (InvalidOperationException ex)
             {

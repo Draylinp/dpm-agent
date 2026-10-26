@@ -11,6 +11,7 @@ Entrega: **miércoles 4 de noviembre, 9:00 PM ET** (misma hora en República Dom
 | Lun 26 oct | F2: confirmar en la documentación de Meta la ruta y los campos de Muse Voice Transcribe y probar con la clave real | ⬜ |
 | Lun 26 oct | F3: carnet de la ARS por foto, pendiente de confirmación del paciente o la secretaria, sin guardar la imagen | ✅ |
 | Lun 26 oct | F3: confirmar en la documentación de Meta el formato de imagen y `response_format` de Muse Spark y probar con un carnet ficticio | ⬜ |
+| Lun 26 oct | F4: lista de espera con ofertas automáticas (vencimiento y siguiente candidato), recordatorio de 24 horas, bitácora y cola de mensajes salientes | ✅ |
 | Lun 26 oct | Primera llamada real a Muse Spark con la clave del evento | ⬜ |
 | Mar 27 oct | Workshop Meta P1. Ajustar prompt con conversaciones reales de prueba | ⬜ |
 | Mié 28 oct | Workshop Meta P2. Reprogramar citas y recordatorios | ⬜ |

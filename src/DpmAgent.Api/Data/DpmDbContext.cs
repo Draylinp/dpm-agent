@@ -32,6 +32,12 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<Escalamiento> Escalamientos => Set<Escalamiento>();
 
+    public DbSet<OfertaHueco> OfertasHueco => Set<OfertaHueco>();
+
+    public DbSet<MensajeSaliente> MensajesSalientes => Set<MensajeSaliente>();
+
+    public DbSet<RegistroBitacora> Bitacora => Set<RegistroBitacora>();
+
     public DbSet<CarnetPendiente> CarnetsPendientes => Set<CarnetPendiente>();
 
     public DbSet<Conversacion> Conversaciones => Set<Conversacion>();
@@ -108,6 +114,49 @@ public abstract class DpmDbContext : DbContext
             e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.SetNull);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasIndex(x => new { x.ConsultorioId, x.Estado });
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<OfertaHueco>(e =>
+        {
+            e.ToTable("OfertasHueco");
+            e.Property(x => x.Estado).HasMaxLength(20).IsConcurrencyToken();
+            e.HasOne<ListaEspera>().WithMany().HasForeignKey(x => x.ListaEsperaId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Medico>().WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasIndex(x => new { x.ConsultorioId, x.Estado });
+            e.HasIndex(x => new { x.MedicoId, x.FechaHoraUtc });
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<MensajeSaliente>(e =>
+        {
+            e.ToTable("MensajesSalientes");
+            e.Property(x => x.SesionId).HasMaxLength(100);
+            e.Property(x => x.Canal).HasMaxLength(20);
+            e.Property(x => x.Destino).HasMaxLength(20);
+            e.Property(x => x.Texto).HasMaxLength(2000);
+            e.Property(x => x.Tipo).HasMaxLength(20);
+            e.Property(x => x.Estado).HasMaxLength(20);
+            e.Property(x => x.Error).HasMaxLength(500);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasIndex(x => x.Estado);
+            e.HasIndex(x => new { x.ConsultorioId, x.SesionId });
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<RegistroBitacora>(e =>
+        {
+            e.ToTable("Bitacora");
+            e.Property(x => x.Actor).HasMaxLength(60);
+            e.Property(x => x.Accion).HasMaxLength(60);
+            e.Property(x => x.Entidad).HasMaxLength(30);
+            e.Property(x => x.EntidadId).HasMaxLength(30);
+            e.Property(x => x.SesionId).HasMaxLength(100);
+            e.Property(x => x.Detalle).HasMaxLength(500);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasIndex(x => new { x.ConsultorioId, x.FechaUtc });
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
 

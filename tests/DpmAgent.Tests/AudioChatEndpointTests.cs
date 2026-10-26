@@ -4,8 +4,6 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using DpmAgent.Api.Model;
 using DpmAgent.Api.Voz;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -17,20 +15,15 @@ public class AudioChatEndpointTests
     private static (HttpClient Cliente, ScriptedChatModel Modelo, FakeTranscriber Transcriber) Crear(
         FakeTranscriber transcriber, ScriptedChatModel? modelo = null, long maxBytes = 2 * 1024 * 1024)
     {
-        modelo ??= new ScriptedChatModel();
-        var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(b =>
-        {
-            b.UseSetting("BaseDatos:Proveedor", "Memoria");
-            b.UseSetting("Transcripcion:MaxBytes", maxBytes.ToString());
-            b.ConfigureServices(s =>
+        var app = new AppDePrueba(
+            modelo,
+            s =>
             {
-                s.RemoveAll<IChatModel>();
-                s.AddSingleton<IChatModel>(modelo);
                 s.RemoveAll<ITranscriber>();
                 s.AddSingleton<ITranscriber>(transcriber);
-            });
-        });
-        return (factory.CreateClient(), modelo, transcriber);
+            },
+            new Dictionary<string, string?> { ["Transcripcion:MaxBytes"] = maxBytes.ToString() });
+        return (app.Cliente, app.Modelo, transcriber);
     }
 
     private static MultipartFormDataContent Form(byte[] audio, string? telefono = "809-555-0101", string? sesionId = null)

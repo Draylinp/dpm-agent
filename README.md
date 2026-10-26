@@ -21,6 +21,9 @@ DPM Agent se encarga de esa conversación repetitiva y deja al personal lo que d
 - Validación en el servidor: no se puede reservar un horario ocupado ni en el pasado, aunque el modelo lo intente.
 - **Notas de voz**: `POST /api/chat/audio` recibe el audio (OGG/Opus de WhatsApp, WebM, MP3, M4A o WAV), lo transcribe con Muse Voice Transcribe y se lo pasa al agente. El formato se valida por los bytes, hay límite de tamaño y de duración, y el audio nunca se guarda. El panel tiene un botón para grabar desde el navegador.
 - **Carnet de la ARS por foto**: `POST /api/pacientes/carnet` lee nombre, ARS y número de afiliado con Muse Spark (imagen + salida estructurada con JSON schema). El resultado queda **pendiente** hasta que el paciente lo confirma en el chat (`confirmar_datos_carnet`) o la secretaria lo revisa (`GET /api/carnets`, `POST /api/carnets/{id}/confirmar` con correcciones opcionales, `POST /api/carnets/{id}/descartar`). Si el número no tenía paciente, se registra con esos datos. La imagen no se guarda; lo leído se limpia como dato no confiable y, si el nombre no coincide con el paciente del número, solo la secretaria puede confirmarlo.
+- **Lista de espera que llena huecos sola**: si no hay horario, el agente anota al paciente (`agregar_lista_espera`). Cuando alguien cancela, un servicio en segundo plano ofrece el hueco al primero de la lista cuyo rango de días y horas coincide, por su canal. Si no responde en 30 minutos, la oferta vence y pasa al siguiente; si acepta (`responder_oferta`), se reserva validando de nuevo que siga libre.
+- **Recordatorio 24 horas antes**, con opción de confirmar (`confirmar_asistencia`) o cancelar.
+- **Bitácora** (`GET /api/bitacora`): quién hizo qué y cuándo (agente, sistema o secretaria), sin detalles clínicos. Los mensajes automáticos son plantillas fijas, no texto del modelo.
 - **Persistencia y multi-consultorio**: citas, pacientes, escalamientos y conversaciones se guardan con EF Core (SQLite en local, PostgreSQL en la nube). Cada registro lleva su `ConsultorioId` y cada consulta se filtra por el consultorio actual.
 - **Escalamiento al personal**: preguntas clínicas, quejas o posibles emergencias se pasan a un humano y quedan registradas en `/api/escalamientos`. En una posible emergencia el agente indica llamar al 911.
 - Panel de prueba que muestra, al lado del chat, cada herramienta que el modelo usó y lo que devolvió.
@@ -49,7 +52,7 @@ Navegador / WhatsApp
    ReceptionAgent ──► IChatModel ──► Meta Model API (Muse Spark)
         │                             o servidor propio (Muse Glimmer)
         ▼
-   AgentTools (9 herramientas administrativas)
+   AgentTools (12 herramientas administrativas)
         │
         ▼
    IDpmGateway ──► DbDpmGateway (EF Core: SQLite / PostgreSQL)
@@ -62,6 +65,8 @@ src/DpmAgent.Api/
   Agent/   ReceptionAgent, AgentTools, Sesion, IConversationStore (memoria y base de datos)
   Data/    DpmDbContext, entidades, migraciones por proveedor, datos de demo
   Model/   IChatModel, MetaModelClient, MetaOptions
+  Agenda/  lista de espera, motor de ofertas y recordatorios, notificador, despachador, bitácora
+  Canales/ IMessageChannel, WebChatChannel
   Carnet/  ILectorCarnet, MetaLectorCarnet, ServicioCarnet, endpoints del carnet
   Voz/     ITranscriber, MetaTranscriber, validación de audio, endpoint de notas de voz
   Dpm/     IDpmGateway, DbDpmGateway, MockDpmGateway, horario del consultorio
@@ -111,7 +116,12 @@ Configuración opcional (`appsettings.json` o variables de entorno):
 | `Transcripcion__MaxDuracionSegundos` | `120` |
 | `Carnet__Modelo` | vacío (usa `Meta__Model`) |
 | `Carnet__MaxBytes` | `4194304` (4 MB) |
-| `BaseDatos__Proveedor` | `Sqlite` (también `Postgres` o `Memoria`) |
+| `BaseDatos__Proveedor` | `Sqlite` (también `Postgres`, o `Memoria` = SQLite en memoria) |
+| `Agenda__MotorActivo` | `true` |
+| `Agenda__IntervaloSegundos` | `15` |
+| `Agenda__OfertaMinutos` | `30` |
+| `Agenda__AnticipacionMinimaMinutos` | `60` |
+| `Agenda__RecordatorioHorasAntes` | `24` |
 | `ConnectionStrings__Dpm` | `Data Source=dpm-agent.db` (en la nube, la cadena de PostgreSQL por variable de entorno) |
 | `BaseDatos__MigrarAlIniciar` | `true` |
 | `BaseDatos__SembrarDatosDemo` | `true` |

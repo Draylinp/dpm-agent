@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Dpm;
 
@@ -23,11 +24,17 @@ public sealed class AgentTools
 
     private readonly IDpmGateway _dpm;
     private readonly ServicioCarnet _carnets;
+    private readonly ServicioListaEspera? _agenda;
+    private readonly Bitacora? _bitacora;
 
-    public AgentTools(IDpmGateway dpm)
+    /// <param name="agenda">Lista de espera y respuestas a mensajes automáticos. Sin ella esas herramientas no están disponibles.</param>
+    /// <param name="bitacora">Si se da, cada acción que cambia datos queda registrada.</param>
+    public AgentTools(IDpmGateway dpm, ServicioListaEspera? agenda = null, Bitacora? bitacora = null)
     {
         _dpm = dpm;
         _carnets = new ServicioCarnet(dpm);
+        _agenda = agenda;
+        _bitacora = bitacora;
     }
 
     public JsonArray Definitions => Definiciones;
@@ -58,6 +65,9 @@ public sealed class AgentTools
                 "citas_del_paciente" => await CitasDelPaciente(sesion, ct),
                 "cancelar_cita" => await CancelarCita(sesion, Req(args, "cita_id"), ct),
                 "confirmar_datos_carnet" => await ConfirmarCarnet(sesion, ct),
+                "agregar_lista_espera" => await AgregarListaEspera(sesion, args, ct),
+                "responder_oferta" => await ResponderOferta(sesion, args, ct),
+                "confirmar_asistencia" => await ConfirmarAsistencia(sesion, Req(args, "cita_id"), ct),
                 "escalar_a_personal" => await Escalar(sesion, args, ct),
                 _ => Error($"Herramienta desconocida: {name}"),
             };
@@ -110,6 +120,7 @@ public sealed class AgentTools
 
         var p = await _dpm.RegistrarPacienteAsync(Req(args, "nombre"), sesion.TelefonoCanal, Opt(args, "ars"), ct);
         sesion.PacienteId = p.Id;
+        await Registrar(sesion, "paciente_registrado", "paciente", p.Id, null, ct);
         return Ok(new { registrado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars } });
     }
 
@@ -133,6 +144,7 @@ public sealed class AgentTools
         var pacienteId = PacienteDeSesion(sesion);
         var fechaHora = DateTimeOffset.Parse(Req(args, "fecha_hora"), CultureInfo.InvariantCulture);
         var cita = await _dpm.CrearCitaAsync(pacienteId, Req(args, "medico_id"), fechaHora, Req(args, "motivo"), ct);
+        await Registrar(sesion, "cita_creada", "cita", cita.Id, $"{cita.PacienteId} con {cita.MedicoId}", ct);
 
         return Ok(new { creada = true, cita = Resumen(cita) });
     }
@@ -146,9 +158,12 @@ public sealed class AgentTools
     private async Task<string> CancelarCita(Sesion sesion, string citaId, CancellationToken ct)
     {
         var cita = await _dpm.CancelarCitaAsync(citaId, PacienteDeSesion(sesion), ct);
-        return cita is null
-            ? Error($"No encontré la cita {citaId} entre las citas de este paciente.")
-            : Ok(new { cancelada = true, cita = Resumen(cita) });
+        if (cita is null)
+            return Error($"No encontré la cita {citaId} entre las citas de este paciente.");
+
+        await Registrar(sesion, "cita_cancelada", "cita", cita.Id, cita.PacienteId, ct);
+        _agenda?.AvisarHuecoLiberado();
+        return Ok(new { cancelada = true, cita = Resumen(cita) });
     }
 
     private async Task<string> ConfirmarCarnet(Sesion sesion, CancellationToken ct)
@@ -160,6 +175,7 @@ public sealed class AgentTools
         var r = await _carnets.ConfirmarAsync(
             carnet, null, ServicioCarnet.PorPaciente, sesion.PacienteId, exigirMismoNombre: true, ct);
         sesion.PacienteId = r.Paciente.Id;
+        await Registrar(sesion, "carnet_confirmado", "carnet", carnet.Id, $"por el paciente {r.Paciente.Id}", ct);
 
         return Ok(new
         {
@@ -173,8 +189,74 @@ public sealed class AgentTools
     {
         var urgente = args["urgente"]?.GetValueKind() == JsonValueKind.True;
         var e = await _dpm.RegistrarEscalamientoAsync(sesion.Id, sesion.PacienteId, Req(args, "motivo"), urgente, ct);
+        await Registrar(sesion, "escalamiento", "escalamiento", e.Id, urgente ? "urgente" : null, ct);
         return Ok(new { escalado = true, id = e.Id, urgente });
     }
+
+    private const string SinAgenda = "La lista de espera no está disponible en este momento. Usa escalar_a_personal.";
+
+    private async Task<string> AgregarListaEspera(Sesion sesion, JsonObject args, CancellationToken ct)
+    {
+        if (_agenda is null)
+            return Error(SinAgenda);
+
+        var e = await _agenda.AgregarAsync(
+            PacienteDeSesion(sesion),
+            Req(args, "medico_id"),
+            DateOnly.ParseExact(Req(args, "desde"), "yyyy-MM-dd", CultureInfo.InvariantCulture),
+            DateOnly.ParseExact(Req(args, "hasta"), "yyyy-MM-dd", CultureInfo.InvariantCulture),
+            TimeOnly.ParseExact(Req(args, "hora_desde"), "HH:mm", CultureInfo.InvariantCulture),
+            TimeOnly.ParseExact(Req(args, "hora_hasta"), "HH:mm", CultureInfo.InvariantCulture),
+            ct);
+
+        await Registrar(sesion, "lista_espera", "lista_espera", e.Id, $"{e.PacienteId} para {e.MedicoId}", ct);
+        return Ok(new
+        {
+            en_lista = true,
+            id = e.Id,
+            medico_id = e.MedicoId,
+            desde = e.Desde.ToString("yyyy-MM-dd"),
+            hasta = e.Hasta.ToString("yyyy-MM-dd"),
+            hora_desde = e.HoraDesde.ToString("HH:mm"),
+            hora_hasta = e.HoraHasta.ToString("HH:mm"),
+        });
+    }
+
+    private async Task<string> ResponderOferta(Sesion sesion, JsonObject args, CancellationToken ct)
+    {
+        if (_agenda is null)
+            return Error(SinAgenda);
+
+        var acepta = args["acepta"]?.GetValueKind() switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => throw new ArgumentException("Falta el parámetro 'acepta' (true o false)."),
+        };
+
+        var r = await _agenda.ResponderOfertaAsync(PacienteDeSesion(sesion), acepta, ct);
+        if (!r.Aceptada)
+        {
+            await Registrar(sesion, "oferta_rechazada", "paciente", sesion.PacienteId, null, ct);
+            return Ok(new { aceptada = false, sigue_en_lista = true });
+        }
+
+        await Registrar(sesion, "oferta_aceptada", "cita", r.Cita!.Id, $"{r.Cita.PacienteId} desde lista de espera", ct);
+        return Ok(new { aceptada = true, cita = Resumen(r.Cita) });
+    }
+
+    private async Task<string> ConfirmarAsistencia(Sesion sesion, string citaId, CancellationToken ct)
+    {
+        if (_agenda is null)
+            return Error(SinAgenda);
+
+        var cita = await _agenda.ConfirmarAsistenciaAsync(PacienteDeSesion(sesion), citaId, ct);
+        await Registrar(sesion, "asistencia_confirmada", "cita", cita.Id, null, ct);
+        return Ok(new { asistencia_confirmada = true, cita = Resumen(cita) });
+    }
+
+    private Task Registrar(Sesion sesion, string accion, string entidad, string? entidadId, string? detalle, CancellationToken ct) =>
+        _bitacora?.RegistrarAsync(Bitacora.Agente, accion, entidad, entidadId, sesion.Id, detalle, ct) ?? Task.CompletedTask;
 
     private static object Resumen(Cita c) => new
     {
@@ -264,6 +346,28 @@ public sealed class AgentTools
             Tool("confirmar_datos_carnet",
                 "Guarda los datos del carnet de ARS que el paciente envió en foto (ARS y número de afiliado; si es nuevo, lo registra). Usarla solo después de mostrarle los datos y que diga que están correctos.",
                 new JsonObject()),
+            Tool("agregar_lista_espera",
+                "Anota al paciente en la lista de espera de un médico cuando no hay horario que le sirva. Si se libera un turno en su rango, el sistema se lo ofrecerá por este chat.",
+                new JsonObject
+                {
+                    ["medico_id"] = Str("Id del médico."),
+                    ["desde"] = Str("Primer día que le sirve, YYYY-MM-DD."),
+                    ["hasta"] = Str("Último día que le sirve, YYYY-MM-DD (máximo 60 días después de 'desde')."),
+                    ["hora_desde"] = Str("Hora desde la que puede, HH:mm en 24 horas (por ejemplo 08:00)."),
+                    ["hora_hasta"] = Str("Hora hasta la que puede, HH:mm en 24 horas (por ejemplo 12:00)."),
+                },
+                "medico_id", "desde", "hasta", "hora_desde", "hora_hasta"),
+            Tool("responder_oferta",
+                "Registra la respuesta del paciente a un turno liberado que el sistema le ofreció en este chat.",
+                new JsonObject
+                {
+                    ["acepta"] = new JsonObject { ["type"] = "boolean", ["description"] = "true si quiere el turno, false si no." },
+                },
+                "acepta"),
+            Tool("confirmar_asistencia",
+                "Marca que el paciente confirmó que asistirá a su cita (respuesta al recordatorio).",
+                new JsonObject { ["cita_id"] = Str("Id de la cita, por ejemplo CITA-12.") },
+                "cita_id"),
             Tool("escalar_a_personal",
                 "Pasa la conversación al personal humano del consultorio. Usarla para cualquier pregunta clínica, síntomas, medicamentos, resultados, quejas o lo que no se pueda resolver.",
                 new JsonObject

@@ -8,7 +8,7 @@ public sealed class BaseDatosOptions
 {
     public const string SectionName = "BaseDatos";
 
-    /// <summary>Sqlite (local), Postgres (nube) o Memoria (sin persistencia, datos simulados).</summary>
+    /// <summary>Sqlite (archivo local), Postgres (nube) o Memoria (SQLite en memoria: se pierde al reiniciar).</summary>
     public string Proveedor { get; set; } = "Sqlite";
 
     public bool MigrarAlIniciar { get; set; } = true;
@@ -32,18 +32,21 @@ public static class PersistenciaExtensions
         services.AddSingleton(opciones);
 
         var proveedor = opciones.Proveedor.Trim().ToLowerInvariant();
-        if (proveedor == "memoria")
-        {
-            services.AddSingleton<IDpmGateway, MockDpmGateway>();
-            services.AddSingleton<IConversationStore, InMemoryConversationStore>();
-            return services;
-        }
-
         var conexion = config.GetConnectionString("Dpm");
-        services.AddSingleton<IConsultorioActual>(new ConsultorioFijo(opciones.ConsultorioId));
+        services.AddScoped(_ => new ConsultorioDelAmbito(opciones.ConsultorioId));
+        services.AddScoped<IConsultorioActual>(sp => sp.GetRequiredService<ConsultorioDelAmbito>());
 
         switch (proveedor)
         {
+            case "memoria":
+                // Base compartida en memoria: vive mientras la conexión "ancla" siga abierta.
+                var nombre = $"dpm-memoria-{Guid.NewGuid():N}";
+                var cadena = $"Data Source={nombre};Mode=Memory;Cache=Shared";
+                services.AddSingleton(new AnclaSqliteEnMemoria(cadena));
+                services.AddDbContext<SqliteDpmDbContext>(o => o.UseSqlite(cadena));
+                services.AddScoped<DpmDbContext>(sp => sp.GetRequiredService<SqliteDpmDbContext>());
+                break;
+
             case "sqlite":
                 services.AddDbContext<SqliteDpmDbContext>(o => o.UseSqlite(conexion ?? "Data Source=dpm-agent.db"));
                 services.AddScoped<DpmDbContext>(sp => sp.GetRequiredService<SqliteDpmDbContext>());
@@ -59,6 +62,9 @@ public static class PersistenciaExtensions
             default:
                 throw new InvalidOperationException($"Proveedor de base de datos desconocido: {opciones.Proveedor}. Use Sqlite, Postgres o Memoria.");
         }
+
+        if (proveedor == "memoria")
+            opciones.MigrarAlIniciar = true;
 
         services.AddScoped<IDpmGateway, DbDpmGateway>();
         services.AddScoped<IConversationStore, DbConversationStore>();
@@ -80,4 +86,18 @@ public static class PersistenciaExtensions
         if (opciones.SembrarDatosDemo)
             await DatosDemo.SembrarAsync(db, scope.ServiceProvider.GetRequiredService<TimeProvider>(), ct);
     }
+}
+
+/// <summary>Mantiene abierta una conexión para que la base SQLite en memoria no desaparezca.</summary>
+public sealed class AnclaSqliteEnMemoria : IDisposable
+{
+    private readonly Microsoft.Data.Sqlite.SqliteConnection _conexion;
+
+    public AnclaSqliteEnMemoria(string cadena)
+    {
+        _conexion = new Microsoft.Data.Sqlite.SqliteConnection(cadena);
+        _conexion.Open();
+    }
+
+    public void Dispose() => _conexion.Dispose();
 }
