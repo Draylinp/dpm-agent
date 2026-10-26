@@ -1,5 +1,6 @@
 using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Agent;
+using DpmAgent.Api.Autorizaciones;
 using DpmAgent.Api.Canales.WhatsApp;
 using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Data;
@@ -24,6 +25,7 @@ builder.Services.AddPersistencia(builder.Configuration);
 builder.Services.AddAgenda(builder.Configuration);
 builder.Services.AddWhatsApp(builder.Configuration);
 builder.Services.AddPanel(builder.Configuration, builder.Environment);
+builder.Services.AddScoped<ServicioAutorizaciones>();
 builder.Services.AddScoped<AgentTools>();
 builder.Services.AddScoped<ReceptionAgent>();
 
@@ -58,6 +60,7 @@ app.MapCarnet();
 app.MapAgenda();
 app.MapWhatsApp();
 app.MapPanel();
+app.MapAutorizaciones();
 
 app.MapGet("/api/escalamientos", async (IDpmGateway dpm, CancellationToken ct) =>
     Results.Ok(await dpm.ListarEscalamientosAsync(ct))).RequireAuthorization(PanelExtensions.Politica);

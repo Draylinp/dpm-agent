@@ -42,6 +42,8 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<RegistroBitacora> Bitacora => Set<RegistroBitacora>();
 
+    public DbSet<AutorizacionArs> AutorizacionesArs => Set<AutorizacionArs>();
+
     public DbSet<CarnetPendiente> CarnetsPendientes => Set<CarnetPendiente>();
 
     public DbSet<Conversacion> Conversaciones => Set<Conversacion>();
@@ -194,6 +196,22 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.Detalle).HasMaxLength(500);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasIndex(x => new { x.ConsultorioId, x.FechaUtc });
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<AutorizacionArs>(e =>
+        {
+            e.ToTable("AutorizacionesArs");
+            e.Property(x => x.Contenido).HasMaxLength(4000);
+            e.Property(x => x.Estado).HasMaxLength(20).IsConcurrencyToken();
+            e.Property(x => x.CreadaPor).HasMaxLength(60);
+            e.Property(x => x.AprobadaPor).HasMaxLength(60);
+            e.HasOne<Cita>().WithMany().HasForeignKey(x => x.CitaId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasIndex(x => new { x.ConsultorioId, x.Estado });
+            // Un solo borrador vivo por cita.
+            e.HasIndex(x => x.CitaId).IsUnique().HasFilter("\"Estado\" <> 'descartada'");
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
 

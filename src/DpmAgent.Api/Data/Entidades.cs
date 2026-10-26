@@ -290,6 +290,36 @@ public sealed class Escalamiento
 }
 
 /// <summary>
+/// Borrador de solicitud de autorización a la ARS para una cita. Lo prepara el sistema,
+/// la secretaria lo revisa, edita y aprueba. Nunca se envía solo.
+/// </summary>
+public sealed class AutorizacionArs
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int CitaId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public required string Contenido { get; set; }
+
+    /// <summary>borrador, aprobada o descartada.</summary>
+    public required string Estado { get; set; }
+
+    public DateTime CreadaUtc { get; set; }
+
+    public required string CreadaPor { get; set; }
+
+    public DateTime ActualizadaUtc { get; set; }
+
+    public DateTime? AprobadaUtc { get; set; }
+
+    public string? AprobadaPor { get; set; }
+}
+
+/// <summary>
 /// Datos leídos de la foto de un carnet de ARS, pendientes de confirmación.
 /// La imagen no se guarda: solo el resultado de la lectura.
 /// </summary>

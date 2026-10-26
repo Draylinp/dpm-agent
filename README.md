@@ -26,6 +26,7 @@ DPM Agent se encarga de esa conversación repetitiva y deja al personal lo que d
 - **Bitácora** (`GET /api/bitacora`): quién hizo qué y cuándo (agente, sistema o secretaria), sin detalles clínicos. Los mensajes automáticos son plantillas fijas, no texto del modelo.
 - **WhatsApp Cloud API**: webhook con verificación de firma `X-Hub-Signature-256`, texto, notas de voz y fotos del carnet, respuestas y mensajes proactivos con plantillas aprobadas. Ver [docs/WHATSAPP.md](docs/WHATSAPP.md).
 - **Panel de la secretaria** (`/panel.html`): inicio de sesión con cookie segura (`HttpOnly`, `SameSite=Strict`), claves con `PasswordHasher` y bloqueo tras 5 intentos. Muestra las citas del día, los escalamientos (urgentes primero, con botón de atendido), los carnets por confirmar y la bitácora. Cada secretaria solo ve los datos de su consultorio.
+- **Borrador de autorización de ARS**: desde las citas del día, la secretaria pide un borrador con los datos administrativos (ARS, afiliado, médico, especialidad, fecha). Lo que falta queda marcado como `[FALTA: …]` y no se puede aprobar hasta completarlo. Aprobar solo lo marca como listo: **nunca se envía solo**.
 - **Persistencia y multi-consultorio**: citas, pacientes, escalamientos y conversaciones se guardan con EF Core (SQLite en local, PostgreSQL en la nube). Cada registro lleva su `ConsultorioId` y cada consulta se filtra por el consultorio actual.
 - **Escalamiento al personal**: preguntas clínicas, quejas o posibles emergencias se pasan a un humano y quedan registradas en `/api/escalamientos`. En una posible emergencia el agente indica llamar al 911.
 - Panel de prueba que muestra, al lado del chat, cada herramienta que el modelo usó y lo que devolvió.
@@ -68,6 +69,7 @@ src/DpmAgent.Api/
   Data/    DpmDbContext, entidades, migraciones por proveedor, datos de demo
   Model/   IChatModel, MetaModelClient, MetaOptions
   Agenda/  lista de espera, motor de ofertas y recordatorios, notificador, despachador, bitácora
+  Autorizaciones/ borradores de autorización de ARS
   Canales/ IMessageChannel, WebChatChannel, WhatsApp/ (Cloud API, webhook, procesador)
   Carnet/  ILectorCarnet, MetaLectorCarnet, ServicioCarnet, endpoints del carnet
   Panel/   usuarios, autenticación por cookie, vistas de la secretaria
