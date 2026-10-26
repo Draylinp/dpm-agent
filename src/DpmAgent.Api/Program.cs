@@ -11,8 +11,7 @@ using DpmAgent.Api.Voz;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<MetaOptions>(builder.Configuration.GetSection(MetaOptions.SectionName));
-builder.Services.AddHttpClient<IChatModel, MetaModelClient>();
+builder.Services.AddModelos(builder.Configuration);
 builder.Services.Configure<TranscripcionOptions>(builder.Configuration.GetSection(TranscripcionOptions.SectionName));
 builder.Services.AddHttpClient<ITranscriber, MetaTranscriber>();
 builder.Services.Configure<CarnetOptions>(builder.Configuration.GetSection(CarnetOptions.SectionName));

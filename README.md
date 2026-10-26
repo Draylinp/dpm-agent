@@ -38,9 +38,9 @@ DPM Agent se encarga de esa conversación repetitiva y deja al personal lo que d
 | Razonamiento y tool calling | **Muse Spark** vía Meta Model API (`/v1/chat/completions`) |
 | Lectura de carnet de ARS | Muse Spark, entrada de imagen + salida estructurada (`/api/pacientes/carnet`) |
 | Transcripción de notas de voz | Muse Voice Transcribe (`/api/chat/audio`) |
-| Ejecución local, sin enviar datos fuera del consultorio (planificado) | **Muse Glimmer**, pesos abiertos |
+| Ejecución en servidor propio o como respaldo | **Muse Glimmer**, pesos abiertos, servido con vLLM (Modal, Baseten o local) |
 
-El modelo está detrás de la interfaz `IChatModel`, así que cambiar entre la API de Meta y un servidor propio con Muse Glimmer es cuestión de configuración.
+El modelo está detrás de `IChatModel`: `Modelo__Proveedor` elige entre la Meta Model API y un servidor compatible con OpenAI, y `Modelo__Respaldo` define a cuál pasar si el principal falla. Ver [docs/GLIMMER.md](docs/GLIMMER.md).
 
 ## Arquitectura
 
@@ -112,7 +112,9 @@ Configuración opcional (`appsettings.json` o variables de entorno):
 
 | Variable | Valor por defecto |
 |---|---|
-| `Meta__Model` | `muse-spark-1.2` |
+| `Meta__Model` | `muse-spark-1.2` (las variantes `-contributor` se rechazan al arrancar) |
+| `Modelo__Proveedor` | `MetaApi` u `OpenAICompatible` |
+| `Modelo__Respaldo` | vacío, o el otro proveedor |
 | `Meta__BaseUrl` | `https://api.meta.ai/v1/` |
 | `Meta__Temperature` | `0.2` |
 | `Transcripcion__Modelo` | `muse-voice-transcribe-1.0` |

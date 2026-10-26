@@ -15,6 +15,7 @@ Entrega: **miércoles 4 de noviembre, 9:00 PM ET** (misma hora en República Dom
 | Lun 26 oct | F5: canales web y WhatsApp Cloud API (webhook firmado, texto, voz, imagen, respuestas y plantillas) | ✅ |
 | Lun 26 oct | F6: panel de la secretaria con autenticación (citas del día, escalamientos, carnets, bitácora) | ✅ |
 | Lun 26 oct | F7: borrador de autorización de ARS (revisar, editar, aprobar; nunca se envía solo) | ✅ |
+| Lun 26 oct | F8: modelo intercambiable (Meta API / servidor OpenAI-compatible), respaldo automático, bloqueo de variantes -contributor y guía para Muse Glimmer en Modal | ✅ |
 | Lun 26 oct | Primera llamada real a Muse Spark con la clave del evento | ⬜ |
 | Mar 27 oct | Workshop Meta P1. Ajustar prompt con conversaciones reales de prueba | ⬜ |
 | Mié 28 oct | Workshop Meta P2. Reprogramar citas y recordatorios | ⬜ |
