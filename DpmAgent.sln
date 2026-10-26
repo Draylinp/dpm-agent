@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C0AE1D9B-669A-4FDF-B677-49B682C262DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DpmAgent.Api", "src\DpmAgent.Api\DpmAgent.Api.csproj", "{C81DF8DB-261C-4A30-A55B-6348CA640B1F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1A8E3E2A-5886-423F-B713-F31765AAAD6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DpmAgent.Tests", "tests\DpmAgent.Tests\DpmAgent.Tests.csproj", "{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C81DF8DB-261C-4A30-A55B-6348CA640B1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C81DF8DB-261C-4A30-A55B-6348CA640B1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C81DF8DB-261C-4A30-A55B-6348CA640B1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C81DF8DB-261C-4A30-A55B-6348CA640B1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C81DF8DB-261C-4A30-A55B-6348CA640B1F} = {C0AE1D9B-669A-4FDF-B677-49B682C262DA}
+		{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4} = {1A8E3E2A-5886-423F-B713-F31765AAAD6F}
+	EndGlobalSection
+EndGlobal
