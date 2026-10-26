@@ -1,0 +1,486 @@
+[
+  {
+    "id": "agendar-es-1",
+    "categoria": "agendar",
+    "idioma": "es",
+    "turnos": [
+      "Hola, quiero una cita con la doctora Valdez el martes a las 9 de la mañana",
+      "Sí, por favor, resérvela"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "El martes 27 a las 9:00 a. m. está libre con la Dra. Ana Valdez. ¿Se la reservo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, su cita quedó para el martes 27 de octubre a las 9:00 a. m. con la Dra. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "buscar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "agendar-es-2",
+    "categoria": "agendar",
+    "idioma": "es",
+    "telefono": "8295550102",
+    "turnos": [
+      "Buenas tardes, necesito una cita para el miércoles en la tarde",
+      "La de las 3 está bien"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-28"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "El miércoles en la tarde tengo 2:00, 2:30 y 3:00 p. m. con la Dra. Ana Valdez. ¿Cuál prefiere?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-28T15:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Perfecto, José. Quedó su cita el miércoles 28 de octubre a las 3:00 p. m. con la Dra. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "consultar_disponibilidad",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-002",
+        "fechaHora": "2026-10-28T15:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "agendar-en-1",
+    "categoria": "agendar",
+    "idioma": "en",
+    "turnos": [
+      "Hi, I'd like an appointment with Dr. Valdez on Tuesday at 9 in the morning",
+      "Yes, please book it"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Tuesday the 27th at 9:00 AM is available with Dr. Ana Valdez. Shall I book it for you?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done! Your appointment is booked for Tuesday, October 27 at 9:00 AM with Dr. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "buscar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "agendar-en-2",
+    "categoria": "agendar",
+    "idioma": "en",
+    "telefono": "8295550102",
+    "turnos": [
+      "Good afternoon, I need an appointment on Wednesday afternoon",
+      "The 3 o'clock one works for me"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-28"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "On Wednesday afternoon I have 2:00, 2:30 and 3:00 PM with Dr. Ana Valdez. Which one would you like?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-28T15:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Perfect, José. Your appointment is on Wednesday, October 28 at 3:00 PM with Dr. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "consultar_disponibilidad",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-002",
+        "fechaHora": "2026-10-28T15:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "agendar-ht-1",
+    "categoria": "agendar",
+    "idioma": "ht",
+    "turnos": [
+      "Bonjou, mwen vle yon randevou ak doktè Valdez madi a 9è nan maten",
+      "Wi, tanpri pran l pou mwen"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Madi 27 a 9:00 AM disponib ak Dr. Ana Valdez. Èske m pran l pou ou?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Dakò! Randevou ou pran pou madi 27 oktòb a 9:00 AM ak Dr. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "buscar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "agendar-ht-2",
+    "categoria": "agendar",
+    "idioma": "ht",
+    "telefono": "8295550102",
+    "turnos": [
+      "Bonswa, mwen bezwen yon randevou mèkredi apremidi",
+      "Sa a 3è a bon pou mwen"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-28"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Mèkredi apremidi mwen gen 2:00, 2:30 ak 3:00 PM ak Dr. Ana Valdez. Kilès ou pito?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-28T15:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Pafè, José. Randevou ou pran pou mèkredi 28 oktòb a 3:00 PM ak Dr. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "consultar_disponibilidad",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-002",
+        "fechaHora": "2026-10-28T15:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "agendar-fr-1",
+    "categoria": "agendar",
+    "idioma": "fr",
+    "turnos": [
+      "Bonjour, je voudrais un rendez-vous avec le médecin mardi à 9 heures",
+      "Oui, merci"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Mardi 27 à 9h00 est disponible avec la Dre Ana Valdez. Je vous le réserve ?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "C'est fait, votre rendez-vous est mardi 27 octobre à 9h00 avec la Dre Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "idiomaSesion": "fr",
+      "idiomaRespuesta": "fr"
+    }
+  },
+  {
+    "id": "agendar-pt-1",
+    "categoria": "agendar",
+    "idioma": "pt",
+    "turnos": [
+      "Olá, gostaria de marcar uma consulta com a médica na terça às 9 horas",
+      "Sim, obrigada"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Terça-feira, dia 27, às 9h00 está livre com a Dra. Ana Valdez. Posso marcar para você?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Pronto, sua consulta ficou para terça-feira, 27 de outubro, às 9h00 com a Dra. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "idiomaSesion": "pt",
+      "idiomaRespuesta": "pt"
+    }
+  }
+]

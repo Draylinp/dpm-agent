@@ -1,0 +1,381 @@
+[
+  {
+    "id": "cambio_idioma-es-1",
+    "categoria": "cambio_idioma",
+    "idioma": "es",
+    "descripcion": "Starts in es, switches to en.",
+    "turnos": [
+      "Hola, quiero una cita para el martes",
+      "Sorry, can we continue in English? I need it in the morning"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Claro, ¿la prefiere en la mañana o en la tarde?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "On Tuesday morning I have 8:00, 8:30 and 9:00 AM with Dr. Ana Valdez. Which one works for you?"
+      }
+    ],
+    "esperado": {
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en",
+      "escalado": false
+    }
+  },
+  {
+    "id": "cambio_idioma-en-1",
+    "categoria": "cambio_idioma",
+    "idioma": "en",
+    "descripcion": "Starts in en, switches to ht.",
+    "turnos": [
+      "Hi, I would like an appointment for Tuesday",
+      "Eskize m, èske nou ka kontinye an kreyòl? Mwen bezwen l nan maten"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Of course, would you prefer the morning or the afternoon?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Madi maten mwen gen 8:00, 8:30 ak 9:00 AM ak Dr. Ana Valdez. Kilès ki bon pou ou?"
+      }
+    ],
+    "esperado": {
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht",
+      "escalado": false
+    }
+  },
+  {
+    "id": "cambio_idioma-ht-1",
+    "categoria": "cambio_idioma",
+    "idioma": "ht",
+    "descripcion": "Starts in ht, switches to es.",
+    "turnos": [
+      "Bonjou, mwen vle yon randevou pou madi",
+      "Perdón, ¿podemos seguir en español? La necesito en la mañana"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Dakò, èske ou pito nan maten oswa nan apremidi?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "El martes en la mañana tengo 8:00, 8:30 y 9:00 a. m. con la Dra. Ana Valdez. ¿Cuál le sirve?"
+      }
+    ],
+    "esperado": {
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es",
+      "escalado": false
+    }
+  },
+  {
+    "id": "cambio_idioma-es-2",
+    "categoria": "cambio_idioma",
+    "idioma": "es",
+    "descripcion": "Switches from es to ht in the middle of a booking.",
+    "turnos": [
+      "Hola, quiero cita con la doctora el martes a las 10",
+      "Mwen pito pale kreyòl. Wi, tanpri pran randevou a pou mwen"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "El martes a las 10:00 a. m. está libre con la Dra. Ana Valdez. ¿Se la reservo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T10:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Dakò, randevou ou pran pou madi 27 a 10:00 AM."
+      }
+    ],
+    "esperado": {
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht",
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T10:00"
+      }
+    }
+  },
+  {
+    "id": "cambio_idioma-en-2",
+    "categoria": "cambio_idioma",
+    "idioma": "en",
+    "descripcion": "Switches from en to es in the middle of a booking.",
+    "turnos": [
+      "Hi, I would like an appointment with the doctor on Tuesday at 10",
+      "Prefiero seguir en español. Sí, resérveme esa cita por favor"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Tuesday at 10:00 AM is available with Dr. Ana Valdez. Shall I book it for you?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T10:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, su cita quedó para el martes 27 a las 10:00 a. m."
+      }
+    ],
+    "esperado": {
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es",
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T10:00"
+      }
+    }
+  },
+  {
+    "id": "cambio_idioma-ht-2",
+    "categoria": "cambio_idioma",
+    "idioma": "ht",
+    "descripcion": "Switches from ht to en in the middle of a booking.",
+    "turnos": [
+      "Bonjou, mwen vle yon randevou ak doktè a madi a 10è",
+      "I'd rather continue in English. Yes, please book that appointment for me"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Madi a 10:00 AM lib ak Dr. Ana Valdez. Èske m pran l pou ou?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T10:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, your appointment is booked for Tuesday the 27th at 10:00 AM."
+      }
+    ],
+    "esperado": {
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en",
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T10:00"
+      }
+    }
+  },
+  {
+    "id": "cambio_idioma-es-fr",
+    "categoria": "cambio_idioma",
+    "idioma": "fr",
+    "descripcion": "Starts in Spanish, switches to a tier-2 language (fr).",
+    "turnos": [
+      "Hola, quiero una cita para el martes",
+      "Pardon, je préfère parler en français. Je voudrais mardi matin"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Claro, ¿la prefiere en la mañana o en la tarde?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Bien sûr ! Mardi matin, j'ai 8h00, 8h30 et 9h00 avec la Dre Ana Valdez. Lequel vous convient ?"
+      }
+    ],
+    "esperado": {
+      "idiomaSesion": "fr",
+      "idiomaRespuesta": "fr"
+    }
+  },
+  {
+    "id": "cambio_idioma-es-pt",
+    "categoria": "cambio_idioma",
+    "idioma": "pt",
+    "descripcion": "Starts in Spanish, switches to a tier-2 language (pt).",
+    "turnos": [
+      "Hola, quiero una cita para el martes",
+      "Desculpe, prefiro falar em português. Quero na terça de manhã"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Claro, ¿la prefiere en la mañana o en la tarde?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Claro! Na terça de manhã tenho 8h00, 8h30 e 9h00 com a Dra. Ana Valdez. Qual prefere?"
+      }
+    ],
+    "esperado": {
+      "idiomaSesion": "pt",
+      "idiomaRespuesta": "pt"
+    }
+  }
+]

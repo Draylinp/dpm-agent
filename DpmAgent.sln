@@ -11,6 +11,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1A8E3E2A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DpmAgent.Tests", "tests\DpmAgent.Tests\DpmAgent.Tests.csproj", "{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{EFA99D63-56C8-4C60-9283-400F93B5C3C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DpmAgent.Eval", "tools\DpmAgent.Eval\DpmAgent.Eval.csproj", "{2B3C9346-A7DE-42B9-939B-0567998B6812}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +32,14 @@ Global
 		{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B3C9346-A7DE-42B9-939B-0567998B6812}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B3C9346-A7DE-42B9-939B-0567998B6812}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B3C9346-A7DE-42B9-939B-0567998B6812}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B3C9346-A7DE-42B9-939B-0567998B6812}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C81DF8DB-261C-4A30-A55B-6348CA640B1F} = {C0AE1D9B-669A-4FDF-B677-49B682C262DA}
 		{31D0A913-95A1-4F61-B8EF-B5B6CE19A2D4} = {1A8E3E2A-5886-423F-B713-F31765AAAD6F}
+		{2B3C9346-A7DE-42B9-939B-0567998B6812} = {EFA99D63-56C8-4C60-9283-400F93B5C3C0}
 	EndGlobalSection
 EndGlobal

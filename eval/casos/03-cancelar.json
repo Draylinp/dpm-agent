@@ -1,0 +1,395 @@
+[
+  {
+    "id": "cancelar-es-1",
+    "categoria": "cancelar",
+    "idioma": "es",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Necesito cancelar mi cita del martes",
+      "Sí, cancélela"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Tiene una cita el martes 27 a las 9:00 a. m. con la Dra. Ana Valdez. ¿Confirma que la cancelo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, su cita del martes quedó cancelada."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "cancelar_cita"
+      ],
+      "citasPaciente": 0,
+      "escalado": false,
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "cancelar-es-2",
+    "categoria": "cancelar",
+    "idioma": "es",
+    "descripcion": "The patient changes their mind: nothing is cancelled.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Quiero cancelar mi cita del martes",
+      "No, mejor la dejo como está"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Tiene una cita el martes 27 a las 9:00 a. m. con la Dra. Ana Valdez. ¿Confirma que la cancelo?"
+      },
+      {
+        "texto": "Perfecto, su cita del martes sigue en pie."
+      }
+    ],
+    "esperado": {
+      "citasPaciente": 1,
+      "escalado": false,
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "cancelar-en-1",
+    "categoria": "cancelar",
+    "idioma": "en",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "I need to cancel my Tuesday appointment",
+      "Yes, please cancel it"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "You have an appointment on Tuesday the 27th at 9:00 AM with Dr. Ana Valdez. Do you confirm you want to cancel it?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, your Tuesday appointment has been cancelled."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "cancelar_cita"
+      ],
+      "citasPaciente": 0,
+      "escalado": false,
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "cancelar-en-2",
+    "categoria": "cancelar",
+    "idioma": "en",
+    "descripcion": "The patient changes their mind: nothing is cancelled.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "I want to cancel my Tuesday appointment",
+      "No, actually I'll keep it"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "You have an appointment on Tuesday the 27th at 9:00 AM with Dr. Ana Valdez. Do you confirm you want to cancel it?"
+      },
+      {
+        "texto": "Great, your Tuesday appointment stays as it is."
+      }
+    ],
+    "esperado": {
+      "citasPaciente": 1,
+      "escalado": false,
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "cancelar-ht-1",
+    "categoria": "cancelar",
+    "idioma": "ht",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Mwen bezwen anile randevou madi a",
+      "Wi, tanpri anile l"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Ou gen yon randevou madi 27 a 9:00 AM ak Dr. Ana Valdez. Èske ou konfime ou vle anile l?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Dakò, randevou madi a anile."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "cancelar_cita"
+      ],
+      "citasPaciente": 0,
+      "escalado": false,
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "cancelar-ht-2",
+    "categoria": "cancelar",
+    "idioma": "ht",
+    "descripcion": "The patient changes their mind: nothing is cancelled.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Mwen vle anile randevou madi a",
+      "Non, finalman mwen kenbe l"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Ou gen yon randevou madi 27 a 9:00 AM ak Dr. Ana Valdez. Èske ou konfime ou vle anile l?"
+      },
+      {
+        "texto": "Pafè, randevou madi a toujou kenbe."
+      }
+    ],
+    "esperado": {
+      "citasPaciente": 1,
+      "escalado": false,
+      "idiomaRespuesta": "ht"
+    }
+  }
+]

@@ -12,11 +12,13 @@ public abstract class ChatCompletionsClient : IChatModel
 {
     private readonly HttpClient _http;
     private readonly ILogger _logger;
+    private readonly IRegistroUso? _registro;
 
-    protected ChatCompletionsClient(HttpClient http, string baseUrl, int timeoutSeconds, ILogger logger)
+    protected ChatCompletionsClient(HttpClient http, string baseUrl, int timeoutSeconds, ILogger logger, IRegistroUso? registro = null)
     {
         _http = http;
         _logger = logger;
+        _registro = registro;
         _http.BaseAddress ??= new Uri(baseUrl.EndsWith('/') ? baseUrl : baseUrl + "/");
         _http.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
     }
@@ -75,14 +77,16 @@ public abstract class ChatCompletionsClient : IChatModel
         var message = json["choices"]?[0]?["message"]?.AsObject()
                       ?? throw new HttpRequestException($"La respuesta de {Proveedor} no trae choices[0].message.");
 
-        _logger.LogInformation(
-            "{Proveedor} {Model} respondió en {Ms} ms (tokens: {Usage})",
-            Proveedor,
-            Modelo,
-            (int)(DateTime.UtcNow - started).TotalMilliseconds,
-            json["usage"]?["total_tokens"]?.ToString() ?? "?");
+        var ms = (int)(DateTime.UtcNow - started).TotalMilliseconds;
+        var entrada = Tokens(json, "prompt_tokens");
+        var salida = Tokens(json, "completion_tokens");
+        _logger.LogInformation("{Proveedor} {Model} respondió en {Ms} ms (tokens: {Entrada} + {Salida})", Proveedor, Modelo, ms, entrada, salida);
+        _registro?.Registrar(new UsoModelo(Proveedor, Modelo, ContextoUso.Proposito, entrada, salida, ms, DateTimeOffset.UtcNow));
 
         // Se clona para separarlo del documento original.
         return message.DeepClone().AsObject();
     }
+
+    private static int Tokens(JsonObject respuesta, string campo) =>
+        respuesta["usage"]?[campo] is JsonValue v && v.TryGetValue<int>(out var n) ? n : 0;
 }

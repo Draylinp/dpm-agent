@@ -32,8 +32,9 @@ public sealed class OpenAICompatibleChatModel : ChatCompletionsClient
 {
     private readonly OpenAICompatibleOptions _options;
 
-    public OpenAICompatibleChatModel(HttpClient http, IOptions<OpenAICompatibleOptions> options, ILogger<OpenAICompatibleChatModel> logger)
-        : base(http, options.Value.BaseUrl, options.Value.TimeoutSeconds, logger)
+    public OpenAICompatibleChatModel(
+        HttpClient http, IOptions<OpenAICompatibleOptions> options, ILogger<OpenAICompatibleChatModel> logger, IRegistroUso? registro = null)
+        : base(http, options.Value.BaseUrl, options.Value.TimeoutSeconds, logger, registro)
     {
         _options = options.Value;
         if (string.IsNullOrWhiteSpace(_options.Model))

@@ -45,6 +45,17 @@ DPM Agent se encarga de esa conversación repetitiva y deja al personal lo que d
 
 El modelo está detrás de `IChatModel`: `Modelo__Proveedor` elige entre la Meta Model API y un servidor compatible con OpenAI, y `Modelo__Respaldo` define a cuál pasar si el principal falla. Ver [docs/es/GLIMMER.md](docs/es/GLIMMER.md).
 
+## Evaluación
+
+84 casos en 11 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena y cambio de idioma) en español, inglés y kreyòl, más francés y portugués de nivel 2. Dos capas: comprobaciones deterministas sobre herramientas y estado de la base, y un juez LLM (Muse Glimmer por defecto) con una rúbrica escrita. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
+
+**Contra Muse Spark:**
+
+<!-- RESULTADOS MUSE SPARK: correr `dotnet run --project tools/DpmAgent.Eval -- --modelo real` y pegar aquí las tablas de eval/resultados/ -->
+*Pendiente: requiere acceso a la Meta Model API.*
+
+**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 84 de 84 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones hacen de un modelo que obedece una inyección a propósito; el servidor igual impide cancelar citas ajenas o cancelar sin que el paciente confirme.
+
 ## Arquitectura
 
 ```

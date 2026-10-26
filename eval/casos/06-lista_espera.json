@@ -1,0 +1,416 @@
+[
+  {
+    "id": "lista_espera-es-1",
+    "categoria": "lista_espera",
+    "idioma": "es",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Quiero cita con la doctora el martes a las 9",
+      "Sí, anóteme en la lista de espera para el martes en la mañana"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "El martes a las 9:00 ya está ocupado. ¿Quiere que la anote en la lista de espera para la mañana?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "agregar_lista_espera",
+            "args": {
+              "medico_id": "MED-01",
+              "desde": "2026-10-27",
+              "hasta": "2026-10-27",
+              "hora_desde": "08:00",
+              "hora_hasta": "12:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, quedó en la lista de espera. Si se libera un turno el martes en la mañana, le escribo."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "agregar_lista_espera"
+      ],
+      "listaEspera": 1,
+      "citasPaciente": 0,
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "lista_espera-es-2",
+    "categoria": "lista_espera",
+    "idioma": "es",
+    "descripcion": "José cancels; the engine offers the slot to María, who accepts.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ],
+      "listaEspera": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "desde": "2026-10-27",
+          "hasta": "2026-10-30",
+          "horaDesde": "08:00",
+          "horaHasta": "12:00"
+        }
+      ],
+      "cancelar": [
+        0
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "es"
+      }
+    },
+    "turnos": [
+      "Sí, lo quiero"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "responder_oferta",
+            "args": {
+              "acepta": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "¡Listo! Su cita quedó para el martes 27 a las 9:00 a. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "responder_oferta"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "listaEspera": 0,
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "lista_espera-en-1",
+    "categoria": "lista_espera",
+    "idioma": "en",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "I want an appointment with the doctor on Tuesday at 9",
+      "Yes, please put me on the waiting list for Tuesday morning"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Tuesday at 9:00 is already taken. Would you like me to add you to the waiting list for the morning?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "agregar_lista_espera",
+            "args": {
+              "medico_id": "MED-01",
+              "desde": "2026-10-27",
+              "hasta": "2026-10-27",
+              "hora_desde": "08:00",
+              "hora_hasta": "12:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, you're on the waiting list. If a slot opens up on Tuesday morning, I'll message you."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "agregar_lista_espera"
+      ],
+      "listaEspera": 1,
+      "citasPaciente": 0,
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "lista_espera-en-2",
+    "categoria": "lista_espera",
+    "idioma": "en",
+    "descripcion": "José cancels; the engine offers the slot to María, who accepts.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ],
+      "listaEspera": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "desde": "2026-10-27",
+          "hasta": "2026-10-30",
+          "horaDesde": "08:00",
+          "horaHasta": "12:00"
+        }
+      ],
+      "cancelar": [
+        0
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "en"
+      }
+    },
+    "turnos": [
+      "Yes, I want it"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "responder_oferta",
+            "args": {
+              "acepta": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Great! Your appointment is booked for Tuesday the 27th at 9:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "responder_oferta"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "listaEspera": 0,
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "lista_espera-ht-1",
+    "categoria": "lista_espera",
+    "idioma": "ht",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Mwen vle yon randevou ak doktè a madi a 9è",
+      "Wi, tanpri mete m sou lis datant pou madi maten"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Madi a 9:00 deja pran. Èske ou vle m mete ou sou lis datant pou maten an?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "agregar_lista_espera",
+            "args": {
+              "medico_id": "MED-01",
+              "desde": "2026-10-27",
+              "hasta": "2026-10-27",
+              "hora_desde": "08:00",
+              "hora_hasta": "12:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Dakò, ou sou lis datant lan. Si gen yon plas ki libere madi maten, m ap ekri ou."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "agregar_lista_espera"
+      ],
+      "listaEspera": 1,
+      "citasPaciente": 0,
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "lista_espera-ht-2",
+    "categoria": "lista_espera",
+    "idioma": "ht",
+    "descripcion": "José cancels; the engine offers the slot to María, who accepts.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ],
+      "listaEspera": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "desde": "2026-10-27",
+          "hasta": "2026-10-30",
+          "horaDesde": "08:00",
+          "horaHasta": "12:00"
+        }
+      ],
+      "cancelar": [
+        0
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "ht"
+      }
+    },
+    "turnos": [
+      "Wi, mwen vle l"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "responder_oferta",
+            "args": {
+              "acepta": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Bon nouvèl! Randevou ou pran pou madi 27 a 9:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "responder_oferta"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "listaEspera": 0,
+      "idiomaRespuesta": "ht"
+    }
+  }
+]

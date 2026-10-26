@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DpmAgent.Api\DpmAgent.Api.csproj" />
+    <ProjectReference Include="..\..\tools\DpmAgent.Eval\DpmAgent.Eval.csproj" />
   </ItemGroup>
 
 </Project>

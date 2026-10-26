@@ -32,3 +32,5 @@ jobs:
       - run: dotnet restore
       - run: dotnet build --no-restore -c Release
       - run: dotnet test --no-build -c Release --verbosity normal
+      - name: Banco de evaluación (modelo falso, capa determinista)
+        run: dotnet run --project tools/DpmAgent.Eval -c Release --no-build -- --no-escribir

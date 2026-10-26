@@ -9,8 +9,8 @@ public sealed class MetaModelClient : ChatCompletionsClient
 {
     private readonly MetaOptions _options;
 
-    public MetaModelClient(HttpClient http, IOptions<MetaOptions> options, ILogger<MetaModelClient> logger)
-        : base(http, options.Value.BaseUrl, options.Value.TimeoutSeconds, logger)
+    public MetaModelClient(HttpClient http, IOptions<MetaOptions> options, ILogger<MetaModelClient> logger, IRegistroUso? registro = null)
+        : base(http, options.Value.BaseUrl, options.Value.TimeoutSeconds, logger, registro)
     {
         _options = options.Value;
     }
