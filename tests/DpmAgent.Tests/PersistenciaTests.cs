@@ -1,12 +1,16 @@
 using System.Text.Json.Nodes;
 using DpmAgent.Api.Agent;
+using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Data;
+using DpmAgent.Api.Demo;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using DpmAgent.Api.Panel;
 using E = DpmAgent.Api.Data.Entidades;
 
 namespace DpmAgent.Tests;
@@ -166,6 +170,54 @@ public class PersistenciaTests
     }
 
     /// <summary>Arma los servicios igual que Program.cs, con el modelo falso.</summary>
+    [Fact]
+    public async Task El_reinicio_de_la_demo_funciona_con_una_base_en_archivo()
+    {
+        var archivo = Path.Combine(Path.GetTempPath(), $"dpm-demo-{Guid.NewGuid():N}.db");
+        try
+        {
+            var modelo = new ScriptedChatModel()
+                .ThenTool("buscar_paciente", new { })
+                .ThenTool("crear_cita", new { medico_id = "MED-01", fecha_hora = "2026-10-27T09:00:00-04:00", motivo = "control" })
+                .ThenText("Listo");
+            await using var sp = await ArrancarAsync(archivo, modelo);
+            await using (var scope = sp.CreateAsyncScope())
+                await scope.ServiceProvider.GetRequiredService<ReceptionAgent>().RunAsync(null, "cita el martes a las 9", "8095550101", CancellationToken.None);
+
+            await ReiniciarDemoYVerificarAsync(sp);
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            File.Delete(archivo);
+        }
+    }
+
+    /// <summary>Reinicia la demo sobre la base de <paramref name="sp"/> y comprueba que queda solo la semilla y el escenario.</summary>
+    internal static async Task ReiniciarDemoYVerificarAsync(IServiceProvider sp)
+    {
+        await using var scope = sp.CreateAsyncScope();
+        var s = scope.ServiceProvider;
+        var db = s.GetRequiredService<DpmDbContext>();
+        var reloj = s.GetRequiredService<TimeProvider>();
+        var dpm = s.GetRequiredService<IDpmGateway>();
+        var demo = new ServicioDemo(
+            db,
+            Options.Create(new DemoOptions { Habilitado = true }),
+            reloj,
+            new ServicioUsuarios(db, Options.Create(new PanelOptions()), reloj),
+            new ServicioListaEspera(db, dpm, new DespertadorAgenda(), reloj),
+            dpm);
+
+        await demo.ReiniciarAsync(CancellationToken.None);
+
+        Assert.Equal(2, await db.Pacientes.CountAsync());
+        Assert.Equal(2, await db.Conversaciones.CountAsync());
+        Assert.Equal(1, await db.Citas.CountAsync());
+        Assert.Equal(1, await db.ListaEspera.CountAsync());
+        Assert.Equal(0, await db.Mensajes.CountAsync());
+    }
+
     internal static async Task<ServiceProvider> ArrancarAsync(string archivoSqlite, IChatModel modelo, string proveedor = "Sqlite", string? cadena = null)
     {
         var config = new ConfigurationBuilder()
