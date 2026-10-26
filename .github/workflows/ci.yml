@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
 
 jobs:
@@ -39,5 +39,7 @@ jobs:
           cp .env.example .env
           POSTGRES_PASSWORD=solo-ci docker compose config -q
           POSTGRES_PASSWORD=solo-ci docker compose --profile glimmer config -q
+          # La imagen de vLLM del perfil glimmer debe existir (sin descargarla).
+          docker manifest inspect "$(grep '^VLLM_IMAGEN=' .env.example | cut -d= -f2)" > /dev/null
       - name: Imagen de Docker
         run: docker build -t dpm-agent:ci .
