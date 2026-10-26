@@ -8,28 +8,26 @@ Entrega: **miércoles 4 de noviembre, 9:00 PM ET** (misma hora en República Dom
 | Lun 26 oct | Seguridad: cada sesión queda atada al paciente del teléfono del canal; no se pueden ver, crear ni cancelar citas ajenas | ✅ |
 | Lun 26 oct | F1: persistencia con EF Core (SQLite local, PostgreSQL en la nube), entidades con `ConsultorioId`, seed ficticio, historial persistente; se conserva todo al reiniciar | ✅ |
 | Lun 26 oct | F2: notas de voz (`/api/chat/audio`, límites de tamaño y duración, grabación en el panel) | ✅ |
-| Lun 26 oct | F2: confirmar en la documentación de Meta la ruta y los campos de Muse Voice Transcribe y probar con la clave real | ⬜ |
 | Lun 26 oct | F3: carnet de la ARS por foto, pendiente de confirmación del paciente o la secretaria, sin guardar la imagen | ✅ |
-| Lun 26 oct | F3: confirmar en la documentación de Meta el formato de imagen y `response_format` de Muse Spark y probar con un carnet ficticio | ⬜ |
 | Lun 26 oct | F4: lista de espera con ofertas automáticas (vencimiento y siguiente candidato), recordatorio de 24 horas, bitácora y cola de mensajes salientes | ✅ |
 | Lun 26 oct | F5: canales web y WhatsApp Cloud API (webhook firmado, texto, voz, imagen, respuestas y plantillas) | ✅ |
 | Lun 26 oct | F6: panel de la secretaria con autenticación (citas del día, escalamientos, carnets, bitácora) | ✅ |
 | Lun 26 oct | F7: borrador de autorización de ARS (revisar, editar, aprobar; nunca se envía solo) | ✅ |
 | Lun 26 oct | F8: modelo intercambiable (Meta API / servidor OpenAI-compatible), respaldo automático, bloqueo de variantes -contributor y guía para Muse Glimmer en Modal | ✅ |
 | Lun 26 oct | F9: Dockerfile, despliegue a Azure con OIDC, rate limiting, health checks, logs JSON con correlación, defensa contra prompt injection en el servidor y retención | ✅ |
-| Lun 26 oct | Primera llamada real a Muse Spark con la clave del evento | ⬜ |
-| Mar 27 oct | Workshop Meta P1. Ajustar prompt con conversaciones reales de prueba | ⬜ |
-| Mié 28 oct | Workshop Meta P2. Reprogramar citas y recordatorios | ⬜ |
-| Jue 29 oct | Lectura de carnet de ARS con imagen (llenar datos del paciente) | ⬜ |
-| Vie 30 oct | Borrador de solicitud de autorización a la ARS | ⬜ |
-| Sáb 31 oct – Dom 1 nov | Notas de voz con Muse Voice Transcribe / prueba con Muse Glimmer local | ⬜ |
-| Lun 2 nov | Pulir panel, README, despliegue en Azure | ⬜ |
+| Lun 26 oct | Pruebas de integración opcionales contra la Meta Model API, script con curl y guía de ajustes | ✅ |
+| Mar 27 oct | Workshop Meta P1. Primera llamada real (`docs/PRUEBAS-META.md`) y ajuste del prompt con conversaciones de prueba | ⬜ |
+| Mié 28 oct | Workshop Meta P2. Confirmar en la documentación y con la clave real Muse Voice Transcribe y la lectura de carnet (imagen + `json_schema`) | ⬜ |
+| Jue 29 oct | Conectar un número de prueba de WhatsApp (`docs/WHATSAPP.md`) y probar texto, nota de voz, foto y oferta de lista de espera | ⬜ |
+| Vie 30 oct | Servir Muse Glimmer en Modal (`docs/GLIMMER.md`) y probarlo como principal y como respaldo | ⬜ |
+| Sáb 31 oct – Dom 1 nov | Despliegue en Azure (`docs/DESPLIEGUE.md`) y prueba de punta a punta en la nube | ⬜ |
+| Lun 2 nov | Pulir panel y README con capturas reales | ⬜ |
 | Mar 3 nov | Grabar video de 3 minutos | ⬜ |
 | Mié 4 nov | Enviar temprano. Verificar repo en navegador sin sesión | ⬜ |
 
 ## Guion del video (3 minutos)
 
 1. **0:00–0:30** El problema: la secretaria y el WhatsApp lleno.
-2. **0:30–2:15** Demo en vivo: el paciente pide cita, el agente busca, ofrece horarios, confirma y crea la cita. Panel de pasos visible. Luego una pregunta clínica que se escala.
-3. **2:15–2:45** Cómo usa Meta: Muse Spark con tool calling, imagen y voz.
+2. **0:30–2:15** Demo en vivo por WhatsApp: nota de voz pidiendo cita → el agente identifica, ofrece horarios y reserva. Foto del carnet → confirma la ARS. Otra paciente cancela → la lista de espera ofrece el hueco solo. Pregunta clínica → se escala. Panel de la secretaria con el escalamiento y el borrador de autorización.
+3. **2:15–2:45** Cómo usa Meta: Muse Spark (tool calling, imagen con salida estructurada), Muse Voice Transcribe y Muse Glimmer con pesos abiertos como respaldo o modo local.
 4. **2:45–3:00** Impacto y siguiente paso.

@@ -106,6 +106,8 @@ Pruebas:
 dotnet test
 ```
 
+Con la clave de Meta, `./scripts/probar-meta.sh` y `dotnet test --filter "Categoria=Meta"` confirman los formatos reales. Ver [docs/PRUEBAS-META.md](docs/PRUEBAS-META.md).
+
 La prueba contra PostgreSQL solo corre si se define `DPM_TEST_POSTGRES` con la cadena de una base desechable (el CI la define con un contenedor de Postgres).
 
 Despliegue en Azure App Service con PostgreSQL, Key Vault y GitHub Actions: ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). También hay un `Dockerfile` multi-stage.
