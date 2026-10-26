@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Panel del consultorio</title>
+  <script src="i18n.js"></script>
   <style>
     :root { --bg:#f4f6f8; --card:#fff; --text:#1d2430; --muted:#6b7480; --brand:#0f7b6c; --line:#e3e7eb; --warn:#c0392b; --soft:#eef7f5; }
     @media (prefers-color-scheme: dark) {
@@ -40,20 +41,27 @@
     #login { max-width:360px; margin:10vh auto; }
     #login input { width:100%; }
     #login button { width:100%; margin-top:14px; }
+    .idioma { display:flex; gap:6px; align-items:center; font-size:13px; color:var(--muted); }
+    select { padding:6px 8px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); }
+    .original { border-left:3px solid var(--line); padding:4px 8px; margin:6px 0; color:var(--muted); font-style:italic; }
     textarea { width:100%; min-height:220px; padding:10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font:13px/1.5 ui-monospace,Consolas,monospace; }
   </style>
 </head>
 <body>
 <main>
+  <div class="idioma" style="justify-content:flex-end;margin-bottom:8px">
+    <label for="selectorIdioma" data-i18n="idioma"></label>
+    <select id="selectorIdioma" data-selector-idioma></select>
+  </div>
   <section id="login" class="card" hidden>
-    <h1>Panel del consultorio</h1>
-    <p class="muted">Solo para el personal. Datos ficticios.</p>
+    <h1 data-i18n="panel.titulo"></h1>
+    <p class="muted" data-i18n="panel.solo_personal"></p>
     <form id="formLogin">
-      <label for="usuario">Usuario</label>
+      <label for="usuario" data-i18n="panel.usuario"></label>
       <input id="usuario" autocomplete="username" required>
-      <label for="clave">Clave</label>
+      <label for="clave" data-i18n="panel.clave"></label>
       <input id="clave" type="password" autocomplete="current-password" required>
-      <button>Entrar</button>
+      <button data-i18n="panel.entrar"></button>
       <p id="errorLogin" class="error"></p>
     </form>
   </section>
@@ -61,17 +69,17 @@
   <section id="app" hidden>
     <header class="top">
       <div>
-        <h1>Panel del consultorio</h1>
+        <h1 data-i18n="panel.titulo"></h1>
         <span id="quien" class="muted"></span>
       </div>
-      <button id="salir" class="sec">Cerrar sesión</button>
+      <button id="salir" class="sec" data-i18n="panel.salir"></button>
     </header>
     <nav id="tabs">
-      <button data-tab="citas" class="activa">Citas del día</button>
-      <button data-tab="escalamientos">Escalamientos</button>
-      <button data-tab="carnets">Carnets por confirmar</button>
-      <button data-tab="autorizaciones">Autorizaciones ARS</button>
-      <button data-tab="bitacora">Bitácora</button>
+      <button data-tab="citas" class="activa" data-i18n="tab.citas"></button>
+      <button data-tab="escalamientos" data-i18n="tab.escalamientos"></button>
+      <button data-tab="carnets" data-i18n="tab.carnets"></button>
+      <button data-tab="autorizaciones" data-i18n="tab.autorizaciones"></button>
+      <button data-tab="bitacora" data-i18n="tab.bitacora"></button>
     </nav>
     <div class="card">
       <p id="error" class="error"></p>
@@ -81,7 +89,9 @@
 </main>
 <script>
   const $ = (id) => document.getElementById(id);
+  const t = (clave) => I18N.t(clave);
   let tab = 'citas';
+  I18N.alCambiar(() => { if (!$('app').hidden) cargar(); });
 
   function el(tag, props = {}, ...hijos) {
     const e = document.createElement(tag);
@@ -100,7 +110,7 @@
       headers: opciones.body ? { 'Content-Type': 'application/json' } : undefined,
       credentials: 'same-origin',
     });
-    if (res.status === 401) { mostrarLogin(); throw new Error('La sesión terminó. Entre de nuevo.'); }
+    if (res.status === 401) { mostrarLogin(); throw new Error(t('panel.sesion_vencida')); }
     const texto = await res.text();
     const datos = texto ? JSON.parse(texto) : null;
     if (!res.ok) throw new Error((datos && (datos.error || datos.detail)) || res.statusText);
@@ -126,7 +136,7 @@
       body: JSON.stringify({ usuario: $('usuario').value.trim(), clave: $('clave').value }),
     });
     $('clave').value = '';
-    if (!res.ok) { $('errorLogin').textContent = 'Usuario o clave incorrectos.'; return; }
+    if (!res.ok) { $('errorLogin').textContent = t('panel.login_error'); return; }
     await mostrarApp();
   });
 
@@ -147,7 +157,7 @@
     $('error').textContent = '';
     const vista = $('vista');
     try {
-      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, bitacora })[tab]();
+      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, costos, bitacora })[tab]();
       vista.replaceChildren(contenido);
     } catch (err) {
       $('error').textContent = err.message;
@@ -171,80 +181,106 @@
       el('td', {}, c.ars || '—', el('div', { class: 'muted' }, c.numeroAfiliado || '')),
       el('td', {}, c.medico),
       el('td', {}, c.motivo),
-      el('td', {}, el('span', { class: 'chip' }, c.estado), c.asistenciaConfirmada ? el('div', { class: 'muted' }, 'asistencia confirmada') : ''),
+      el('td', {}, el('span', { class: 'chip' }, c.estado), c.asistenciaConfirmada ? el('div', { class: 'muted' }, t('citas.asistencia')) : ''),
       el('td', {}, c.estado === 'confirmada'
-        ? el('button', { class: 'sec', onclick: () => accion(() => api(`/api/panel/autorizaciones`, { method: 'POST', body: JSON.stringify({ citaId: c.id }) })) }, 'Borrador ARS')
+        ? el('button', { class: 'sec', onclick: () => accion(() => api(`/api/panel/autorizaciones`, { method: 'POST', body: JSON.stringify({ citaId: c.id }) })) }, t('citas.borrador'))
         : '')));
     return el('div', {},
-      el('div', { class: 'fila-acciones' }, el('label', {}, 'Fecha '), fecha),
+      el('div', { class: 'fila-acciones' }, el('label', {}, t('citas.fecha') + ' '), fecha),
       lista.length ? el('div', { class: 'tabla' }, el('table', {},
-        el('thead', {}, el('tr', {}, ['Hora', 'Paciente', 'ARS', 'Médico', 'Motivo', 'Estado', ''].map(t => el('th', {}, t)))),
-        el('tbody', {}, filas))) : el('p', { class: 'vacio' }, 'No hay citas para este día.'));
+        el('thead', {}, el('tr', {}, ['citas.hora', 'citas.paciente', 'citas.ars', 'citas.medico', 'citas.motivo', 'citas.estado'].map(k => el('th', {}, t(k))), el('th', {}))),
+        el('tbody', {}, filas))) : el('p', { class: 'vacio' }, t('citas.vacio')));
   }
 
   async function escalamientos() {
     const lista = await api('/api/panel/escalamientos');
-    if (!lista.length) return el('p', { class: 'vacio' }, 'No hay escalamientos pendientes.');
+    if (!lista.length) return el('p', { class: 'vacio' }, t('esc.vacio'));
     return el('div', {}, lista.map(e => el('div', { class: 'item' },
       el('div', { class: 'fila-acciones' },
-        e.urgente ? el('span', { class: 'chip urgente' }, 'URGENTE') : '',
-        el('strong', {}, e.id), el('span', { class: 'muted' }, new Date(e.creado).toLocaleString('es-DO'))),
-      el('p', {}, e.motivo),
-      el('p', { class: 'muted' }, `Paciente: ${e.pacienteId || 'sin identificar'} · Conversación: ${e.sesionId}`),
-      el('button', { onclick: () => accion(() => api(`/api/panel/escalamientos/${e.id}/atender`, { method: 'POST' })) }, 'Marcar como atendido'))));
+        e.urgente ? el('span', { class: 'chip urgente' }, t('esc.urgente')) : '',
+        el('strong', {}, e.id),
+        e.idioma ? el('span', { class: 'chip' }, e.idioma) : '',
+        el('span', { class: 'muted' }, fecha(e.creado))),
+      // Resumen en el idioma del panel; el mensaje del paciente, tal como lo escribió.
+      el('p', {}, I18N.idioma === 'en' ? (e.motivoEn || e.motivo) : e.motivo),
+      e.mensajeOriginal ? el('div', { class: 'original', title: t('esc.original') }, e.mensajeOriginal) : '',
+      el('p', { class: 'muted' }, `${t('esc.paciente')}: ${e.pacienteId || t('esc.sin_identificar')} · ${t('esc.conversacion')}: ${e.sesionId}`),
+      el('button', { onclick: () => accion(() => api(`/api/panel/escalamientos/${e.id}/atender`, { method: 'POST' })) }, t('esc.atender')))));
   }
 
   async function carnets() {
     const lista = await api('/api/carnets');
-    if (!lista.length) return el('p', { class: 'vacio' }, 'No hay carnets por confirmar.');
+    if (!lista.length) return el('p', { class: 'vacio' }, t('carnet.vacio'));
     return el('div', {}, lista.map(c => {
       const nombre = el('input', { value: c.datos.nombre || '' });
       const ars = el('input', { value: c.datos.ars || '' });
       const afiliado = el('input', { value: c.datos.numeroAfiliado || '' });
       return el('div', { class: 'item' },
         el('div', { class: 'fila-acciones' }, el('strong', {}, c.id),
-          el('span', { class: 'muted' }, `Tel. ${c.telefonoCanal} · ${c.pacienteId || 'paciente nuevo'}`)),
+          el('span', { class: 'muted' }, `${t('carnet.tel')} ${c.telefonoCanal} · ${c.pacienteId || t('carnet.nuevo')}`)),
         el('div', { class: 'grid' },
-          el('div', {}, el('label', {}, 'Nombre'), nombre),
-          el('div', {}, el('label', {}, 'ARS'), ars),
-          el('div', {}, el('label', {}, 'Número de afiliado'), afiliado)),
+          el('div', {}, el('label', {}, t('carnet.nombre')), nombre),
+          el('div', {}, el('label', {}, t('carnet.ars')), ars),
+          el('div', {}, el('label', {}, t('carnet.afiliado')), afiliado)),
         el('div', { class: 'fila-acciones', style: 'margin-top:10px' },
           el('button', { onclick: () => accion(() => api(`/api/carnets/${c.id}/confirmar`, { method: 'POST',
-            body: JSON.stringify({ nombre: nombre.value, ars: ars.value, numeroAfiliado: afiliado.value }) })) }, 'Confirmar'),
-          el('button', { class: 'sec', onclick: () => accion(() => api(`/api/carnets/${c.id}/descartar`, { method: 'POST' })) }, 'Descartar')));
+            body: JSON.stringify({ nombre: nombre.value, ars: ars.value, numeroAfiliado: afiliado.value }) })) }, t('carnet.confirmar')),
+          el('button', { class: 'sec', onclick: () => accion(() => api(`/api/carnets/${c.id}/descartar`, { method: 'POST' })) }, t('carnet.descartar'))));
     }));
   }
 
   async function autorizaciones() {
     const lista = await api('/api/panel/autorizaciones');
-    if (!lista.length) return el('p', { class: 'vacio' }, 'No hay borradores pendientes. Créelos desde "Citas del día".');
+    if (!lista.length) return el('p', { class: 'vacio' }, t('aut.vacio'));
     return el('div', {}, lista.map(a => {
       const texto = el('textarea', {}, a.contenido);
       return el('div', { class: 'item' },
         el('div', { class: 'fila-acciones' }, el('strong', {}, a.id),
           el('span', { class: 'chip' }, a.estado),
-          el('span', { class: 'muted' }, `${a.citaId} · ${a.paciente} · ${a.ars || 'sin ARS'}`)),
-        a.faltantes.length ? el('p', { class: 'error' }, 'Falta: ' + a.faltantes.join(', ')) : '',
+          el('span', { class: 'muted' }, `${a.citaId} · ${a.paciente} · ${a.ars || t('aut.sin_ars')}`)),
+        a.faltantes.length ? el('p', { class: 'error' }, t('aut.falta') + a.faltantes.join(', ')) : '',
         texto,
-        el('p', { class: 'muted' }, 'Revise y edite el texto. Aprobar no envía nada: solo lo marca como listo para que usted lo tramite.'),
+        el('p', { class: 'muted' }, t('aut.nota')),
         el('div', { class: 'fila-acciones' },
-          el('button', { class: 'sec', onclick: () => accion(() => api(`/api/panel/autorizaciones/${a.id}`, { method: 'PUT', body: JSON.stringify({ contenido: texto.value }) })) }, 'Guardar cambios'),
-          el('button', { onclick: () => accion(() => api(`/api/panel/autorizaciones/${a.id}/aprobar`, { method: 'POST', body: JSON.stringify({ contenido: texto.value }) })) }, 'Aprobar'),
-          el('button', { class: 'peligro', onclick: () => accion(() => api(`/api/panel/autorizaciones/${a.id}/descartar`, { method: 'POST' })) }, 'Descartar')));
+          el('button', { class: 'sec', onclick: () => accion(() => api(`/api/panel/autorizaciones/${a.id}`, { method: 'PUT', body: JSON.stringify({ contenido: texto.value }) })) }, t('aut.guardar')),
+          el('button', { onclick: () => accion(() => api(`/api/panel/autorizaciones/${a.id}/aprobar`, { method: 'POST', body: JSON.stringify({ contenido: texto.value }) })) }, t('aut.aprobar')),
+          el('button', { class: 'peligro', onclick: () => accion(() => api(`/api/panel/autorizaciones/${a.id}/descartar`, { method: 'POST' })) }, t('aut.descartar'))));
     }));
+  }
+
+  const fecha = (iso) => new Date(iso).toLocaleString(I18N.idioma === 'en' ? 'en-US' : 'es-DO');
+
+  async function costos() {
+    const c = await api('/api/panel/costos');
+    const dinero = (v) => v === null || v === undefined ? '—' : `$${v.toFixed(4)}`;
+    const fila = (clave, valor) => el('tr', {}, el('th', {}, t(clave)), el('td', {}, valor));
+    return el('div', {},
+      el('p', { class: 'muted' }, t('costos.periodo')),
+      el('table', {}, el('tbody', {},
+        fila('costos.conversaciones', String(c.conversaciones)),
+        fila('costos.citas', String(c.citasAgendadas)),
+        fila('costos.llamadas', String(c.llamadas)),
+        fila('costos.tokens', `${c.tokensEntrada} / ${c.tokensSalida}`),
+        fila('costos.total', dinero(c.costoTotal)),
+        fila('costos.por_conversacion', dinero(c.costoPorConversacion)),
+        fila('costos.por_cita', dinero(c.costoPorCita)))),
+      c.modelosSinPrecio.length ? el('p', { class: 'error' }, t('costos.sin_precio') + c.modelosSinPrecio.join(', ')) : '',
+      el('h3', {}, t('costos.por_modelo')),
+      el('table', {}, el('tbody', {}, c.porModelo.map(m =>
+        el('tr', {}, el('td', {}, m.modelo), el('td', {}, String(m.llamadas)), el('td', {}, `${m.tokensEntrada} / ${m.tokensSalida}`), el('td', {}, dinero(m.costo)))))));
   }
 
   async function bitacora() {
     const lista = await api('/api/bitacora?limite=200');
-    if (!lista.length) return el('p', { class: 'vacio' }, 'Sin registros todavía.');
+    if (!lista.length) return el('p', { class: 'vacio' }, t('bit.vacio'));
     return el('div', { class: 'tabla' }, el('table', {},
-      el('thead', {}, el('tr', {}, ['Fecha', 'Quién', 'Acción', 'Sobre', 'Detalle'].map(t => el('th', {}, t)))),
+      el('thead', {}, el('tr', {}, ['bit.fecha', 'bit.quien', 'bit.accion', 'bit.sobre', 'bit.detalle'].map(k => el('th', {}, t(k))))),
       el('tbody', {}, lista.map(b => el('tr', {},
-        el('td', {}, new Date(b.fecha).toLocaleString('es-DO')),
+        el('td', {}, fecha(b.fecha)),
         el('td', {}, b.actor),
         el('td', {}, b.accion),
         el('td', {}, [b.entidad, b.entidadId].filter(Boolean).join(' ')),
-        el('td', {}, b.detalle || ''))))));
+        el('td', {}, [b.detalle, I18N.idioma === 'en' ? (b.resumenEn || b.resumenEs) : b.resumenEs].filter(Boolean).join(' · ')))))));
   }
 
   fetch('/api/auth/yo', { credentials: 'same-origin' }).then(r => r.ok ? mostrarApp() : mostrarLogin()).catch(mostrarLogin);

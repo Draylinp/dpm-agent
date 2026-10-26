@@ -16,12 +16,13 @@ Entrega: **miércoles 4 de noviembre, 9:00 PM ET** (misma hora en República Dom
 | Lun 26 oct | F8: modelo intercambiable (Meta API / servidor OpenAI-compatible), respaldo automático, bloqueo de variantes -contributor y guía para Muse Glimmer en Modal | ✅ |
 | Lun 26 oct | F9: Dockerfile, despliegue a Azure con OIDC, rate limiting, health checks, logs JSON con correlación, defensa contra prompt injection en el servidor y retención | ✅ |
 | Lun 26 oct | F10: multilingüe. Nivel 1 garantizado (es, en, ht): detección por mensaje, idioma en la sesión y el paciente, textos fijos y plantillas en los tres idiomas. Nivel 2 abierto con respaldo en inglés. Número de emergencias e idioma predeterminado por consultorio; escalamientos y bitácora con mensaje original y resúmenes es/en | ✅ |
+| Lun 26 oct | F10b: chat y panel con selector español/inglés (recordado en el navegador), resúmenes del panel en el idioma elegido, README y guías en inglés con versión en español (`README.es.md`, `docs/es/`) | ✅ |
 | Lun 26 oct | Pruebas de integración opcionales contra la Meta Model API, script con curl y guía de ajustes | ✅ |
-| Mar 27 oct | Workshop Meta P1. Primera llamada real (`docs/PRUEBAS-META.md`) y ajuste del prompt con conversaciones de prueba | ⬜ |
+| Mar 27 oct | Workshop Meta P1. Primera llamada real (`docs/es/PRUEBAS-META.md`) y ajuste del prompt con conversaciones de prueba | ⬜ |
 | Mié 28 oct | Workshop Meta P2. Confirmar en la documentación y con la clave real Muse Voice Transcribe y la lectura de carnet (imagen + `json_schema`) | ⬜ |
-| Jue 29 oct | Conectar un número de prueba de WhatsApp (`docs/WHATSAPP.md`) y probar texto, nota de voz, foto y oferta de lista de espera | ⬜ |
-| Vie 30 oct | Servir Muse Glimmer en Modal (`docs/GLIMMER.md`) y probarlo como principal y como respaldo | ⬜ |
-| Sáb 31 oct – Dom 1 nov | Despliegue en Azure (`docs/DESPLIEGUE.md`) y prueba de punta a punta en la nube | ⬜ |
+| Jue 29 oct | Conectar un número de prueba de WhatsApp (`docs/es/WHATSAPP.md`) y probar texto, nota de voz, foto y oferta de lista de espera | ⬜ |
+| Vie 30 oct | Servir Muse Glimmer en Modal (`docs/es/GLIMMER.md`) y probarlo como principal y como respaldo | ⬜ |
+| Sáb 31 oct – Dom 1 nov | Despliegue en Azure (`docs/es/DESPLIEGUE.md`) y prueba de punta a punta en la nube | ⬜ |
 | Lun 2 nov | Pulir panel y README con capturas reales | ⬜ |
 | Mar 3 nov | Grabar video de 3 minutos | ⬜ |
 | Mié 4 nov | Enviar temprano. Verificar repo en navegador sin sesión | ⬜ |

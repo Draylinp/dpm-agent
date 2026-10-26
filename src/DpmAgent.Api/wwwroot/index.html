@@ -4,85 +4,107 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>DPM Agent</title>
+  <script src="i18n.js"></script>
   <style>
-    :root { --bg:#f4f6f8; --card:#fff; --text:#1d2430; --muted:#6b7480; --brand:#0f7b6c; --me:#dcf5ee; --line:#e3e7eb; }
+    :root { --bg:#f4f6f8; --card:#fff; --text:#1d2430; --muted:#6b7480; --brand:#0f7b6c; --me:#dcf5ee; --line:#e3e7eb; --aviso:#fff4d6; --aviso-borde:#e6c35c; }
     @media (prefers-color-scheme: dark) {
-      :root { --bg:#12161b; --card:#1b2129; --text:#e6e9ed; --muted:#9aa3ad; --brand:#3fbfa8; --me:#1f3b35; --line:#2a313a; }
+      :root { --bg:#12161b; --card:#1b2129; --text:#e6e9ed; --muted:#9aa3ad; --brand:#3fbfa8; --me:#1f3b35; --line:#2a313a; --aviso:#3a3220; --aviso-borde:#8a7232; }
     }
     * { box-sizing:border-box; }
     body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+    .banner { background:var(--aviso); border-bottom:1px solid var(--aviso-borde); padding:8px 16px; font-size:14px; display:flex; gap:12px; align-items:center; justify-content:center; flex-wrap:wrap; }
+    .barra { max-width:1100px; margin:0 auto; padding:12px 16px 0; display:flex; justify-content:flex-end; gap:8px; align-items:center; font-size:13px; color:var(--muted); }
     main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:1fr; }
     @media (min-width:900px) { main { grid-template-columns:3fr 2fr; } }
     section { background:var(--card); border:1px solid var(--line); border-radius:12px; display:flex; flex-direction:column; min-height:0; }
     header { padding:12px 16px; border-bottom:1px solid var(--line); }
     header h1, header h2 { margin:0; font-size:16px; }
     header p { margin:4px 0 0; color:var(--muted); font-size:13px; }
-    #chat { height:60vh; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; }
+    #ejemplos { padding:10px 16px; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:13px; }
+    #ejemplos button { background:transparent; color:var(--text); border:1px solid var(--line); padding:6px 10px; font-weight:500; font-size:13px; }
+    #chat { height:56vh; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; }
     .msg { max-width:85%; padding:8px 12px; border-radius:10px; white-space:pre-wrap; line-height:1.4; font-size:14px; }
     .user { align-self:flex-end; background:var(--me); }
     .bot { align-self:flex-start; background:var(--bg); }
     .err { align-self:center; color:#c0392b; font-size:13px; }
-    .canal { display:flex; gap:8px; align-items:center; padding:8px 16px; border-bottom:1px solid var(--line); font-size:13px; color:var(--muted); }
-    .canal input { flex:0 1 180px; padding:6px 8px; }
+    .canal { display:flex; gap:8px; align-items:center; padding:8px 16px; border-bottom:1px solid var(--line); font-size:13px; color:var(--muted); flex-wrap:wrap; }
+    .canal input { flex:0 1 160px; padding:6px 8px; }
+    #idiomaPaciente { margin-left:auto; }
     form { display:flex; gap:8px; padding:12px; border-top:1px solid var(--line); }
-    input { flex:1; padding:10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:14px; }
+    input, select { padding:10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:14px; }
+    form input { flex:1; min-width:0; }
+    select { padding:6px 8px; }
     button { padding:10px 16px; border:0; border-radius:8px; background:var(--brand); color:#fff; font-weight:600; cursor:pointer; }
     button:disabled { opacity:.5; }
     #grabar.activo { background:#c0392b; }
     .voz { font-size:12px; color:var(--muted); display:block; margin-bottom:2px; }
-    #trace { height:60vh; overflow-y:auto; padding:12px 16px; font-family:ui-monospace,Consolas,monospace; font-size:12px; }
+    #trace { height:56vh; overflow-y:auto; padding:12px 16px; font-family:ui-monospace,Consolas,monospace; font-size:12px; }
     .step { border-left:3px solid var(--brand); padding:4px 8px; margin-bottom:10px; }
     .step b { color:var(--brand); }
     .step pre { margin:4px 0 0; white-space:pre-wrap; word-break:break-word; color:var(--muted); }
   </style>
 </head>
 <body>
+<div id="banner" class="banner" hidden>
+  <strong data-i18n="demo.banner"></strong>
+  <button id="reiniciar" type="button" data-i18n="demo.reiniciar"></button>
+</div>
+<div class="barra">
+  <label for="selectorIdioma" data-i18n="idioma"></label>
+  <select id="selectorIdioma" data-selector-idioma></select>
+</div>
 <main>
   <section>
     <header>
-      <h1>DPM Agent: recepción del consultorio</h1>
-      <p>Prototipo con datos ficticios. Solo tareas administrativas, sin orientación médica.</p>
+      <h1 data-i18n="chat.titulo"></h1>
+      <p data-i18n="chat.subtitulo"></p>
     </header>
+    <div id="ejemplos" hidden><span data-i18n="demo.probar"></span></div>
     <div class="canal">
-      <label for="telefono">Número de WhatsApp (simulado):</label>
+      <label for="telefono" data-i18n="chat.telefono"></label>
       <input id="telefono" value="809-555-0101" autocomplete="off">
-      <button id="nueva" type="button">Nueva conversación</button>
+      <button id="nueva" type="button" data-i18n="chat.nueva"></button>
+      <span id="idiomaPaciente"></span>
     </div>
     <div id="chat"></div>
     <form id="form">
-      <input id="input" autocomplete="off" placeholder="Ej.: Quiero una cita con la doctora para mañana en la mañana">
-      <button id="foto" type="button" title="Enviar foto del carnet de la ARS">📷</button>
+      <input id="input" autocomplete="off" data-i18n-placeholder="chat.placeholder">
+      <button id="foto" type="button" data-i18n-title="chat.foto">📷</button>
       <input id="archivoFoto" type="file" accept="image/jpeg,image/png,image/webp" hidden>
-      <button id="grabar" type="button" title="Grabar nota de voz">🎤</button>
-      <button id="send">Enviar</button>
+      <button id="grabar" type="button" data-i18n-title="chat.grabar">🎤</button>
+      <button id="send" data-i18n="chat.enviar"></button>
     </form>
   </section>
   <section>
     <header>
-      <h2>Pasos del agente</h2>
-      <p>Herramientas que el modelo decidió usar en cada turno.</p>
+      <h2 data-i18n="traza.titulo"></h2>
+      <p data-i18n="traza.subtitulo"></p>
     </header>
     <div id="trace"></div>
   </section>
 </main>
 <script>
+  const t = (clave) => I18N.t(clave);
   const chat = document.getElementById('chat');
   const trace = document.getElementById('trace');
   const form = document.getElementById('form');
   const input = document.getElementById('input');
   const send = document.getElementById('send');
   const telefono = document.getElementById('telefono');
+  const idiomaPaciente = document.getElementById('idiomaPaciente');
   let sesionId = null;
-
   let ultimoSaliente = 0;
 
-  document.getElementById('nueva').addEventListener('click', () => {
+  function nuevaConversacion() {
     sesionId = null;
     ultimoSaliente = 0;
     telefono.disabled = false;
+    idiomaPaciente.textContent = '';
     chat.replaceChildren();
     trace.replaceChildren();
-  });
+  }
+
+  document.getElementById('nueva').addEventListener('click', nuevaConversacion);
 
   function add(cls, text, etiqueta) {
     const div = document.createElement('div');
@@ -99,10 +121,23 @@
     return div;
   }
 
+  function addStep(p) {
+    const div = document.createElement('div');
+    div.className = 'step';
+    const b = document.createElement('b');
+    b.textContent = p.herramienta;
+    const pre = document.createElement('pre');
+    pre.textContent = 'args: ' + p.argumentos + '\n→ ' + p.resultado;
+    div.append(b, pre);
+    trace.appendChild(div);
+    trace.scrollTop = trace.scrollHeight;
+  }
+
   function mostrarRespuesta(data) {
     sesionId = data.sesionId;
     // Una sesión queda atada a su número, igual que un chat de WhatsApp.
     telefono.disabled = true;
+    if (data.idioma) idiomaPaciente.textContent = `${t('chat.idioma_detectado')}: ${data.idioma}`;
     (data.pasos || []).forEach(addStep);
     add('bot', data.respuesta);
   }
@@ -116,39 +151,31 @@
     }
   }
 
-  function addStep(p) {
-    const div = document.createElement('div');
-    div.className = 'step';
-    const b = document.createElement('b');
-    b.textContent = p.herramienta;
-    const pre = document.createElement('pre');
-    pre.textContent = 'args: ' + p.argumentos + '\n→ ' + p.resultado;
-    div.append(b, pre);
-    trace.appendChild(div);
-    trace.scrollTop = trace.scrollHeight;
+  async function enviarTexto(mensaje) {
+    add('user', mensaje);
+    send.disabled = true;
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sesionId, mensaje, telefono: telefono.value.trim() || null, idioma: I18N.idioma })
+      });
+      if (!res.ok) throw new Error(await leerError(res));
+      mostrarRespuesta(await res.json());
+    } catch (err) {
+      add('err', t('chat.error') + err.message);
+    } finally {
+      send.disabled = false;
+      input.focus();
+    }
   }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const mensaje = input.value.trim();
     if (!mensaje) return;
-    add('user', mensaje);
     input.value = '';
-    send.disabled = true;
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sesionId, mensaje, telefono: telefono.value.trim() || null })
-      });
-      if (!res.ok) throw new Error(await leerError(res));
-      mostrarRespuesta(await res.json());
-    } catch (err) {
-      add('err', 'Error: ' + err.message);
-    } finally {
-      send.disabled = false;
-      input.focus();
-    }
+    await enviarTexto(mensaje);
   });
 
   // Mensajes que el sistema envía solo (ofertas de turnos liberados, recordatorios).
@@ -159,7 +186,7 @@
       if (!res.ok) return;
       for (const m of await res.json()) {
         ultimoSaliente = Math.max(ultimoSaliente, m.id);
-        add('bot', m.texto, m.tipo === 'recordatorio' ? '🔔 Recordatorio' : '🔔 Mensaje automático');
+        add('bot', m.texto, m.tipo === 'recordatorio' ? t('chat.recordatorio') : t('chat.automatico'));
       }
     } catch {
       // Sin conexión: se intenta en la siguiente vuelta.
@@ -175,22 +202,27 @@
     const archivo = archivoFoto.files[0];
     archivoFoto.value = '';
     if (!archivo) return;
-    add('user', archivo.name, '📷 Foto del carnet');
+    add('user', archivo.name, t('chat.foto_carnet'));
     send.disabled = foto.disabled = true;
     try {
-      const datos = new FormData();
-      datos.append('imagen', archivo);
-      if (sesionId) datos.append('sesionId', sesionId);
-      if (telefono.value.trim()) datos.append('telefono', telefono.value.trim());
-      const res = await fetch('/api/pacientes/carnet', { method: 'POST', body: datos });
+      const res = await fetch('/api/pacientes/carnet', { method: 'POST', body: formulario('imagen', archivo) });
       if (!res.ok) throw new Error(await leerError(res));
       mostrarRespuesta(await res.json());
     } catch (err) {
-      add('err', 'Error: ' + err.message);
+      add('err', t('chat.error') + err.message);
     } finally {
       send.disabled = foto.disabled = false;
     }
   });
+
+  function formulario(campo, archivo) {
+    const datos = new FormData();
+    datos.append(campo, archivo, archivo.name || 'archivo');
+    if (sesionId) datos.append('sesionId', sesionId);
+    if (telefono.value.trim()) datos.append('telefono', telefono.value.trim());
+    datos.append('idioma', I18N.idioma);
+    return datos;
+  }
 
   // Notas de voz: se graban en el navegador y se envían a /api/chat/audio.
   const grabar = document.getElementById('grabar');
@@ -200,12 +232,12 @@
 
   function formatoGrabacion() {
     const opciones = ['audio/ogg;codecs=opus', 'audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
-    return opciones.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+    return opciones.find(x => window.MediaRecorder && MediaRecorder.isTypeSupported(x)) || '';
   }
 
   if (!navigator.mediaDevices || !window.MediaRecorder) {
     grabar.disabled = true;
-    grabar.title = 'Este navegador no permite grabar audio';
+    grabar.dataset.i18nTitle = 'chat.sin_microfono';
   }
 
   grabar.addEventListener('click', async () => {
@@ -217,7 +249,7 @@
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
-      add('err', 'No se pudo usar el micrófono: ' + err.message);
+      add('err', t('chat.error_microfono') + err.message);
       return;
     }
     const partes = [];
@@ -226,7 +258,7 @@
     grabadora.ondataavailable = (e) => { if (e.data.size) partes.push(e.data); };
     grabadora.onstop = async () => {
       clearTimeout(corte);
-      stream.getTracks().forEach(t => t.stop());
+      stream.getTracks().forEach(x => x.stop());
       const blob = new Blob(partes, { type: grabadora.mimeType });
       grabadora = null;
       grabar.classList.remove('activo');
@@ -241,25 +273,66 @@
 
   async function enviarAudio(blob) {
     if (!blob.size) return;
-    const pendiente = add('user', '…', '🎤 Nota de voz');
+    const pendiente = add('user', '…', t('chat.nota_voz'));
     send.disabled = grabar.disabled = true;
     try {
-      const datos = new FormData();
-      datos.append('audio', blob, 'nota');
-      if (sesionId) datos.append('sesionId', sesionId);
-      if (telefono.value.trim()) datos.append('telefono', telefono.value.trim());
-      const res = await fetch('/api/chat/audio', { method: 'POST', body: datos });
+      const res = await fetch('/api/chat/audio', { method: 'POST', body: formulario('audio', blob) });
       if (!res.ok) throw new Error(await leerError(res));
       const data = await res.json();
       pendiente.lastChild.textContent = data.transcripcion;
       mostrarRespuesta(data);
     } catch (err) {
-      pendiente.lastChild.textContent = '(no se pudo procesar)';
-      add('err', 'Error: ' + err.message);
+      pendiente.lastChild.textContent = t('chat.no_procesado');
+      add('err', t('chat.error') + err.message);
     } finally {
       send.disabled = grabar.disabled = false;
     }
   }
+
+  // Modo demo: banner, reinicio y ejemplos para probar en 30 segundos.
+  let demo = null;
+
+  function pintarEjemplos() {
+    const caja = document.getElementById('ejemplos');
+    caja.querySelectorAll('button').forEach(b => b.remove());
+    if (!demo) return;
+    for (const ej of demo.ejemplos) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = ej.etiqueta[I18N.idioma] || ej.etiqueta.en;
+      b.addEventListener('click', async () => {
+        if (ej.telefono !== telefono.value.trim() || telefono.disabled) {
+          nuevaConversacion();
+          telefono.value = ej.telefono;
+        }
+        await enviarTexto(ej.mensaje[I18N.idioma] || ej.mensaje.en);
+      });
+      caja.appendChild(b);
+    }
+  }
+
+  async function cargarDemo() {
+    try {
+      const res = await fetch('/api/demo');
+      if (!res.ok) return;
+      demo = await res.json();
+      if (!demo.habilitado) { demo = null; return; }
+      document.getElementById('banner').hidden = false;
+      document.getElementById('ejemplos').hidden = false;
+      pintarEjemplos();
+    } catch {
+      demo = null;
+    }
+  }
+
+  document.getElementById('reiniciar').addEventListener('click', async () => {
+    const res = await fetch('/api/demo/reiniciar', { method: 'POST' });
+    nuevaConversacion();
+    add(res.ok ? 'bot' : 'err', res.ok ? t('demo.reiniciada') : t('chat.error') + await leerError(res));
+  });
+
+  I18N.alCambiar(pintarEjemplos);
+  cargarDemo();
 </script>
 </body>
 </html>

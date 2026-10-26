@@ -1,73 +1,75 @@
-# Modo con pesos abiertos: Muse Glimmer
+# Open-weights mode: Muse Glimmer
 
-El agente puede usar **Muse Spark** por la Meta Model API o **Muse Glimmer** (pesos abiertos, Apache 2.0) en un servidor propio. Así el consultorio puede correr el modelo sin que las conversaciones salgan a un tercero, o tenerlo como **respaldo** si la API no responde.
+*Versión en español: [es/GLIMMER.md](es/GLIMMER.md)*
 
-## Configuración en la app
+The agent can use **Muse Spark** through the Meta Model API or **Muse Glimmer** (open weights, Apache 2.0) on your own server. That lets a clinic run the model without conversations leaving to a third party, or keep it as a **fallback** if the API does not answer. Glimmer is also the default judge of the evaluation bank (`eval/`).
 
-| Variable | Valor |
+## App configuration
+
+| Variable | Value |
 |---|---|
-| `Modelo__Proveedor` | `MetaApi` (por defecto) u `OpenAICompatible` |
-| `Modelo__Respaldo` | Vacío, o el otro proveedor para usarlo si el principal falla |
-| `OpenAICompatible__BaseUrl` | URL del servidor terminada en `/v1/` |
-| `OpenAICompatible__Model` | Nombre del modelo en el servidor (en vLLM, el id de Hugging Face) |
-| `OpenAICompatible__ApiKey` | La clave del servidor (`--api-key` de vLLM). Vacía si no pide |
-| `OpenAICompatible__TimeoutSeconds` | `120` (el arranque en frío de una GPU tarda) |
+| `Modelo__Proveedor` | `MetaApi` (default) or `OpenAICompatible` |
+| `Modelo__Respaldo` | Empty, or the other provider to use when the main one fails |
+| `OpenAICompatible__BaseUrl` | Server URL ending in `/v1/` |
+| `OpenAICompatible__Model` | Model name on the server (in vLLM, the Hugging Face id) |
+| `OpenAICompatible__ApiKey` | Server key (vLLM `--api-key`). Empty if not required |
+| `OpenAICompatible__TimeoutSeconds` | `120` (a GPU cold start takes time) |
 
-El respaldo entra solo si el principal **no está disponible**: sin clave, error de red, tiempo agotado, 429 o 5xx. Un 400 o 401 no se reintenta.
+The fallback only kicks in when the main provider is **unavailable**: missing key, network error, timeout, 429 or 5xx. A 400 or 401 is not retried.
 
-Por privacidad, la app **no arranca** si algún modelo configurado es una variante `-contributor` (Meta usa esos prompts para entrenar).
+For privacy, the app **refuses to start** if any configured model is a `-contributor` variant (Meta uses those prompts for training).
 
-## Opción A: Modal (recomendado para el demo)
+## Option A: Modal (recommended for the demo)
 
-Glimmer pesa unos 18 GB cuantizado a 4 bits; una **L40S** (48 GB) deja espacio para el contexto.
+Glimmer is about 18 GB quantized to 4 bits; an **L40S** (48 GB) leaves room for the context.
 
-1. Instala Modal y autentícate: `pip install modal && modal setup`.
-2. Busca en Hugging Face el repositorio exacto de Muse Glimmer (la versión cuantizada si vas a usar 4 bits) y el **parser de tool calling** de vLLM que indique su model card.
-3. Crea el secret (nada de esto va al repositorio):
+1. Install Modal and sign in: `pip install modal && modal setup`.
+2. Find on Hugging Face the exact Muse Glimmer repository (the quantized version if you use 4 bits) and the vLLM **tool-calling parser** its model card recommends.
+3. Create the secret (none of this goes into the repository):
    ```bash
    modal secret create dpm-glimmer \
      VLLM_API_KEY="$(openssl rand -hex 32)" \
-     GLIMMER_MODEL_ID="<repo de Hugging Face>" \
+     GLIMMER_MODEL_ID="<Hugging Face repo>" \
      GLIMMER_TOOL_PARSER="<parser>" \
-     HF_TOKEN="<token si hace falta>"
+     HF_TOKEN="<token if needed>"
    ```
-   Si el repositorio es una versión cuantizada que vLLM no detecta sola, agrega `GLIMMER_QUANTIZATION=awq` (o el método que corresponda).
-4. Despliega (opcionalmente fija versiones: `VLLM_VERSION=... GLIMMER_GPU=L40S`):
+   If the repository is a quantized version vLLM does not detect on its own, add `GLIMMER_QUANTIZATION=awq` (or the matching method).
+4. Deploy (optionally pin versions: `VLLM_VERSION=... GLIMMER_GPU=L40S`):
    ```bash
    modal deploy deploy/modal/glimmer_vllm.py
    ```
-5. Prueba el endpoint (la primera vez descarga los pesos; puede tardar varios minutos):
+5. Test the endpoint (the first time it downloads the weights; it can take several minutes):
    ```bash
-   curl -H "Authorization: Bearer $VLLM_API_KEY" https://<tu-usuario>--dpm-glimmer-serve.modal.run/v1/models
+   curl -H "Authorization: Bearer $VLLM_API_KEY" https://<your-user>--dpm-glimmer-serve.modal.run/v1/models
    ```
-6. Configura la app:
+6. Configure the app:
    ```bash
    Modelo__Proveedor=OpenAICompatible
-   OpenAICompatible__BaseUrl=https://<tu-usuario>--dpm-glimmer-serve.modal.run/v1/
-   OpenAICompatible__Model=<repo de Hugging Face>
-   OpenAICompatible__ApiKey=<la VLLM_API_KEY>
+   OpenAICompatible__BaseUrl=https://<your-user>--dpm-glimmer-serve.modal.run/v1/
+   OpenAICompatible__Model=<Hugging Face repo>
+   OpenAICompatible__ApiKey=<the VLLM_API_KEY>
    ```
-   O deja Muse Spark como principal y Glimmer como `Modelo__Respaldo=OpenAICompatible`.
+   Or keep Muse Spark as the main model and Glimmer as `Modelo__Respaldo=OpenAICompatible`.
 
-El contenedor se apaga tras 15 minutos sin uso (`scaledown_window`); el siguiente mensaje lo vuelve a encender.
+The container shuts down after 15 idle minutes (`scaledown_window`); the next message starts it again.
 
-## Opción B: Baseten
+## Option B: Baseten
 
-Despliega el modelo con un *Truss* de vLLM (Baseten tiene plantillas para modelos de Hugging Face) con las mismas banderas: `--enable-auto-tool-choice --tool-call-parser <parser>`. Baseten expone un endpoint compatible con OpenAI; usa su URL como `OpenAICompatible__BaseUrl` y la API key de Baseten como `OpenAICompatible__ApiKey`.
+Deploy the model with a vLLM *Truss* (Baseten has templates for Hugging Face models) with the same flags: `--enable-auto-tool-choice --tool-call-parser <parser>`. Baseten exposes an OpenAI-compatible endpoint; use its URL as `OpenAICompatible__BaseUrl` and the Baseten API key as `OpenAICompatible__ApiKey`.
 
-## Opción C: en el propio consultorio
+## Option C: inside the clinic
 
-Con una GPU de 24 GB o más:
+With a GPU of 24 GB or more:
 
 ```bash
-vllm serve <repo de Hugging Face> --port 8000 --api-key <clave> \
+vllm serve <Hugging Face repo> --port 8000 --api-key <key> \
   --enable-auto-tool-choice --tool-call-parser <parser> --max-model-len 16384
 ```
 
-y `OpenAICompatible__BaseUrl=http://localhost:8000/v1/`.
+and `OpenAICompatible__BaseUrl=http://localhost:8000/v1/`. The `docker-compose.yml` has a `glimmer` profile that does exactly this (see [INSTALLATION.md](INSTALLATION.md)).
 
-Con **Ollama**, si hay una versión del modelo para Ollama: `ollama run <nombre>` y `OpenAICompatible__BaseUrl=http://localhost:11434/v1/`, `OpenAICompatible__Model=<nombre>` (sin clave).
+With **Ollama**, if there is an Ollama build of the model: `ollama run <name>` and `OpenAICompatible__BaseUrl=http://localhost:11434/v1/`, `OpenAICompatible__Model=<name>` (no key).
 
-## Qué sigue usando la Meta Model API
+## What still uses the Meta Model API
 
-La transcripción de notas de voz (Muse Voice Transcribe) y la lectura del carnet (Muse Spark con imagen) siguen yendo a la Meta Model API. El modo local cubre la conversación y el tool calling, que es donde viaja la mayor parte de los datos.
+Voice-note transcription (Muse Voice Transcribe) and insurance-card reading (Muse Spark with images) still go to the Meta Model API. Local mode covers the conversation and tool calling, which is where most of the data travels.

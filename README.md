@@ -1,173 +1,162 @@
 # DPM Agent
 
-Agente de recepción para consultorios médicos en República Dominicana, construido sobre los modelos **Muse de Meta**.
+*Versión en español: [README.es.md](README.es.md)*
 
-El agente atiende a los pacientes por chat: busca o registra al paciente, consulta la agenda del médico, ofrece horarios, crea, reprograma y cancela citas, y pasa al personal humano todo lo que no le corresponde. **Es estrictamente administrativo: no da orientación médica.**
+A front-desk agent for medical clinics in the Dominican Republic, built on **Meta's Muse models**.
 
-> Proyecto para el **Meta AI Developer Hackathon** (26 oct – 4 nov 2026), track Indie Developer.
+The agent talks to patients over chat and WhatsApp: it finds or registers the patient, checks the doctor's schedule, offers slots, books, reschedules and cancels appointments, and hands everything outside its job to the human staff. **It is strictly administrative: it never gives medical advice.**
+
+> Project for the **Meta AI Developer Hackathon** (Oct 26 – Nov 4, 2026), Indie Developer track.
 
 ---
 
-## El problema
+## The problem
 
-En muchos consultorios dominicanos la agenda se maneja por WhatsApp y por teléfono. La secretaria responde los mismos mensajes todo el día: "¿hay cupo mañana?", "¿la doctora atiende el sábado?", "quiero cambiar mi cita". Mientras tanto atiende a los pacientes que están en la sala, llena formularios de las ARS y cobra. Los mensajes se quedan sin responder, se pierden pacientes y se cometen errores de doble reserva.
+In many Dominican clinics the schedule runs on WhatsApp and the phone. The receptionist answers the same messages all day ("any slot tomorrow?", "does the doctor work on Saturday?", "I want to change my appointment") while also attending patients in the waiting room, filling in insurance (ARS) forms and taking payments. Messages go unanswered, patients are lost and double bookings happen.
 
-DPM Agent se encarga de esa conversación repetitiva y deja al personal lo que de verdad necesita a una persona.
+DPM Agent takes over that repetitive conversation and leaves the staff what truly needs a person.
 
-## Qué hace hoy
+## What it does today
 
-- Conversación en español dominicano, breve, como un mensaje de WhatsApp.
-- **Tool calling de varios pasos**: el modelo decide qué herramientas usar y en qué orden (buscar paciente → ver disponibilidad → confirmar → crear cita).
-- Validación en el servidor: no se puede reservar un horario ocupado ni en el pasado, aunque el modelo lo intente.
-- **Notas de voz**: `POST /api/chat/audio` recibe el audio (OGG/Opus de WhatsApp, WebM, MP3, M4A o WAV), lo transcribe con Muse Voice Transcribe y se lo pasa al agente. El formato se valida por los bytes, hay límite de tamaño y de duración, y el audio nunca se guarda. El panel tiene un botón para grabar desde el navegador.
-- **Carnet de la ARS por foto**: `POST /api/pacientes/carnet` lee nombre, ARS y número de afiliado con Muse Spark (imagen + salida estructurada con JSON schema). El resultado queda **pendiente** hasta que el paciente lo confirma en el chat (`confirmar_datos_carnet`) o la secretaria lo revisa (`GET /api/carnets`, `POST /api/carnets/{id}/confirmar` con correcciones opcionales, `POST /api/carnets/{id}/descartar`). Si el número no tenía paciente, se registra con esos datos. La imagen no se guarda; lo leído se limpia como dato no confiable y, si el nombre no coincide con el paciente del número, solo la secretaria puede confirmarlo.
-- **Lista de espera que llena huecos sola**: si no hay horario, el agente anota al paciente (`agregar_lista_espera`). Cuando alguien cancela, un servicio en segundo plano ofrece el hueco al primero de la lista cuyo rango de días y horas coincide, por su canal. Si no responde en 30 minutos, la oferta vence y pasa al siguiente; si acepta (`responder_oferta`), se reserva validando de nuevo que siga libre.
-- **Recordatorio 24 horas antes**, con opción de confirmar (`confirmar_asistencia`) o cancelar.
-- **Bitácora** (`GET /api/bitacora`): quién hizo qué y cuándo (agente, sistema o secretaria), sin detalles clínicos. Los mensajes automáticos son plantillas fijas, no texto del modelo.
-- **WhatsApp Cloud API**: webhook con verificación de firma `X-Hub-Signature-256`, texto, notas de voz y fotos del carnet, respuestas y mensajes proactivos con plantillas aprobadas. Ver [docs/WHATSAPP.md](docs/WHATSAPP.md).
-- **Panel de la secretaria** (`/panel.html`): inicio de sesión con cookie segura (`HttpOnly`, `SameSite=Strict`), claves con `PasswordHasher` y bloqueo tras 5 intentos. Muestra las citas del día, los escalamientos (urgentes primero, con botón de atendido), los carnets por confirmar y la bitácora. Cada secretaria solo ve los datos de su consultorio.
-- **Borrador de autorización de ARS**: desde las citas del día, la secretaria pide un borrador con los datos administrativos (ARS, afiliado, médico, especialidad, fecha). Lo que falta queda marcado como `[FALTA: …]` y no se puede aprobar hasta completarlo. Aprobar solo lo marca como listo: **nunca se envía solo**.
-- **Persistencia y multi-consultorio**: citas, pacientes, escalamientos y conversaciones se guardan con EF Core (SQLite en local, PostgreSQL en la nube). Cada registro lleva su `ConsultorioId` y cada consulta se filtra por el consultorio actual.
-- **Escalamiento al personal**: preguntas clínicas, quejas o posibles emergencias se pasan a un humano y quedan registradas en `/api/escalamientos`. En una posible emergencia el agente indica llamar al 911.
-- Panel de prueba que muestra, al lado del chat, cada herramienta que el modelo usó y lo que devolvió.
+- **Multilingual**: Spanish, English and Haitian Creole (Kreyòl ayisyen) are guaranteed (fixed texts, WhatsApp templates and tests in all three); any other language is answered as well as possible, with English as the fallback for fixed texts. The language is detected on every message and the conversation follows the patient if they switch. The web chat and the dashboard have a Spanish/English selector.
+- Short, friendly replies, like a WhatsApp message.
+- **Multi-step tool calling**: the model decides which tools to use and in which order (find patient → check availability → confirm → book).
+- Server-side validation: a taken or past slot cannot be booked, even if the model tries.
+- **Voice notes**: `POST /api/chat/audio` receives the audio (WhatsApp OGG/Opus, WebM, MP3, M4A or WAV), transcribes it with Muse Voice Transcribe and passes it to the agent. The format is checked from the bytes, there are size and duration limits, and the audio is never stored. The web chat has a button to record from the browser.
+- **Insurance card from a photo**: `POST /api/pacientes/carnet` reads name, insurer (ARS) and member number with Muse Spark (image input + structured output with a JSON schema). The result stays **pending** until the patient confirms it in the chat (`confirmar_datos_carnet`) or the receptionist reviews it. If the number had no patient, one is registered with that data. The image is not stored; what was read is cleaned as untrusted data and, if the name does not match the patient of that number, only the receptionist can confirm it.
+- **A waiting list that fills gaps on its own**: if no slot works, the agent adds the patient to the waiting list (`agregar_lista_espera`). When someone cancels, a background service offers the slot to the first patient whose preferred days and hours match, on their channel. If they don't answer in 30 minutes the offer expires and moves to the next one; if they accept (`responder_oferta`) the slot is booked after checking again that it is still free.
+- **Reminder 24 hours before**, with the option to confirm (`confirmar_asistencia`) or cancel.
+- **Audit log** (`GET /api/bitacora`): who did what and when (agent, system or receptionist). Automatic messages are fixed templates, not model output.
+- **WhatsApp Cloud API**: webhook with `X-Hub-Signature-256` verification, text, voice notes and card photos, replies and proactive messages with approved templates. See [docs/WHATSAPP.md](docs/WHATSAPP.md).
+- **Clinic dashboard** (`/panel.html`): sign-in with a secure cookie (`HttpOnly`, `SameSite=Strict`), passwords hashed with `PasswordHasher` and lockout after 5 attempts. Shows today's appointments, escalations (urgent first, with the patient's original message and a summary in the dashboard language), insurance cards to confirm and the audit log. Each receptionist only sees their own clinic's data.
+- **Insurance authorization draft**: from today's appointments, the receptionist requests a draft with the administrative data (insurer, member, doctor, specialty, date). Missing data is marked `[FALTA: …]` and blocks approval. Approving only marks it as ready: **it is never sent on its own**.
+- **Persistence and multi-clinic**: appointments, patients, escalations and conversations are stored with EF Core (SQLite locally, PostgreSQL in the cloud). Every record carries its `ConsultorioId` and every query is filtered by the current clinic.
+- **Escalation to staff**: clinical questions, complaints or possible emergencies go to a human. In a possible emergency the agent tells the patient to call the clinic's emergency number (911 by default).
+- The web chat shows, next to the conversation, every tool the model used and what it returned.
 
-## Cómo usa Meta AI
+## How it uses Meta AI
 
-| Pieza | Modelo / producto |
+| Piece | Model / product |
 |---|---|
-| Razonamiento y tool calling | **Muse Spark** vía Meta Model API (`/v1/chat/completions`) |
-| Lectura de carnet de ARS | Muse Spark, entrada de imagen + salida estructurada (`/api/pacientes/carnet`) |
-| Transcripción de notas de voz | Muse Voice Transcribe (`/api/chat/audio`) |
-| Ejecución en servidor propio o como respaldo | **Muse Glimmer**, pesos abiertos, servido con vLLM (Modal, Baseten o local) |
+| Reasoning and tool calling | **Muse Spark** through the Meta Model API (`/v1/chat/completions`) |
+| Reading the insurance card | Muse Spark, image input + structured output (`/api/pacientes/carnet`) |
+| Voice-note transcription | Muse Voice Transcribe (`/api/chat/audio`) |
+| Own server or fallback | **Muse Glimmer**, open weights, served with vLLM (Modal, Baseten or on-premises) |
 
-El modelo está detrás de `IChatModel`: `Modelo__Proveedor` elige entre la Meta Model API y un servidor compatible con OpenAI, y `Modelo__Respaldo` define a cuál pasar si el principal falla. Ver [docs/GLIMMER.md](docs/GLIMMER.md).
+The model sits behind `IChatModel`: `Modelo__Proveedor` picks the Meta Model API or an OpenAI-compatible server, and `Modelo__Respaldo` sets the fallback if the main one fails. See [docs/GLIMMER.md](docs/GLIMMER.md).
 
-## Arquitectura
+## Architecture
 
 ```
-Navegador / WhatsApp
+Browser / WhatsApp
         │
         ▼
  ASP.NET Core 8 (Minimal API)
    POST /api/chat        POST /api/chat/audio ──► ITranscriber ──► Muse Voice Transcribe
-        │                        │ (texto transcrito)
+        │                        │ (transcribed text)
         ├────────────────────────┘
    ReceptionAgent ──► IChatModel ──► Meta Model API (Muse Spark)
-        │                             o servidor propio (Muse Glimmer)
+        │                             or own server (Muse Glimmer)
         ▼
-   AgentTools (12 herramientas administrativas)
+   AgentTools (12 administrative tools)
         │
         ▼
    IDpmGateway ──► DbDpmGateway (EF Core: SQLite / PostgreSQL)
-        │          MockDpmGateway (en memoria, para pruebas)
+        │          MockDpmGateway (in memory, for tests)
    IConversationStore ──► DbConversationStore / InMemoryConversationStore
 ```
 
 ```
 src/DpmAgent.Api/
-  Agent/   ReceptionAgent, AgentTools, Sesion, IConversationStore (memoria y base de datos)
-  Data/    DpmDbContext, entidades, migraciones por proveedor, datos de demo
-  Model/   IChatModel, MetaModelClient, MetaOptions
-  Agenda/  lista de espera, motor de ofertas y recordatorios, notificador, despachador, bitácora
-  Autorizaciones/ borradores de autorización de ARS
-  Canales/ IMessageChannel, WebChatChannel, WhatsApp/ (Cloud API, webhook, procesador)
-  Carnet/  ILectorCarnet, MetaLectorCarnet, ServicioCarnet, endpoints del carnet
-  Panel/   usuarios, autenticación por cookie, vistas de la secretaria
-  Voz/     ITranscriber, MetaTranscriber, validación de audio, endpoint de notas de voz
-  Dpm/     IDpmGateway, DbDpmGateway, MockDpmGateway, horario del consultorio
-  wwwroot/ panel de prueba
-tests/DpmAgent.Tests/   pruebas con un modelo simulado (sin llamadas reales)
+  Agent/          ReceptionAgent, AgentTools, Sesion, IConversationStore
+  Idiomas/        language detection, fixed texts in es/en/ht
+  Data/           DpmDbContext, entities, migrations per provider, demo data
+  Model/          IChatModel, Meta and OpenAI-compatible clients, fallback
+  Agenda/         waiting list, offer and reminder engine, notifier, dispatcher, audit log
+  Autorizaciones/ insurance authorization drafts
+  Canales/        IMessageChannel, WebChatChannel, WhatsApp/ (Cloud API, webhook, processor)
+  Carnet/         card reader, confirmation service, endpoints
+  Panel/          users, cookie authentication, receptionist views
+  Voz/            transcriber, audio validation, voice-note endpoint
+  Seguridad/      rate limiting, health, logs, retention
+  Dpm/            IDpmGateway, DbDpmGateway, MockDpmGateway, clinic hours
+  wwwroot/        web chat and dashboard
+tests/DpmAgent.Tests/   tests with a scripted fake model (no real calls)
 ```
 
-## Ejecutar en local
+(Code identifiers are in Spanish; the code is the project's working language.)
 
-Requisitos: .NET 8 SDK y una clave de la Meta Model API.
+## Run locally
+
+Requirements: .NET 8 SDK and a Meta Model API key.
 
 ```bash
 git clone https://github.com/Draylinp/dpm-agent.git
 cd dpm-agent
 
 # Linux / macOS
-export META_API_KEY="tu-clave"
+export META_API_KEY="your-key"
 # Windows PowerShell
-# $env:META_API_KEY="tu-clave"
+# $env:META_API_KEY="your-key"
 
 dotnet run --project src/DpmAgent.Api
 ```
 
-Abre la URL que muestra la consola (por ejemplo `http://localhost:5271`). El campo *Número de WhatsApp (simulado)* hace de remitente: con `809-555-0101` el agente te reconoce como la paciente ficticia María Rodríguez. Escribe algo como:
-*"Hola, quiero una cita con la doctora para mañana en la mañana."*
+Open the URL printed in the console (for example `http://localhost:5271`). The *WhatsApp number (simulated)* field acts as the sender: with `809-555-0101` the agent recognizes you as the fictional patient María Rodríguez. Try:
+*"Hi, I would like an appointment with the doctor tomorrow morning."*
 
-Al arrancar, la app aplica las migraciones y crea `dpm-agent.db` (SQLite) con un consultorio, dos médicos y dos pacientes ficticios. Las citas y conversaciones se conservan entre reinicios.
+On startup the app applies the migrations and creates `dpm-agent.db` (SQLite) with a clinic, two doctors and two fictional patients. Appointments and conversations survive restarts.
 
-Pruebas:
+Tests:
 
 ```bash
 dotnet test
 ```
 
-Con la clave de Meta, `./scripts/probar-meta.sh` y `dotnet test --filter "Categoria=Meta"` confirman los formatos reales. Ver [docs/PRUEBAS-META.md](docs/PRUEBAS-META.md).
+With a Meta key, `./scripts/probar-meta.sh` and `dotnet test --filter "Categoria=Meta"` confirm the real formats. See [docs/META-API-TESTING.md](docs/META-API-TESTING.md).
 
-La prueba contra PostgreSQL solo corre si se define `DPM_TEST_POSTGRES` con la cadena de una base desechable (el CI la define con un contenedor de Postgres).
+The PostgreSQL test only runs when `DPM_TEST_POSTGRES` holds the connection string of a throwaway database (CI provides one with a Postgres container).
 
-Despliegue en Azure App Service con PostgreSQL, Key Vault y GitHub Actions: ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). También hay un `Dockerfile` multi-stage.
+Deployment to Azure App Service with PostgreSQL, Key Vault and GitHub Actions: see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). There is also a multi-stage `Dockerfile`.
 
-Configuración opcional (`appsettings.json` o variables de entorno):
+Main settings (`appsettings.json` or environment variables):
 
-| Variable | Valor por defecto |
+| Variable | Default |
 |---|---|
-| `Meta__Model` | `muse-spark-1.2` (las variantes `-contributor` se rechazan al arrancar) |
-| `Modelo__Proveedor` | `MetaApi` u `OpenAICompatible` |
-| `Modelo__Respaldo` | vacío, o el otro proveedor |
+| `Meta__Model` | `muse-spark-1.2` (`-contributor` variants are rejected on startup) |
+| `Modelo__Proveedor` | `MetaApi` or `OpenAICompatible` |
+| `Modelo__Respaldo` | empty, or the other provider |
 | `Meta__BaseUrl` | `https://api.meta.ai/v1/` |
-| `Meta__Temperature` | `0.2` |
 | `Transcripcion__Modelo` | `muse-voice-transcribe-1.0` |
-| `Transcripcion__Ruta` | `audio/transcriptions` (relativa a `Meta__BaseUrl`) |
-| `Transcripcion__MaxBytes` | `2097152` (2 MB) |
-| `Transcripcion__MaxDuracionSegundos` | `120` |
-| `Carnet__Modelo` | vacío (usa `Meta__Model`) |
-| `Carnet__MaxBytes` | `4194304` (4 MB) |
-| `BaseDatos__Proveedor` | `Sqlite` (también `Postgres`, o `Memoria` = SQLite en memoria) |
-| `Panel__ClaveInicial` | Clave del usuario inicial `secretaria` (administrador). En desarrollo, si falta, se genera una y se muestra en la consola |
-| `Agenda__MotorActivo` | `true` (también despacha los mensajes salientes) |
-| `Agenda__IntervaloSegundos` | `15` |
+| `Transcripcion__Idioma` | empty (the service detects the language) |
+| `Carnet__Modelo` | empty (uses `Meta__Model`) |
+| `BaseDatos__Proveedor` | `Sqlite` (also `Postgres`, or `Memoria` = in-memory SQLite) |
+| `Panel__ClaveInicial` | Password of the initial `secretaria` (admin) user. In development, if missing, one is generated and printed to the console |
 | `Agenda__OfertaMinutos` | `30` |
-| `Agenda__AnticipacionMinimaMinutos` | `60` |
 | `Agenda__RecordatorioHorasAntes` | `24` |
-| `ConnectionStrings__Dpm` | `Data Source=dpm-agent.db` (en la nube, la cadena de PostgreSQL por variable de entorno) |
-| `BaseDatos__MigrarAlIniciar` | `true` |
-| `BaseDatos__SembrarDatosDemo` | `true` |
-| `BaseDatos__ConsultorioId` | `1` |
+| `ConnectionStrings__Dpm` | `Data Source=dpm-agent.db` (in the cloud, the PostgreSQL connection string as an environment variable) |
 
-Para generar una migración nueva (una por proveedor):
+The clinic's default language (es/en) and emergency number are set from the dashboard (`PUT /api/panel/consultorio`, admin only).
 
-```bash
-dotnet tool restore
-dotnet ef migrations add Nombre --project src/DpmAgent.Api --context SqliteDpmDbContext --output-dir Data/Migraciones/Sqlite
-dotnet ef migrations add Nombre --project src/DpmAgent.Api --context PostgresDpmDbContext --output-dir Data/Migraciones/Postgres
-```
+## Security and limits
 
-## Seguridad y límites
+- **No medical advice.** The system prompt forbids it in every language and there is no clinical tool. Any health question is escalated to the staff.
+- **Each conversation only acts on its own patient.** The patient is identified by the phone number the channel provides (the WhatsApp sender), never by what the model says. Cancelling someone else's appointment returns the same error as a non-existent one. A session cannot change its number.
+- **Prompt-injection defense enforced on the server**: tool results, transcriptions and text read from photos are treated as data. Cancelling is a two-step process controlled by the server: it only executes on a later turn, i.e. after a real patient message. A turn cannot perform more than 3 data-changing actions nor more than 5 tools per response. The appointment reason only accepts administrative values.
+- **Rate limiting** per IP (public endpoints and sign-in) and per conversation (all channels).
+- **Structured logs** (JSON in production) with `SesionId` and `CorrelationId`, without tool arguments or results: no patient data.
+- **Retention**: conversations are deleted after 30 days (configurable); the patient's original text copied into the audit log is cleared at the same time; the log itself is kept for a year.
+- **Health**: `/health/live` and `/health/ready` (database and model configured).
+- Security headers (CSP, `X-Frame-Options`, `nosniff`), HSTS and HTTPS in production.
+- **Fictional data only.** Every patient and doctor in the repository is made up.
+- Keys are read from environment variables and never stored in the repository.
 
-- **Defensa contra prompt injection validada en el servidor**: lo que devuelven las herramientas, las transcripciones y lo leído en fotos se tratan como datos. Cancelar una cita es en dos pasos que controla el servidor: solo se ejecuta en un turno posterior, o sea, después de un mensaje real del paciente. Un turno no puede hacer más de 3 acciones que cambien datos ni más de 5 herramientas por respuesta. El motivo de la cita solo admite valores administrativos.
-- **Rate limiting** por IP (endpoints públicos y login) y por conversación (todos los canales).
-- **Logs estructurados** (JSON en producción) con `SesionId` y `CorrelationId`, sin argumentos ni resultados de herramientas: no llevan datos de pacientes.
-- **Retención**: las conversaciones se borran a los 30 días (configurable); la bitácora se guarda un año.
-- **Salud**: `/health/live` y `/health/ready` (base de datos y modelo configurado).
-- Cabeceras de seguridad (CSP, `X-Frame-Options`, `nosniff`), HSTS y HTTPS en producción.
+## What existed before the event and what was built during it
 
-- **Cada conversación solo actúa sobre su propio paciente.** El paciente se identifica por el teléfono que entrega el canal (el remitente de WhatsApp), nunca por lo que diga el modelo. Las herramientas de citas toman el paciente de la sesión, y cancelar una cita ajena devuelve el mismo error que una cita que no existe. Una sesión no puede cambiar de número.
-- **Sin orientación médica.** El prompt de sistema lo prohíbe y no existe ninguna herramienta clínica. Cualquier pregunta de salud se escala al personal.
-- **Solo datos ficticios.** Todos los pacientes y médicos del repositorio son inventados.
-- El motivo de la cita se guarda en términos administrativos ("control", "primera consulta"), sin detalles de salud.
-- Las claves se leen de variables de entorno y nunca se guardan en el repositorio.
+**Before October 26, 2026:** DPM, my clinic management system (a separate private repository). That system is **not** part of this submission or the demo.
 
-## Qué existía antes del evento y qué se construyó durante
+**During the hackathon (everything in this repository):** the agent, the Meta Model API clients, the tools, the DPM simulation, the web chat, the dashboard and the tests. The commit history starts on October 26, 2026.
 
-**Antes del 26 de octubre de 2026:** DPM, mi sistema de gestión de consultorio (repositorio privado aparte). Ese sistema **no** forma parte de esta entrega ni del demo.
-
-**Durante el hackathon (todo lo que hay en este repositorio):** el agente, el cliente de la Meta Model API, las herramientas, la simulación de DPM, el panel de prueba y las pruebas. El historial de commits empieza el 26 de octubre de 2026.
-
-## Licencia
+## License
 
 MIT

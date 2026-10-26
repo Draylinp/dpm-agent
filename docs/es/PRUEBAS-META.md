@@ -1,5 +1,7 @@
 # Probar con la Meta Model API
 
+*English version: [../META-API-TESTING.md](../META-API-TESTING.md)*
+
 Todo el código ya está hecho y probado con modelos falsos. Con la clave real solo queda confirmar que los formatos coinciden con la documentación (https://dev.meta.ai/docs) y ajustar el prompt. Lo que podría cambiar está en la configuración, no en el código, salvo donde se indica.
 
 ## 1. Prueba rápida con curl
@@ -36,7 +38,7 @@ META_API_KEY="tu-clave" dotnet test --filter "Categoria=Meta"
 | 400 por `max_completion_tokens` | `MetaModelClient.ParametroMaxTokens` (`src/DpmAgent.Api/Model/MetaModelClient.cs`) |
 | El modelo no se llama así | `Meta__Model` |
 | 404 en la transcripción | `Transcripcion__Ruta` (por defecto `audio/transcriptions`) |
-| La transcripción pide otros campos o responde distinto | `MetaTranscriber.TranscribirAsync` (`src/DpmAgent.Api/Voz/MetaTranscriber.cs`): nombres `file`, `model`, `language` y lectura de `text` / `duration` |
+| La transcripción pide otros campos o responde distinto | `MetaTranscriber.TranscribirAsync` (`src/DpmAgent.Api/Voz/MetaTranscriber.cs`): nombres `file`, `model` y `language` (este solo si se configura `Transcripcion__Idioma`; por defecto el servicio detecta el idioma) y lectura de `text` / `duration` |
 | La imagen va en otro formato o no se acepta `json_schema` | `MetaLectorCarnet.LeerAsync` (`src/DpmAgent.Api/Carnet/MetaLectorCarnet.cs`) |
 | El modelo no sigue bien una regla | Prompt de sistema en `ReceptionAgent.SystemPrompt` (`src/DpmAgent.Api/Agent/ReceptionAgent.cs`) |
 

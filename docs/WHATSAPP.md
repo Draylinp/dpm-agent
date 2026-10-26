@@ -1,43 +1,45 @@
-# Conectar WhatsApp Cloud API
+# Connecting WhatsApp Cloud API
 
-El agente recibe mensajes por el webhook `POST /api/whatsapp/webhook` y responde con WhatsApp Cloud API.
+*Versión en español: [es/WHATSAPP.md](es/WHATSAPP.md)*
 
-## 1. En Meta for Developers
+The agent receives messages on the webhook `POST /api/whatsapp/webhook` and answers through WhatsApp Cloud API.
 
-1. Crea una app de tipo **Business** y agrega el producto **WhatsApp**.
-2. En *WhatsApp → API Setup* anota el **Phone number ID** del número del consultorio.
-3. Crea un **usuario del sistema** en Business Manager con permiso `whatsapp_business_messaging` y genera un **token permanente**.
-4. En *App settings → Basic* copia el **App secret**.
-5. En *WhatsApp → Configuration → Webhook*:
-   - **Callback URL**: `https://TU-DOMINIO/api/whatsapp/webhook`
-   - **Verify token**: un texto aleatorio que tú inventas (el mismo que pondrás en `WhatsApp__VerifyToken`).
-   - Suscribe el campo **messages**.
+## 1. In Meta for Developers
 
-## 2. Variables de entorno (nunca en el repositorio)
+1. Create a **Business** app and add the **WhatsApp** product.
+2. In *WhatsApp → API Setup*, write down the **Phone number ID** of the clinic's number.
+3. Create a **system user** in Business Manager with the `whatsapp_business_messaging` permission and generate a **permanent token**.
+4. In *App settings → Basic*, copy the **App secret**.
+5. In *WhatsApp → Configuration → Webhook*:
+   - **Callback URL**: `https://YOUR-DOMAIN/api/whatsapp/webhook`
+   - **Verify token**: a random string you make up (the same one you put in `WhatsApp__VerifyToken`).
+   - Subscribe to the **messages** field.
 
-| Variable | Valor |
+## 2. Environment variables (never in the repository)
+
+| Variable | Value |
 |---|---|
-| `WhatsApp__AccessToken` | Token permanente del usuario del sistema |
-| `WhatsApp__AppSecret` | App secret (valida la firma `X-Hub-Signature-256` de cada webhook) |
-| `WhatsApp__VerifyToken` | El texto que pusiste como *Verify token* |
-| `WhatsApp__PhoneNumberId` | Phone number ID del consultorio predeterminado |
-| `WhatsApp__ApiVersion` | Versión de Graph API (por defecto `v21.0`) |
+| `WhatsApp__AccessToken` | Permanent system-user token |
+| `WhatsApp__AppSecret` | App secret (validates the `X-Hub-Signature-256` signature of every webhook) |
+| `WhatsApp__VerifyToken` | The string you used as *Verify token* |
+| `WhatsApp__PhoneNumberId` | Phone number ID of the default clinic |
+| `WhatsApp__ApiVersion` | Graph API version (default `v21.0`) |
 
-Con varios consultorios, guarda el `WhatsAppPhoneNumberId` de cada uno en la tabla `Consultorios`: el webhook enruta cada mensaje según el número que lo recibió.
+With several clinics, store each one's `WhatsAppPhoneNumberId` in the `Consultorios` table: the webhook routes each message by the number that received it.
 
-## 3. Plantillas para mensajes que inicia el consultorio
+## 3. Templates for clinic-initiated messages
 
-WhatsApp solo deja enviar texto libre si el paciente escribió en las últimas 24 horas. Las ofertas de turnos y los recordatorios pueden caer fuera de esa ventana, así que en producción necesitan **plantillas aprobadas** (categoría *Utility*). Cada plantilla tiene un nombre y una traducción por idioma; el agente elige la traducción según el idioma del paciente (español, inglés o kreyòl) y usa la de inglés para cualquier otro idioma.
+WhatsApp only allows free-form text if the patient wrote in the last 24 hours. Slot offers and reminders can fall outside that window, so in production they need **approved templates** (category *Utility*). Each template has one name and one translation per language; the agent picks the translation by the patient's language (Spanish, English or Haitian Creole) and uses the English one for any other language.
 
-| Clave | Variable con el nombre |
+| Key | Variable holding the template name |
 |---|---|
-| `recordatorio` | `WhatsApp__Plantillas__recordatorio` |
-| `oferta` | `WhatsApp__Plantillas__oferta` |
-| `oferta_vencida` | `WhatsApp__Plantillas__oferta_vencida` |
+| `recordatorio` (reminder) | `WhatsApp__Plantillas__recordatorio` |
+| `oferta` (slot offer) | `WhatsApp__Plantillas__oferta` |
+| `oferta_vencida` (offer expired) | `WhatsApp__Plantillas__oferta_vencida` |
 
-Códigos de idioma de cada traducción (`WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht`; por defecto `es`, `en`, `ht`). Verifique en *WhatsApp Manager* qué códigos acepta su cuenta; si un idioma no está disponible, apúntelo al de inglés.
+Language code for each translation: `WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht` (defaults `es`, `en`, `ht`). Check in *WhatsApp Manager* which codes your account accepts; if a language is not available, point it to the English one.
 
-Cuerpos sugeridos (los mismos textos que usa el sistema, en `src/DpmAgent.Api/Idiomas/Recursos/`):
+Suggested bodies (the same texts the system uses, in `src/DpmAgent.Api/Idiomas/Recursos/`):
 
 **recordatorio**
 - es: Hola, {{1}}. Le recordamos su cita con {{2}} el {{3}} a las {{4}} (cita {{5}}). Responda CONFIRMO para confirmar su asistencia o CANCELAR si no puede ir.
@@ -54,21 +56,22 @@ Cuerpos sugeridos (los mismos textos que usa el sistema, en `src/DpmAgent.Api/Id
 - en: The slot on {{1}} at {{2}} is no longer available because the time to accept it ran out. You are still on the waiting list and we will let you know if another one opens up.
 - ht: Randevou {{1}} a {{2}} pa disponib ankò paske tan pou aksepte l la fini. Ou toujou sou lis datant lan e n ap fè ou konnen si gen yon lòt ki libere.
 
-Si una clave no tiene plantilla, se envía como texto (sirve para pruebas dentro de la ventana de 24 horas).
+If a key has no template, the message is sent as text (useful for testing inside the 24-hour window).
 
-## 4. Cómo funciona
+## 4. How it works
 
-1. Meta envía el mensaje al webhook. Se valida la firma con el App secret; si no coincide, se responde 401.
-2. El mensaje se guarda en `MensajesEntrantes` (el id `wamid` es único, así que los reintentos de Meta no se procesan dos veces) y se responde 200 enseguida.
-3. Un servicio en segundo plano lo procesa en orden:
-   - **texto** (o botón de plantilla) → agente;
-   - **nota de voz** → descarga → Muse Voice Transcribe → agente;
-   - **foto** → descarga → lectura del carnet con Muse Spark → agente pide confirmación;
-   - otros tipos → respuesta explicando qué se puede enviar.
-4. La respuesta se encola en `MensajesSalientes` y el despachador la envía. Si el procesamiento falla 3 veces, se le pide disculpas al paciente y se crea un escalamiento.
+1. Meta posts the message to the webhook. The signature is validated with the App secret; if it does not match, the answer is 401.
+2. The message is stored in `MensajesEntrantes` (the `wamid` id is unique, so Meta's retries are never processed twice) and the webhook returns 200 right away.
+3. A background service processes messages in order:
+   - **text** (or a template button) → agent;
+   - **voice note** → download → Muse Voice Transcribe → agent;
+   - **photo** → download → insurance-card reading with Muse Spark → the agent asks the patient to confirm;
+   - other types → a reply explaining what can be sent.
+4. The language of each message is detected and kept in the session; fixed texts and errors go out in the patient's language.
+5. The reply is queued in `MensajesSalientes` and the dispatcher sends it. If processing fails 3 times, the patient gets an apology and an escalation is created.
 
-La sesión de cada paciente en WhatsApp es `wa-` + su número de 10 dígitos, y queda atada a ese número.
+Each patient's WhatsApp session is `wa-` + their 10-digit number and is bound to that number.
 
-## Probar en local
+## Local testing
 
-Expón la app con un túnel (por ejemplo `ngrok http 5271`) y usa esa URL como Callback URL. Con el número de prueba de Meta puedes escribirle desde tu WhatsApp personal si lo agregas como destinatario de prueba.
+Expose the app with a tunnel (for example `ngrok http 5271`) and use that URL as the Callback URL. With Meta's test number you can message it from your personal WhatsApp once you add it as a test recipient.

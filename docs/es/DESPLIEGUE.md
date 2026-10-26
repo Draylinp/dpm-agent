@@ -1,5 +1,7 @@
 # Despliegue en Azure
 
+*English version: [../DEPLOYMENT.md](../DEPLOYMENT.md)*
+
 La app corre en **Azure App Service (Linux, .NET 8)** con **Azure Database for PostgreSQL – Flexible Server**. Los secretos van en *App Settings* o en **Key Vault**, nunca en el repositorio. GitHub Actions despliega con OIDC, así que no se guarda ninguna contraseña de Azure en GitHub.
 
 ## 1. Recursos

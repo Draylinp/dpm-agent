@@ -1,7 +1,7 @@
 name: Despliegue a Azure
 
 # Se activa al definir la variable del repositorio AZURE_WEBAPP_NAME y los secretos de OIDC
-# (AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID). Ver docs/DESPLIEGUE.md.
+# (AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID). See docs/DEPLOYMENT.md.
 on:
   push:
     branches: [main]

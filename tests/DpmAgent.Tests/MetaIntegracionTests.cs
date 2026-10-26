@@ -11,7 +11,7 @@ namespace DpmAgent.Tests;
 
 /// <summary>
 /// Solo corre con META_API_KEY definida: llama a la Meta Model API de verdad (gasta tokens).
-/// Sirve para confirmar formatos y ajustar el prompt. Ver docs/PRUEBAS-META.md.
+/// Sirve para confirmar formatos y ajustar el prompt. Ver docs/META-API-TESTING.md.
 /// </summary>
 public sealed class MetaFactAttribute : FactAttribute
 {
