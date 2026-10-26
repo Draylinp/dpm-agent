@@ -81,7 +81,7 @@ docker run -p 8080:8080 \
   dpm-agent
 ```
 
-Con SQLite dentro del contenedor, usa `-e ConnectionStrings__Dpm="Data Source=/data/dpm.db"` y el volumen `/data`.
+Con SQLite dentro del contenedor, usa `-e ConnectionStrings__Dpm="Data Source=/data/dpm.db"` y el volumen `/data`. Para instalar en un consultorio con PostgreSQL en un solo comando, ver [INSTALACION.md](INSTALACION.md).
 
 ## 5. Una sola instancia
 

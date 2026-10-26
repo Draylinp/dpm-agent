@@ -22,7 +22,8 @@ public sealed class WhatsAppCloudChannel : IMessageChannel
 
     public Task EnviarAsync(MensajeParaEnviar mensaje, CancellationToken ct)
     {
-        var remitente = mensaje.RemitenteId ?? _options.PhoneNumberId
+        // Vacío cuenta como no configurado (docker compose pasa las variables vacías de .env).
+        var remitente = mensaje.RemitenteId ?? (string.IsNullOrWhiteSpace(_options.PhoneNumberId) ? null : _options.PhoneNumberId)
                         ?? throw new InvalidOperationException("Falta el phone_number_id de WhatsApp del consultorio.");
         var destino = Telefono.Internacional(mensaje.Destino)
                       ?? throw new InvalidOperationException($"Número de destino no válido: {mensaje.Destino}.");

@@ -1,0 +1,80 @@
+# Instalación en un consultorio: la app + PostgreSQL. Ver docs/INSTALLATION.md (docs/es/INSTALACION.md).
+#   cp .env.example .env   # y complete las claves
+#   docker compose up -d --build
+# Con Muse Glimmer en una GPU local (pesos abiertos):
+#   docker compose --profile glimmer up -d --build
+name: dpm-agent
+
+services:
+  app:
+    build: .
+    image: dpm-agent:local
+    restart: unless-stopped
+    ports:
+      - "${PUERTO:-8080}:8080"
+    # Todo lo de .env llega a la app (cualquier ajuste de appsettings.json con "__").
+    env_file: .env
+    environment:
+      BaseDatos__Proveedor: Postgres
+      ConnectionStrings__Dpm: "Host=db;Port=5432;Database=dpm;Username=dpm;Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}"
+      # Claves que cifran las cookies del panel: en un volumen para que sobrevivan a los reinicios.
+      DataProtection__Ruta: /data/claves
+    volumes:
+      - claves:/data/claves
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dpm
+      POSTGRES_USER: dpm
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}"
+    volumes:
+      - datos:/var/lib/postgresql/data
+    # Sin puerto publicado: solo la app llega a la base.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dpm -d dpm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Opcional: Muse Glimmer servido con vLLM en la GPU del consultorio (API compatible con OpenAI).
+  # Requiere en .env: GLIMMER_MODELO, GLIMMER_TOOL_PARSER y OpenAICompatible__ApiKey.
+  # En .env: Modelo__Proveedor=OpenAICompatible (o Modelo__Respaldo=OpenAICompatible),
+  # OpenAICompatible__BaseUrl=http://glimmer:8000/v1/, OpenAICompatible__Model=<GLIMMER_MODELO>.
+  glimmer:
+    profiles: ["glimmer"]
+    image: "${VLLM_IMAGEN:-vllm/vllm-openai:v0.10.1}"
+    restart: unless-stopped
+    environment:
+      HF_TOKEN: "${HF_TOKEN:-}"
+    command:
+      - "--model"
+      - "${GLIMMER_MODELO:-}"
+      - "--served-model-name"
+      - "${GLIMMER_MODELO}"
+      - "--api-key"
+      - "${OpenAICompatible__ApiKey:-}"
+      - "--enable-auto-tool-choice"
+      - "--tool-call-parser"
+      - "${GLIMMER_TOOL_PARSER:-}"
+      - "--max-model-len"
+      - "${GLIMMER_MAX_LEN:-16384}"
+    volumes:
+      - modelos:/root/.cache/huggingface
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  datos:
+  claves:
+  modelos:

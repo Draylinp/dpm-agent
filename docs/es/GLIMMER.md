@@ -66,7 +66,7 @@ vllm serve <repo de Hugging Face> --port 8000 --api-key <clave> \
   --enable-auto-tool-choice --tool-call-parser <parser> --max-model-len 16384
 ```
 
-y `OpenAICompatible__BaseUrl=http://localhost:8000/v1/`.
+y `OpenAICompatible__BaseUrl=http://localhost:8000/v1/`. El `docker-compose.yml` tiene un perfil `glimmer` que hace justo esto (ver [INSTALACION.md](INSTALACION.md)).
 
 Con **Ollama**, si hay una versión del modelo para Ollama: `ollama run <nombre>` y `OpenAICompatible__BaseUrl=http://localhost:11434/v1/`, `OpenAICompatible__Model=<nombre>` (sin clave).
 

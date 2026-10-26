@@ -132,6 +132,8 @@ Deployment to Azure App Service with PostgreSQL, Key Vault and GitHub Actions: s
 
 Public demo mode (banner, example buttons, reset, daily limit per IP): see [docs/DEMO.md](docs/DEMO.md).
 
+Clinic install with Docker Compose (app + PostgreSQL, optional local Muse Glimmer profile): see [docs/INSTALLATION.md](docs/INSTALLATION.md).
+
 Cost per conversation and per booked appointment, with prices set in configuration: see [docs/COSTS.md](docs/COSTS.md).
 
 Main settings (`appsettings.json` or environment variables):
