@@ -231,6 +231,13 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.Property<DateTime>("ActualizadaUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CancelacionPropuesta")
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("CancelacionPropuestaTurno")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("ConsultorioId")
                         .HasColumnType("INTEGER");
 
@@ -249,7 +256,12 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Turno")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ActualizadaUtc");
 
                     b.HasIndex("PacienteId");
 

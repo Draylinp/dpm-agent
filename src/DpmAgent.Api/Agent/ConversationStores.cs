@@ -19,6 +19,17 @@ public sealed class Sesion
 
     public string? PacienteId { get; set; }
 
+    /// <summary>Cuántos mensajes del paciente lleva la conversación. Sube al empezar cada turno.</summary>
+    public int Turno { get; internal set; }
+
+    /// <summary>
+    /// Cita cuya cancelación propuso el agente y en qué turno. Solo se ejecuta en un turno posterior,
+    /// es decir, después de un mensaje nuevo del paciente.
+    /// </summary>
+    public string? CancelacionPropuesta { get; set; }
+
+    public int? CancelacionPropuestaTurno { get; set; }
+
     public List<JsonObject> Mensajes { get; set; } = [];
 
     /// <summary>Cuántos de <see cref="Mensajes"/> ya estaban guardados al cargar la sesión.</summary>
@@ -42,10 +53,16 @@ public sealed class Sesion
             throw new SesionInvalidaException("Esta conversación pertenece a otro número de teléfono.");
     }
 
+    /// <summary>Empieza un turno nuevo: llegó un mensaje del paciente.</summary>
+    internal void NuevoTurno() => Turno++;
+
     internal Sesion Copia() => new(Id)
     {
         TelefonoCanal = TelefonoCanal,
         PacienteId = PacienteId,
+        Turno = Turno,
+        CancelacionPropuesta = CancelacionPropuesta,
+        CancelacionPropuestaTurno = CancelacionPropuestaTurno,
         Mensajes = new List<JsonObject>(Mensajes),
         MensajesGuardados = Mensajes.Count,
     };

@@ -1,6 +1,7 @@
 using DpmAgent.Api.Canales;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Panel;
+using DpmAgent.Api.Seguridad;
 using Microsoft.EntityFrameworkCore;
 
 namespace DpmAgent.Api.Agenda;
@@ -23,7 +24,7 @@ public static class AgendaEndpoints
 
             return Results.Ok(mensajes.Select(m =>
                 new MensajeSalienteDto(m.Id, m.Tipo, m.Texto, new DateTimeOffset(m.CreadoUtc, TimeSpan.Zero))));
-        });
+        }).RequireRateLimiting(ProduccionExtensions.PoliticaPublica);
 
         app.MapGet("/api/bitacora", async (int? limite, Bitacora bitacora, CancellationToken ct) =>
             Results.Ok(await bitacora.ListarAsync(limite ?? 100, ct))).RequireAuthorization(PanelExtensions.Politica);

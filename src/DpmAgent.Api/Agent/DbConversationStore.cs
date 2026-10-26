@@ -44,6 +44,9 @@ public sealed class DbConversationStore : IConversationStore
         {
             TelefonoCanal = conv.TelefonoCanal,
             PacienteId = conv.PacienteId is { } p ? IdsDpm.Paciente(p) : null,
+            Turno = conv.Turno,
+            CancelacionPropuesta = conv.CancelacionPropuesta,
+            CancelacionPropuestaTurno = conv.CancelacionPropuestaTurno,
             Mensajes = mensajes,
             MensajesGuardados = mensajes.Count,
         };
@@ -61,6 +64,9 @@ public sealed class DbConversationStore : IConversationStore
 
         conv.TelefonoCanal = sesion.TelefonoCanal;
         conv.PacienteId = IdsDpm.Leer(sesion.PacienteId, "PAC");
+        conv.Turno = sesion.Turno;
+        conv.CancelacionPropuesta = sesion.CancelacionPropuesta;
+        conv.CancelacionPropuestaTurno = sesion.CancelacionPropuestaTurno;
         conv.ActualizadaUtc = ahora;
 
         foreach (var m in sesion.Mensajes.Skip(sesion.MensajesGuardados))

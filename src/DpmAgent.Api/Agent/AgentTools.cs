@@ -20,6 +20,13 @@ public sealed class AgentTools
 
     private static readonly JsonSerializerOptions JsonOpts = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
+    /// <summary>
+    /// Motivos de cita permitidos. El servidor no guarda texto libre como motivo:
+    /// así nunca queda un detalle clínico en la agenda, diga lo que diga el modelo.
+    /// </summary>
+    public static readonly string[] MotivosAdministrativos =
+        ["primera consulta", "control", "seguimiento", "consulta general", "chequeo preventivo", "lista de espera"];
+
     private static readonly JsonArray Definiciones = BuildDefinitions();
 
     private readonly IDpmGateway _dpm;
@@ -143,7 +150,7 @@ public sealed class AgentTools
     {
         var pacienteId = PacienteDeSesion(sesion);
         var fechaHora = DateTimeOffset.Parse(Req(args, "fecha_hora"), CultureInfo.InvariantCulture);
-        var cita = await _dpm.CrearCitaAsync(pacienteId, Req(args, "medico_id"), fechaHora, Req(args, "motivo"), ct);
+        var cita = await _dpm.CrearCitaAsync(pacienteId, Req(args, "medico_id"), fechaHora, MotivoAdministrativo(Opt(args, "motivo")), ct);
         await Registrar(sesion, "cita_creada", "cita", cita.Id, $"{cita.PacienteId} con {cita.MedicoId}", ct);
 
         return Ok(new { creada = true, cita = Resumen(cita) });
@@ -155,9 +162,35 @@ public sealed class AgentTools
         return Ok(new { citas = citas.Select(Resumen) });
     }
 
+    /// <summary>
+    /// Cancelar es en dos pasos y lo controla el servidor: la primera llamada solo propone la cancelación;
+    /// se ejecuta cuando el modelo la repite en un turno posterior, o sea, después de que el paciente
+    /// respondió. Una instrucción colada en un dato no puede cancelar nada dentro del mismo turno.
+    /// </summary>
     private async Task<string> CancelarCita(Sesion sesion, string citaId, CancellationToken ct)
     {
-        var cita = await _dpm.CancelarCitaAsync(citaId, PacienteDeSesion(sesion), ct);
+        var pacienteId = PacienteDeSesion(sesion);
+        var clave = citaId.Trim().ToUpperInvariant();
+
+        if (sesion.CancelacionPropuesta != clave || sesion.CancelacionPropuestaTurno is not { } turno || turno >= sesion.Turno)
+        {
+            var propia = (await _dpm.CitasDePacienteAsync(pacienteId, ct)).FirstOrDefault(c => c.Id == clave);
+            if (propia is null)
+                return Error($"No encontré la cita {citaId} entre las citas de este paciente.");
+
+            sesion.CancelacionPropuesta = clave;
+            sesion.CancelacionPropuestaTurno = sesion.Turno;
+            return Ok(new
+            {
+                requiere_confirmacion = true,
+                cita = Resumen(propia),
+                instruccion = "Todavía no se canceló. Pregúntale al paciente si confirma la cancelación; si responde que sí, vuelve a usar cancelar_cita con el mismo cita_id.",
+            });
+        }
+
+        sesion.CancelacionPropuesta = null;
+        sesion.CancelacionPropuestaTurno = null;
+        var cita = await _dpm.CancelarCitaAsync(clave, pacienteId, ct);
         if (cita is null)
             return Error($"No encontré la cita {citaId} entre las citas de este paciente.");
 
@@ -285,6 +318,12 @@ public sealed class AgentTools
 
     private static string? Opt(JsonObject args, string key) => args[key]?.ToString();
 
+    internal static string MotivoAdministrativo(string? motivo)
+    {
+        var limpio = motivo?.Trim().ToLowerInvariant();
+        return MotivosAdministrativos.FirstOrDefault(m => m == limpio) ?? "consulta general";
+    }
+
     private static string Ok(object value) => JsonSerializer.Serialize(value, JsonOpts);
 
     private static string Error(string message) => JsonSerializer.Serialize(new { error = message }, JsonOpts);
@@ -336,11 +375,17 @@ public sealed class AgentTools
                 {
                     ["medico_id"] = Str("Id del médico."),
                     ["fecha_hora"] = Str("Valor fecha_hora exacto devuelto por consultar_disponibilidad."),
-                    ["motivo"] = Str("Motivo administrativo breve, por ejemplo 'consulta de control' o 'primera consulta'. Sin detalles clínicos."),
+                    ["motivo"] = new JsonObject
+                    {
+                        ["type"] = "string",
+                        ["enum"] = new JsonArray(MotivosAdministrativos.Select(m => (JsonNode)m).ToArray()),
+                        ["description"] = "Motivo administrativo. Nunca detalles de salud.",
+                    },
                 },
                 "medico_id", "fecha_hora", "motivo"),
             Tool("citas_del_paciente", "Lista las citas confirmadas del paciente identificado.", new JsonObject()),
-            Tool("cancelar_cita", "Cancela una cita del paciente identificado. Confirmar con el paciente antes de usarla.",
+            Tool("cancelar_cita",
+                "Cancela una cita del paciente identificado, en dos pasos: la primera vez solo la propone y hay que preguntarle al paciente; si confirma, se vuelve a llamar con el mismo cita_id.",
                 new JsonObject { ["cita_id"] = Str("Id de la cita, por ejemplo CITA-1001.") },
                 "cita_id"),
             Tool("confirmar_datos_carnet",

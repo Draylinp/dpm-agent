@@ -7,10 +7,12 @@ using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
 using DpmAgent.Api.Panel;
+using DpmAgent.Api.Seguridad;
 using DpmAgent.Api.Voz;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddProduccion();
 builder.Services.AddModelos(builder.Configuration);
 builder.Services.Configure<TranscripcionOptions>(builder.Configuration.GetSection(TranscripcionOptions.SectionName));
 builder.Services.AddHttpClient<ITranscriber, MetaTranscriber>();
@@ -35,12 +37,13 @@ var app = builder.Build();
 await app.Services.InicializarBaseDatosAsync();
 await app.Services.AsegurarUsuarioInicialAsync(app.Environment.IsDevelopment());
 
+app.UseProduccion();
 app.UseExceptionHandler();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UsePanel();
 
-app.MapGet("/health", () => Results.Ok(new { estado = "ok", hora = DateTimeOffset.UtcNow }));
+app.MapSalud();
 
 app.MapPost("/api/chat", async (ChatRequest req, ReceptionAgent agent, CancellationToken ct) =>
 {
@@ -52,7 +55,7 @@ app.MapPost("/api/chat", async (ChatRequest req, ReceptionAgent agent, Cancellat
 
     return await RespuestasAgente.EjecutarAsync(async () =>
         Results.Ok(await agent.RunAsync(req.SesionId, req.Mensaje, req.Telefono, ct)));
-});
+}).RequireRateLimiting(ProduccionExtensions.PoliticaPublica);
 
 app.MapAudioChat();
 app.MapCarnet();
@@ -65,7 +68,7 @@ app.MapGet("/api/escalamientos", async (IDpmGateway dpm, CancellationToken ct) =
     Results.Ok(await dpm.ListarEscalamientosAsync(ct))).RequireAuthorization(PanelExtensions.Politica);
 
 app.MapGet("/api/medicos", async (IDpmGateway dpm, CancellationToken ct) =>
-    Results.Ok(await dpm.ListarMedicosAsync(ct)));
+    Results.Ok(await dpm.ListarMedicosAsync(ct))).RequireRateLimiting(ProduccionExtensions.PoliticaPublica);
 
 app.Run();
 

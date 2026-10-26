@@ -246,6 +246,13 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime>("ActualizadaUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CancelacionPropuesta")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int?>("CancelacionPropuestaTurno")
+                        .HasColumnType("integer");
+
                     b.Property<int>("ConsultorioId")
                         .HasColumnType("integer");
 
@@ -264,7 +271,12 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<int>("Turno")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ActualizadaUtc");
 
                     b.HasIndex("PacienteId");
 

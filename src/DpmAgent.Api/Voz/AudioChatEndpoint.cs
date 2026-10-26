@@ -1,4 +1,5 @@
 using DpmAgent.Api.Agent;
+using DpmAgent.Api.Seguridad;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace DpmAgent.Api.Voz;
@@ -22,7 +23,7 @@ public static class AudioChatEndpoint
 
             return await RespuestasAgente.EjecutarAsync(async () => Results.Ok(await procesador.ProcesarAsync(
                 archivo.Datos!, http.Form()["sesionId"].ToString(), http.Form()["telefono"].ToString(), ct)));
-        });
+        }).RequireRateLimiting(ProduccionExtensions.PoliticaPublica);
 
         return app;
     }

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using DpmAgent.Api.Agenda;
+using DpmAgent.Api.Seguridad;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -27,7 +28,7 @@ public static class PanelEndpoints
                 ServicioUsuarios.APrincipal(u, CookieAuthenticationDefaults.AuthenticationScheme));
             await bitacora.RegistrarEnConsultorioAsync(u.ConsultorioId, $"secretaria:{u.Usuario}", "inicio_sesion", ct);
             return Results.Ok(new { u.Usuario, u.Nombre, u.Rol });
-        });
+        }).RequireRateLimiting(ProduccionExtensions.PoliticaLogin);
 
         app.MapPost("/api/auth/logout", async (HttpContext http) =>
         {

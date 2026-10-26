@@ -238,7 +238,9 @@ public abstract class DpmDbContext : DbContext
             e.ToTable("Conversaciones");
             e.Property(x => x.SesionId).HasMaxLength(100);
             e.Property(x => x.TelefonoCanal).HasMaxLength(20);
+            e.Property(x => x.CancelacionPropuesta).HasMaxLength(30);
             e.HasIndex(x => new { x.ConsultorioId, x.SesionId }).IsUnique();
+            e.HasIndex(x => x.ActualizadaUtc);
             e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.SetNull);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasMany(x => x.Mensajes).WithOne().HasForeignKey(x => x.ConversacionId).OnDelete(DeleteBehavior.Cascade);

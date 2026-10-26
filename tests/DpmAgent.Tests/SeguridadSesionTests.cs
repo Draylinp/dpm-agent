@@ -60,8 +60,11 @@ public class SeguridadSesionTests
         var citaDeMaria = await _dpm.CrearCitaAsync("PAC-001", "MED-01", Martes9, "control", CancellationToken.None);
         var sesion = await SesionDeMaria();
 
+        var propuesta = await _tools.ExecuteAsync(sesion, "cancelar_cita", $$"""{"cita_id":"{{citaDeMaria.Id}}"}""", CancellationToken.None);
+        sesion.NuevoTurno(); // el paciente responde "sí"
         var r = await _tools.ExecuteAsync(sesion, "cancelar_cita", $$"""{"cita_id":"{{citaDeMaria.Id}}"}""", CancellationToken.None);
 
+        Assert.Contains("\"requiere_confirmacion\":true", propuesta);
         Assert.Contains("\"cancelada\":true", r);
     }
 

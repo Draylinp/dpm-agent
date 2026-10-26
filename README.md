@@ -108,6 +108,8 @@ dotnet test
 
 La prueba contra PostgreSQL solo corre si se define `DPM_TEST_POSTGRES` con la cadena de una base desechable (el CI la define con un contenedor de Postgres).
 
+Despliegue en Azure App Service con PostgreSQL, Key Vault y GitHub Actions: ver [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). También hay un `Dockerfile` multi-stage.
+
 Configuración opcional (`appsettings.json` o variables de entorno):
 
 | Variable | Valor por defecto |
@@ -144,6 +146,13 @@ dotnet ef migrations add Nombre --project src/DpmAgent.Api --context PostgresDpm
 ```
 
 ## Seguridad y límites
+
+- **Defensa contra prompt injection validada en el servidor**: lo que devuelven las herramientas, las transcripciones y lo leído en fotos se tratan como datos. Cancelar una cita es en dos pasos que controla el servidor: solo se ejecuta en un turno posterior, o sea, después de un mensaje real del paciente. Un turno no puede hacer más de 3 acciones que cambien datos ni más de 5 herramientas por respuesta. El motivo de la cita solo admite valores administrativos.
+- **Rate limiting** por IP (endpoints públicos y login) y por conversación (todos los canales).
+- **Logs estructurados** (JSON en producción) con `SesionId` y `CorrelationId`, sin argumentos ni resultados de herramientas: no llevan datos de pacientes.
+- **Retención**: las conversaciones se borran a los 30 días (configurable); la bitácora se guarda un año.
+- **Salud**: `/health/live` y `/health/ready` (base de datos y modelo configurado).
+- Cabeceras de seguridad (CSP, `X-Frame-Options`, `nosniff`), HSTS y HTTPS en producción.
 
 - **Cada conversación solo actúa sobre su propio paciente.** El paciente se identifica por el teléfono que entrega el canal (el remitente de WhatsApp), nunca por lo que diga el modelo. Las herramientas de citas toman el paciente de la sesión, y cancelar una cita ajena devuelve el mismo error que una cita que no existe. Una sesión no puede cambiar de número.
 - **Sin orientación médica.** El prompt de sistema lo prohíbe y no existe ninguna herramienta clínica. Cualquier pregunta de salud se escala al personal.

@@ -120,6 +120,8 @@ public sealed class AgendaTests : IDisposable
         var maria = await Identificado("8095550101", "web-maria");
 
         await Herramienta(maria, "cancelar_cita", $$"""{"cita_id":"{{citaMaria}}"}""");
+        maria.NuevoTurno();
+        await Herramienta(maria, "cancelar_cita", $$"""{"cita_id":"{{citaMaria}}"}""");
         var r = await Peticion().Motor.ProcesarAsync(CancellationToken.None);
 
         Assert.Equal(1, r.OfertasEnviadas);

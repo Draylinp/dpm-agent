@@ -364,6 +364,13 @@ public sealed class Conversacion
 
     public int? PacienteId { get; set; }
 
+    public int Turno { get; set; }
+
+    /// <summary>Cancelación propuesta por el agente y pendiente de que el paciente la confirme.</summary>
+    public string? CancelacionPropuesta { get; set; }
+
+    public int? CancelacionPropuestaTurno { get; set; }
+
     public DateTime CreadaUtc { get; set; }
 
     public DateTime ActualizadaUtc { get; set; }

@@ -3,6 +3,7 @@ using DpmAgent.Api.Agent;
 using System.Security.Claims;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Panel;
+using DpmAgent.Api.Seguridad;
 using DpmAgent.Api.Voz;
 
 namespace DpmAgent.Api.Carnet;
@@ -25,7 +26,7 @@ public static class CarnetEndpoints
 
             return await RespuestasAgente.EjecutarAsync(async () => Results.Ok(await procesador.ProcesarAsync(
                 archivo.Datos!, http.Form()["sesionId"].ToString(), http.Form()["telefono"].ToString(), ct)));
-        });
+        }).RequireRateLimiting(ProduccionExtensions.PoliticaPublica);
 
         // Acciones de la secretaria: requieren sesión en el panel.
         var secretaria = app.MapGroup("/api/carnets").RequireAuthorization(PanelExtensions.Politica);
