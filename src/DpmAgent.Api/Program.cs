@@ -5,6 +5,7 @@ using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
+using DpmAgent.Api.Panel;
 using DpmAgent.Api.Voz;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddPersistencia(builder.Configuration);
 builder.Services.AddAgenda(builder.Configuration);
 builder.Services.AddWhatsApp(builder.Configuration);
+builder.Services.AddPanel(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<AgentTools>();
 builder.Services.AddScoped<ReceptionAgent>();
 
@@ -30,10 +32,12 @@ builder.Services.AddProblemDetails();
 var app = builder.Build();
 
 await app.Services.InicializarBaseDatosAsync();
+await app.Services.AsegurarUsuarioInicialAsync(app.Environment.IsDevelopment());
 
 app.UseExceptionHandler();
 app.UseDefaultFiles();
 app.UseStaticFiles();
+app.UsePanel();
 
 app.MapGet("/health", () => Results.Ok(new { estado = "ok", hora = DateTimeOffset.UtcNow }));
 
@@ -53,9 +57,10 @@ app.MapAudioChat();
 app.MapCarnet();
 app.MapAgenda();
 app.MapWhatsApp();
+app.MapPanel();
 
 app.MapGet("/api/escalamientos", async (IDpmGateway dpm, CancellationToken ct) =>
-    Results.Ok(await dpm.ListarEscalamientosAsync(ct)));
+    Results.Ok(await dpm.ListarEscalamientosAsync(ct))).RequireAuthorization(PanelExtensions.Politica);
 
 app.MapGet("/api/medicos", async (IDpmGateway dpm, CancellationToken ct) =>
     Results.Ok(await dpm.ListarMedicosAsync(ct)));

@@ -1,5 +1,6 @@
 using DpmAgent.Api.Canales;
 using DpmAgent.Api.Data;
+using DpmAgent.Api.Panel;
 using Microsoft.EntityFrameworkCore;
 
 namespace DpmAgent.Api.Agenda;
@@ -25,10 +26,10 @@ public static class AgendaEndpoints
         });
 
         app.MapGet("/api/bitacora", async (int? limite, Bitacora bitacora, CancellationToken ct) =>
-            Results.Ok(await bitacora.ListarAsync(limite ?? 100, ct)));
+            Results.Ok(await bitacora.ListarAsync(limite ?? 100, ct))).RequireAuthorization(PanelExtensions.Politica);
 
         app.MapGet("/api/lista-espera", async (ServicioListaEspera lista, CancellationToken ct) =>
-            Results.Ok(await lista.ListarActivasAsync(ct)));
+            Results.Ok(await lista.ListarActivasAsync(ct))).RequireAuthorization(PanelExtensions.Politica);
 
         return app;
     }

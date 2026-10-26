@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
 using Microsoft.AspNetCore.Hosting;
@@ -25,6 +26,8 @@ public sealed class AppDePrueba : IDisposable
         {
             b.UseSetting("BaseDatos:Proveedor", "Memoria");
             b.UseSetting("Agenda:MotorActivo", "false");
+            b.UseSetting("WhatsApp:ProcesadorActivo", "false");
+            b.UseSetting("Panel:ClaveInicial", ClaveSecretaria);
             foreach (var (clave, valor) in ajustes ?? new Dictionary<string, string?>())
                 b.UseSetting(clave, valor);
 
@@ -38,6 +41,8 @@ public sealed class AppDePrueba : IDisposable
         Cliente = _factory.CreateClient();
     }
 
+    public const string ClaveSecretaria = "clave-de-prueba-123";
+
     public ScriptedChatModel Modelo { get; }
 
     public HttpClient Cliente { get; }
@@ -49,6 +54,13 @@ public sealed class AppDePrueba : IDisposable
     {
         await using var scope = _factory.Services.CreateAsyncScope();
         return await accion(scope.ServiceProvider);
+    }
+
+    /// <summary>Inicia sesión como la secretaria inicial; la cookie queda en <see cref="Cliente"/>.</summary>
+    public async Task IniciarSesionAsync()
+    {
+        var res = await Cliente.PostAsJsonAsync("/api/auth/login", new { usuario = "secretaria", clave = ClaveSecretaria });
+        res.EnsureSuccessStatusCode();
     }
 
     public Task<T> ConGateway<T>(Func<IDpmGateway, Task<T>> accion) =>

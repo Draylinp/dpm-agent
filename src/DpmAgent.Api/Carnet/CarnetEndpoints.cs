@@ -1,6 +1,8 @@
 using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Agent;
+using System.Security.Claims;
 using DpmAgent.Api.Dpm;
+using DpmAgent.Api.Panel;
 using DpmAgent.Api.Voz;
 
 namespace DpmAgent.Api.Carnet;
@@ -25,12 +27,14 @@ public static class CarnetEndpoints
                 archivo.Datos!, http.Form()["sesionId"].ToString(), http.Form()["telefono"].ToString(), ct)));
         });
 
-        // Acciones de la secretaria. Quedan detrás de la autenticación del panel en F6.
-        app.MapGet("/api/carnets", async (IDpmGateway dpm, CancellationToken ct) =>
+        // Acciones de la secretaria: requieren sesión en el panel.
+        var secretaria = app.MapGroup("/api/carnets").RequireAuthorization(PanelExtensions.Politica);
+
+        secretaria.MapGet("", async (IDpmGateway dpm, CancellationToken ct) =>
             Results.Ok(await dpm.ListarCarnetsPendientesAsync(ct)));
 
-        app.MapPost("/api/carnets/{id}/confirmar", async (
-            string id, CorreccionCarnet? correccion, IDpmGateway dpm, Bitacora bitacora, CancellationToken ct) =>
+        secretaria.MapPost("/{id}/confirmar", async (
+            string id, CorreccionCarnet? correccion, ClaimsPrincipal user, IDpmGateway dpm, Bitacora bitacora, CancellationToken ct) =>
         {
             var carnet = await dpm.ObtenerCarnetAsync(id, ct);
             if (carnet is null)
@@ -51,7 +55,7 @@ public static class CarnetEndpoints
             {
                 var r = await new ServicioCarnet(dpm).ConfirmarAsync(
                     carnet, datos, ServicioCarnet.PorSecretaria, null, exigirMismoNombre: false, ct);
-                await bitacora.RegistrarAsync(ServicioCarnet.PorSecretaria, "carnet_confirmado", "carnet", carnet.Id,
+                await bitacora.RegistrarAsync(user.Actor(), "carnet_confirmado", "carnet", carnet.Id,
                     $"para {r.Paciente.Id}{(datos is null ? "" : ", con correcciones")}", null, ct);
                 return Results.Ok(r);
             }
@@ -61,7 +65,7 @@ public static class CarnetEndpoints
             }
         });
 
-        app.MapPost("/api/carnets/{id}/descartar", async (string id, IDpmGateway dpm, Bitacora bitacora, CancellationToken ct) =>
+        secretaria.MapPost("/{id}/descartar", async (string id, ClaimsPrincipal user, IDpmGateway dpm, Bitacora bitacora, CancellationToken ct) =>
         {
             var carnet = await dpm.ObtenerCarnetAsync(id, ct);
             if (carnet is null)
@@ -70,7 +74,7 @@ public static class CarnetEndpoints
             try
             {
                 var r = await new ServicioCarnet(dpm).DescartarAsync(carnet, ServicioCarnet.PorSecretaria, ct);
-                await bitacora.RegistrarAsync(ServicioCarnet.PorSecretaria, "carnet_descartado", "carnet", carnet.Id, null, null, ct);
+                await bitacora.RegistrarAsync(user.Actor(), "carnet_descartado", "carnet", carnet.Id, null, null, ct);
                 return Results.Ok(r);
             }
             catch (InvalidOperationException ex)

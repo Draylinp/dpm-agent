@@ -42,6 +42,19 @@ public sealed class Bitacora
         await _db.SaveChangesAsync(ct);
     }
 
+    /// <summary>Para registrar antes de que el consultorio de la petición esté fijado (inicio de sesión).</summary>
+    public async Task RegistrarEnConsultorioAsync(int consultorioId, string actor, string accion, CancellationToken ct)
+    {
+        _db.Bitacora.Add(new RegistroBitacora
+        {
+            ConsultorioId = consultorioId,
+            FechaUtc = _clock.GetUtcNow().UtcDateTime,
+            Actor = Recortar(actor, 60)!,
+            Accion = accion,
+        });
+        await _db.SaveChangesAsync(ct);
+    }
+
     public async Task<IReadOnlyList<EntradaBitacora>> ListarAsync(int limite, CancellationToken ct)
     {
         var filas = await _db.Bitacora.AsNoTracking()

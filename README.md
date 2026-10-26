@@ -25,6 +25,7 @@ DPM Agent se encarga de esa conversación repetitiva y deja al personal lo que d
 - **Recordatorio 24 horas antes**, con opción de confirmar (`confirmar_asistencia`) o cancelar.
 - **Bitácora** (`GET /api/bitacora`): quién hizo qué y cuándo (agente, sistema o secretaria), sin detalles clínicos. Los mensajes automáticos son plantillas fijas, no texto del modelo.
 - **WhatsApp Cloud API**: webhook con verificación de firma `X-Hub-Signature-256`, texto, notas de voz y fotos del carnet, respuestas y mensajes proactivos con plantillas aprobadas. Ver [docs/WHATSAPP.md](docs/WHATSAPP.md).
+- **Panel de la secretaria** (`/panel.html`): inicio de sesión con cookie segura (`HttpOnly`, `SameSite=Strict`), claves con `PasswordHasher` y bloqueo tras 5 intentos. Muestra las citas del día, los escalamientos (urgentes primero, con botón de atendido), los carnets por confirmar y la bitácora. Cada secretaria solo ve los datos de su consultorio.
 - **Persistencia y multi-consultorio**: citas, pacientes, escalamientos y conversaciones se guardan con EF Core (SQLite en local, PostgreSQL en la nube). Cada registro lleva su `ConsultorioId` y cada consulta se filtra por el consultorio actual.
 - **Escalamiento al personal**: preguntas clínicas, quejas o posibles emergencias se pasan a un humano y quedan registradas en `/api/escalamientos`. En una posible emergencia el agente indica llamar al 911.
 - Panel de prueba que muestra, al lado del chat, cada herramienta que el modelo usó y lo que devolvió.
@@ -69,6 +70,7 @@ src/DpmAgent.Api/
   Agenda/  lista de espera, motor de ofertas y recordatorios, notificador, despachador, bitácora
   Canales/ IMessageChannel, WebChatChannel, WhatsApp/ (Cloud API, webhook, procesador)
   Carnet/  ILectorCarnet, MetaLectorCarnet, ServicioCarnet, endpoints del carnet
+  Panel/   usuarios, autenticación por cookie, vistas de la secretaria
   Voz/     ITranscriber, MetaTranscriber, validación de audio, endpoint de notas de voz
   Dpm/     IDpmGateway, DbDpmGateway, MockDpmGateway, horario del consultorio
   wwwroot/ panel de prueba
@@ -118,7 +120,8 @@ Configuración opcional (`appsettings.json` o variables de entorno):
 | `Carnet__Modelo` | vacío (usa `Meta__Model`) |
 | `Carnet__MaxBytes` | `4194304` (4 MB) |
 | `BaseDatos__Proveedor` | `Sqlite` (también `Postgres`, o `Memoria` = SQLite en memoria) |
-| `Agenda__MotorActivo` | `true` |
+| `Panel__ClaveInicial` | Clave del usuario inicial `secretaria` (administrador). En desarrollo, si falta, se genera una y se muestra en la consola |
+| `Agenda__MotorActivo` | `true` (también despacha los mensajes salientes) |
 | `Agenda__IntervaloSegundos` | `15` |
 | `Agenda__OfertaMinutos` | `30` |
 | `Agenda__AnticipacionMinimaMinutos` | `60` |

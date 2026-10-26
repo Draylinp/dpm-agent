@@ -223,6 +223,10 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AtendidoPor")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
                     b.Property<DateTime?>("AtendidoUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -646,6 +650,62 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.ToTable("Bitacora", (string)null);
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.UsuarioPanel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("BloqueadoHastaUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreadoUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("HashClave")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("IntentosFallidos")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Rol")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UltimoAccesoUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId");
+
+                    b.HasIndex("Usuario")
+                        .IsUnique();
+
+                    b.ToTable("UsuariosPanel", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.CarnetPendiente", b =>
                 {
                     b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
@@ -811,6 +871,15 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroBitacora", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.UsuarioPanel", b =>
                 {
                     b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
                         .WithMany()

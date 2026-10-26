@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel del consultorio</title>
+  <style>
+    :root { --bg:#f4f6f8; --card:#fff; --text:#1d2430; --muted:#6b7480; --brand:#0f7b6c; --line:#e3e7eb; --warn:#c0392b; --soft:#eef7f5; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#12161b; --card:#1b2129; --text:#e6e9ed; --muted:#9aa3ad; --brand:#3fbfa8; --line:#2a313a; --warn:#e57368; --soft:#1f3b35; }
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
+    main { max-width:1100px; margin:0 auto; padding:16px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+    h1 { font-size:18px; margin:0; }
+    .muted { color:var(--muted); font-size:13px; }
+    header.top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
+    nav { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+    nav button { background:transparent; color:var(--text); border:1px solid var(--line); }
+    nav button.activa { background:var(--brand); color:#fff; border-color:var(--brand); }
+    button { padding:8px 14px; border:0; border-radius:8px; background:var(--brand); color:#fff; font-weight:600; cursor:pointer; font-size:14px; }
+    button.sec { background:transparent; color:var(--text); border:1px solid var(--line); }
+    button.peligro { background:var(--warn); }
+    button:disabled { opacity:.5; }
+    input { padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:14px; }
+    label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+    th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; }
+    .tabla { overflow-x:auto; }
+    .chip { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:var(--soft); }
+    .chip.urgente { background:var(--warn); color:#fff; }
+    .fila-acciones { display:flex; gap:6px; flex-wrap:wrap; }
+    .item { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; }
+    .grid input { width:100%; }
+    .vacio { color:var(--muted); padding:16px 0; }
+    .error { color:var(--warn); font-size:13px; min-height:18px; }
+    #login { max-width:360px; margin:10vh auto; }
+    #login input { width:100%; }
+    #login button { width:100%; margin-top:14px; }
+    textarea { width:100%; min-height:220px; padding:10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font:13px/1.5 ui-monospace,Consolas,monospace; }
+  </style>
+</head>
+<body>
+<main>
+  <section id="login" class="card" hidden>
+    <h1>Panel del consultorio</h1>
+    <p class="muted">Solo para el personal. Datos ficticios.</p>
+    <form id="formLogin">
+      <label for="usuario">Usuario</label>
+      <input id="usuario" autocomplete="username" required>
+      <label for="clave">Clave</label>
+      <input id="clave" type="password" autocomplete="current-password" required>
+      <button>Entrar</button>
+      <p id="errorLogin" class="error"></p>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <header class="top">
+      <div>
+        <h1>Panel del consultorio</h1>
+        <span id="quien" class="muted"></span>
+      </div>
+      <button id="salir" class="sec">Cerrar sesión</button>
+    </header>
+    <nav id="tabs">
+      <button data-tab="citas" class="activa">Citas del día</button>
+      <button data-tab="escalamientos">Escalamientos</button>
+      <button data-tab="carnets">Carnets por confirmar</button>
+      <button data-tab="autorizaciones">Autorizaciones ARS</button>
+      <button data-tab="bitacora">Bitácora</button>
+    </nav>
+    <div class="card">
+      <p id="error" class="error"></p>
+      <div id="vista"></div>
+    </div>
+  </section>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let tab = 'citas';
+
+  function el(tag, props = {}, ...hijos) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'class') e.className = v;
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+      else if (v !== undefined && v !== null) e.setAttribute(k, v);
+    }
+    for (const h of hijos.flat()) e.append(h instanceof Node ? h : document.createTextNode(h ?? ''));
+    return e;
+  }
+
+  async function api(ruta, opciones = {}) {
+    const res = await fetch(ruta, {
+      ...opciones,
+      headers: opciones.body ? { 'Content-Type': 'application/json' } : undefined,
+      credentials: 'same-origin',
+    });
+    if (res.status === 401) { mostrarLogin(); throw new Error('La sesión terminó. Entre de nuevo.'); }
+    const texto = await res.text();
+    const datos = texto ? JSON.parse(texto) : null;
+    if (!res.ok) throw new Error((datos && (datos.error || datos.detail)) || res.statusText);
+    return datos;
+  }
+
+  function mostrarLogin() { $('app').hidden = true; $('login').hidden = false; }
+
+  async function mostrarApp() {
+    const yo = await api('/api/auth/yo');
+    $('quien').textContent = `${yo.nombre} (${yo.usuario})`;
+    $('login').hidden = true;
+    $('app').hidden = false;
+    await cargar();
+  }
+
+  $('formLogin').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('errorLogin').textContent = '';
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario: $('usuario').value.trim(), clave: $('clave').value }),
+    });
+    $('clave').value = '';
+    if (!res.ok) { $('errorLogin').textContent = 'Usuario o clave incorrectos.'; return; }
+    await mostrarApp();
+  });
+
+  $('salir').addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    mostrarLogin();
+  });
+
+  $('tabs').addEventListener('click', async (e) => {
+    const b = e.target.closest('button[data-tab]');
+    if (!b) return;
+    tab = b.dataset.tab;
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('activa', x === b));
+    await cargar();
+  });
+
+  async function cargar() {
+    $('error').textContent = '';
+    const vista = $('vista');
+    try {
+      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, bitacora })[tab]();
+      vista.replaceChildren(contenido);
+    } catch (err) {
+      $('error').textContent = err.message;
+    }
+  }
+
+  async function accion(fn) {
+    $('error').textContent = '';
+    try { await fn(); await cargar(); } catch (err) { $('error').textContent = err.message; }
+  }
+
+  const hoy = () => new Date(Date.now() - 4 * 3600 * 1000).toISOString().slice(0, 10);
+  let fechaCitas = hoy();
+
+  async function citas() {
+    const lista = await api(`/api/panel/citas?fecha=${fechaCitas}`);
+    const fecha = el('input', { type: 'date', value: fechaCitas, onchange: async (e) => { fechaCitas = e.target.value; await cargar(); } });
+    const filas = lista.map(c => el('tr', {},
+      el('td', {}, c.hora),
+      el('td', {}, c.paciente, el('div', { class: 'muted' }, c.telefono)),
+      el('td', {}, c.ars || '—', el('div', { class: 'muted' }, c.numeroAfiliado || '')),
+      el('td', {}, c.medico),
+      el('td', {}, c.motivo),
+      el('td', {}, el('span', { class: 'chip' }, c.estado), c.asistenciaConfirmada ? el('div', { class: 'muted' }, 'asistencia confirmada') : ''),
+      el('td', {}, c.estado === 'confirmada'
+        ? el('button', { class: 'sec', onclick: () => accion(() => api(`/api/panel/autorizaciones`, { method: 'POST', body: JSON.stringify({ citaId: c.id }) })) }, 'Borrador ARS')
+        : '')));
+    return el('div', {},
+      el('div', { class: 'fila-acciones' }, el('label', {}, 'Fecha '), fecha),
+      lista.length ? el('div', { class: 'tabla' }, el('table', {},
+        el('thead', {}, el('tr', {}, ['Hora', 'Paciente', 'ARS', 'Médico', 'Motivo', 'Estado', ''].map(t => el('th', {}, t)))),
+        el('tbody', {}, filas))) : el('p', { class: 'vacio' }, 'No hay citas para este día.'));
+  }
+
+  async function escalamientos() {
+    const lista = await api('/api/panel/escalamientos');
+    if (!lista.length) return el('p', { class: 'vacio' }, 'No hay escalamientos pendientes.');
+    return el('div', {}, lista.map(e => el('div', { class: 'item' },
+      el('div', { class: 'fila-acciones' },
+        e.urgente ? el('span', { class: 'chip urgente' }, 'URGENTE') : '',
+        el('strong', {}, e.id), el('span', { class: 'muted' }, new Date(e.creado).toLocaleString('es-DO'))),
+      el('p', {}, e.motivo),
+      el('p', { class: 'muted' }, `Paciente: ${e.pacienteId || 'sin identificar'} · Conversación: ${e.sesionId}`),
+      el('button', { onclick: () => accion(() => api(`/api/panel/escalamientos/${e.id}/atender`, { method: 'POST' })) }, 'Marcar como atendido'))));
+  }
+
+  async function carnets() {
+    const lista = await api('/api/carnets');
+    if (!lista.length) return el('p', { class: 'vacio' }, 'No hay carnets por confirmar.');
+    return el('div', {}, lista.map(c => {
+      const nombre = el('input', { value: c.datos.nombre || '' });
+      const ars = el('input', { value: c.datos.ars || '' });
+      const afiliado = el('input', { value: c.datos.numeroAfiliado || '' });
+      return el('div', { class: 'item' },
+        el('div', { class: 'fila-acciones' }, el('strong', {}, c.id),
+          el('span', { class: 'muted' }, `Tel. ${c.telefonoCanal} · ${c.pacienteId || 'paciente nuevo'}`)),
+        el('div', { class: 'grid' },
+          el('div', {}, el('label', {}, 'Nombre'), nombre),
+          el('div', {}, el('label', {}, 'ARS'), ars),
+          el('div', {}, el('label', {}, 'Número de afiliado'), afiliado)),
+        el('div', { class: 'fila-acciones', style: 'margin-top:10px' },
+          el('button', { onclick: () => accion(() => api(`/api/carnets/${c.id}/confirmar`, { method: 'POST',
+            body: JSON.stringify({ nombre: nombre.value, ars: ars.value, numeroAfiliado: afiliado.value }) })) }, 'Confirmar'),
+          el('button', { class: 'sec', onclick: () => accion(() => api(`/api/carnets/${c.id}/descartar`, { method: 'POST' })) }, 'Descartar')));
+    }));
+  }
+
+  async function autorizaciones() {
+    const lista = await api('/api/panel/autorizaciones');
+    if (!lista.length) return el('p', { class: 'vacio' }, 'No hay borradores pendientes. Créelos desde "Citas del día".');
+    return el('div', {}, lista.map(a => {
+      const texto = el('textarea', {}, a.contenido);
+      return el('div', { class: 'item' },
+        el('div', { class: 'fila-acciones' }, el('strong', {}, a.id),
+          el('span', { class: 'chip' }, a.estado),
+          el('span', { class: 'muted' }, `${a.citaId} · ${a.paciente} · ${a.ars || 'sin ARS'}`)),
+        a.faltantes.length ? el('p', { class: 'error' }, 'Falta: ' + a.faltantes.join(', ')) : '',
+        texto,
+        el('p', { class: 'muted' }, 'Revise y edite el texto. Aprobar no envía nada: solo lo marca como listo para que usted lo tramite.'),
+        el('div', { class: 'fila-acciones' },
+          el('button', { class: 'sec', onclick: () => accion(() => api(`/api/panel/autorizaciones/${a.id}`, { method: 'PUT', body: JSON.stringify({ contenido: texto.value }) })) }, 'Guardar cambios'),
+          el('button', { onclick: () => accion(() => api(`/api/panel/autorizaciones/${a.id}/aprobar`, { method: 'POST', body: JSON.stringify({ contenido: texto.value }) })) }, 'Aprobar'),
+          el('button', { class: 'peligro', onclick: () => accion(() => api(`/api/panel/autorizaciones/${a.id}/descartar`, { method: 'POST' })) }, 'Descartar')));
+    }));
+  }
+
+  async function bitacora() {
+    const lista = await api('/api/bitacora?limite=200');
+    if (!lista.length) return el('p', { class: 'vacio' }, 'Sin registros todavía.');
+    return el('div', { class: 'tabla' }, el('table', {},
+      el('thead', {}, el('tr', {}, ['Fecha', 'Quién', 'Acción', 'Sobre', 'Detalle'].map(t => el('th', {}, t)))),
+      el('tbody', {}, lista.map(b => el('tr', {},
+        el('td', {}, new Date(b.fecha).toLocaleString('es-DO')),
+        el('td', {}, b.actor),
+        el('td', {}, b.accion),
+        el('td', {}, [b.entidad, b.entidadId].filter(Boolean).join(' ')),
+        el('td', {}, b.detalle || ''))))));
+  }
+
+  fetch('/api/auth/yo', { credentials: 'same-origin' }).then(r => r.ok ? mostrarApp() : mostrarLogin()).catch(mostrarLogin);
+</script>
+</body>
+</html>

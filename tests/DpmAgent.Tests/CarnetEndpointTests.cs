@@ -16,7 +16,7 @@ public class CarnetEndpointTests
     private static readonly LecturaCarnet CarnetDeMaria =
         new(true, new DatosCarnet("María Rodríguez", "ARS Nueva", "AF-777"));
 
-    private sealed record Contexto(HttpClient Cliente, ScriptedChatModel Modelo, FakeLectorCarnet Lector, GatewayDeApp Dpm);
+    private sealed record Contexto(HttpClient Cliente, ScriptedChatModel Modelo, FakeLectorCarnet Lector, GatewayDeApp Dpm, AppDePrueba App);
 
     /// <summary>Acceso al gateway de la app: cada llamada usa un ámbito nuevo.</summary>
     private sealed class GatewayDeApp(AppDePrueba app)
@@ -39,7 +39,7 @@ public class CarnetEndpointTests
                 s.AddSingleton<ILectorCarnet>(lector);
             },
             new Dictionary<string, string?> { ["Carnet:MaxBytes"] = maxBytes.ToString() });
-        return new Contexto(app.Cliente, app.Modelo, lector, new GatewayDeApp(app));
+        return new Contexto(app.Cliente, app.Modelo, lector, new GatewayDeApp(app), app);
     }
 
     private static MultipartFormDataContent Form(byte[] imagen, string? telefono = "809-555-0101", string? sesionId = null)
@@ -59,7 +59,7 @@ public class CarnetEndpointTests
     {
         var modelo = new ScriptedChatModel()
             .ThenText("Leí: María Rodríguez, ARS Nueva, afiliado AF-777. ¿Está correcto?");
-        var (cliente, _, _, dpm) = Crear(CarnetDeMaria, modelo);
+        var (cliente, _, _, dpm, _) = Crear(CarnetDeMaria, modelo);
 
         var res = await cliente.PostAsync("/api/pacientes/carnet", Form(ImagenesDePrueba.Jpeg()));
 
@@ -85,7 +85,7 @@ public class CarnetEndpointTests
             .ThenText("¿Están correctos estos datos?")
             .ThenTool("confirmar_datos_carnet", new { })
             .ThenText("Listo, guardé su ARS.");
-        var (cliente, _, _, dpm) = Crear(CarnetDeMaria, modelo);
+        var (cliente, _, _, dpm, _) = Crear(CarnetDeMaria, modelo);
 
         var r1 = await cliente.PostAsync("/api/pacientes/carnet", Form(ImagenesDePrueba.Jpeg()));
         var sesionId = (await r1.Content.ReadFromJsonAsync<JsonObject>())!["sesionId"]!.ToString();
@@ -102,7 +102,7 @@ public class CarnetEndpointTests
     public async Task Si_no_es_un_carnet_no_queda_nada_pendiente()
     {
         var modelo = new ScriptedChatModel().ThenText("No pude leer el carnet. ¿Me manda otra foto?");
-        var (cliente, _, _, dpm) = Crear(new LecturaCarnet(false, new DatosCarnet(null, null, null)), modelo);
+        var (cliente, _, _, dpm, _) = Crear(new LecturaCarnet(false, new DatosCarnet(null, null, null)), modelo);
 
         var res = await cliente.PostAsync("/api/pacientes/carnet", Form(ImagenesDePrueba.Jpeg()));
 
@@ -115,7 +115,7 @@ public class CarnetEndpointTests
     [Fact]
     public async Task Sin_telefono_no_se_lee_la_foto()
     {
-        var (cliente, _, lector, _) = Crear(CarnetDeMaria);
+        var (cliente, _, lector, _, _) = Crear(CarnetDeMaria);
 
         var res = await cliente.PostAsync("/api/pacientes/carnet", Form(ImagenesDePrueba.Jpeg(), telefono: null));
 
@@ -126,7 +126,7 @@ public class CarnetEndpointTests
     [Fact]
     public async Task Archivo_que_no_es_imagen_o_demasiado_grande_se_rechaza_sin_leer()
     {
-        var (cliente, _, lector, _) = Crear(CarnetDeMaria, maxBytes: 1000);
+        var (cliente, _, lector, _, _) = Crear(CarnetDeMaria, maxBytes: 1000);
 
         var noImagen = await cliente.PostAsync("/api/pacientes/carnet", Form("%PDF-1.7 carnet"u8.ToArray()));
         var grande = await cliente.PostAsync("/api/pacientes/carnet", Form(ImagenesDePrueba.Jpeg(5000)));
@@ -139,8 +139,9 @@ public class CarnetEndpointTests
     [Fact]
     public async Task La_secretaria_corrige_confirma_y_no_puede_confirmar_dos_veces()
     {
-        var (cliente, _, _, dpm) = Crear(CarnetDeMaria, new ScriptedChatModel().ThenText("¿Correcto?"));
+        var (cliente, _, _, dpm, app) = Crear(CarnetDeMaria, new ScriptedChatModel().ThenText("¿Correcto?"));
         await cliente.PostAsync("/api/pacientes/carnet", Form(ImagenesDePrueba.Jpeg()));
+        await app.IniciarSesionAsync();
         var id = (await cliente.GetFromJsonAsync<JsonArray>("/api/carnets"))![0]!["id"]!.ToString();
 
         var malo = await cliente.PostAsJsonAsync($"/api/carnets/{id}/confirmar", new { numeroAfiliado = "AF 1; DROP" });
@@ -156,8 +157,9 @@ public class CarnetEndpointTests
     [Fact]
     public async Task La_secretaria_puede_descartar_y_un_id_inexistente_da_404()
     {
-        var (cliente, _, _, dpm) = Crear(CarnetDeMaria, new ScriptedChatModel().ThenText("¿Correcto?"));
+        var (cliente, _, _, dpm, app) = Crear(CarnetDeMaria, new ScriptedChatModel().ThenText("¿Correcto?"));
         await cliente.PostAsync("/api/pacientes/carnet", Form(ImagenesDePrueba.Jpeg()));
+        await app.IniciarSesionAsync();
         var id = (await cliente.GetFromJsonAsync<JsonArray>("/api/carnets"))![0]!["id"]!.ToString();
 
         var descartar = await cliente.PostAsync($"/api/carnets/{id}/descartar", null);

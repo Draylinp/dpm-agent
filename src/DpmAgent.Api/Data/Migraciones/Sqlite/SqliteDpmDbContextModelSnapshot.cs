@@ -208,6 +208,10 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("AtendidoPor")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("AtendidoUtc")
                         .HasColumnType("TEXT");
 
@@ -615,6 +619,60 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.ToTable("Bitacora", (string)null);
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.UsuarioPanel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("BloqueadoHastaUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreadoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HashClave")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IntentosFallidos")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Rol")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UltimoAccesoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId");
+
+                    b.HasIndex("Usuario")
+                        .IsUnique();
+
+                    b.ToTable("UsuariosPanel", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.CarnetPendiente", b =>
                 {
                     b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
@@ -780,6 +838,15 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.RegistroBitacora", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.UsuarioPanel", b =>
                 {
                     b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
                         .WithMany()

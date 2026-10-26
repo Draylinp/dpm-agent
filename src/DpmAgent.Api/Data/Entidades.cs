@@ -19,6 +19,34 @@ public sealed class Consultorio
     public DateTime CreadoUtc { get; set; }
 }
 
+/// <summary>Persona del consultorio que entra al panel (secretaria o administrador).</summary>
+public sealed class UsuarioPanel
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string Usuario { get; set; }
+
+    public required string Nombre { get; set; }
+
+    /// <summary>Hash PBKDF2 de PasswordHasher; la clave nunca se guarda.</summary>
+    public required string HashClave { get; set; }
+
+    /// <summary>secretaria o admin.</summary>
+    public required string Rol { get; set; }
+
+    public bool Activo { get; set; } = true;
+
+    public int IntentosFallidos { get; set; }
+
+    public DateTime? BloqueadoHastaUtc { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+
+    public DateTime? UltimoAccesoUtc { get; set; }
+}
+
 public sealed class Medico
 {
     public int Id { get; set; }
@@ -257,6 +285,8 @@ public sealed class Escalamiento
     public DateTime CreadoUtc { get; set; }
 
     public DateTime? AtendidoUtc { get; set; }
+
+    public string? AtendidoPor { get; set; }
 }
 
 /// <summary>

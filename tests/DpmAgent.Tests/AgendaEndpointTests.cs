@@ -39,6 +39,7 @@ public class AgendaEndpointTests
         var otraSesion = await app.Cliente.GetFromJsonAsync<JsonArray>("/api/chat/otra-sesion/salientes");
         Assert.Empty(otraSesion!);
 
+        await app.IniciarSesionAsync();
         var bitacora = await app.Cliente.GetFromJsonAsync<JsonArray>("/api/bitacora");
         Assert.Contains(bitacora!, b => b!["accion"]!.ToString() == "recordatorio_enviado");
     }

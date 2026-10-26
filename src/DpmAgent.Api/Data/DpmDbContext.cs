@@ -22,6 +22,8 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<Consultorio> Consultorios => Set<Consultorio>();
 
+    public DbSet<UsuarioPanel> UsuariosPanel => Set<UsuarioPanel>();
+
     public DbSet<Medico> Medicos => Set<Medico>();
 
     public DbSet<Paciente> Pacientes => Set<Paciente>();
@@ -60,6 +62,18 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.TelefonoWhatsApp).HasMaxLength(20);
             e.Property(x => x.WhatsAppPhoneNumberId).HasMaxLength(40);
             e.HasIndex(x => x.WhatsAppPhoneNumberId).IsUnique();
+        });
+
+        // Sin filtro por consultorio: el inicio de sesión busca el usuario antes de saber a qué consultorio pertenece.
+        b.Entity<UsuarioPanel>(e =>
+        {
+            e.ToTable("UsuariosPanel");
+            e.Property(x => x.Usuario).HasMaxLength(60);
+            e.Property(x => x.Nombre).HasMaxLength(120);
+            e.Property(x => x.HashClave).HasMaxLength(200);
+            e.Property(x => x.Rol).HasMaxLength(20);
+            e.HasIndex(x => x.Usuario).IsUnique();
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
         });
 
         b.Entity<Medico>(e =>
@@ -115,6 +129,7 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.SesionId).HasMaxLength(100);
             e.Property(x => x.Motivo).HasMaxLength(1000);
             e.Property(x => x.Estado).HasMaxLength(20);
+            e.Property(x => x.AtendidoPor).HasMaxLength(60);
             e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.SetNull);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasIndex(x => new { x.ConsultorioId, x.Estado });
