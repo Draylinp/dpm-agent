@@ -36,5 +36,13 @@
   "agenda.seguimiento_creado": "Hi, {1}. {0} would like you to know that {2} asked for a follow-up visit around {3}. A few weeks before, we will write to you so you can choose a time. To stop receiving notices, reply STOP.",
   "agenda.seguimiento_agendado": "Hi, {1}. {0} would like you to know that {2} asked for a follow-up visit, and we booked it for {3} at {4} (appointment {5}). Reply CONFIRM to confirm it or CHANGE if you prefer another time. To stop receiving notices, reply STOP.",
   "agenda.seguimiento_contacto": "Hi, {1}. {0} reminds you that {2} asked for a follow-up visit around {3}. Would you like us to find a time for you? Reply YES and we will show you the options. To stop receiving notices, reply STOP.",
-  "agenda.recordatorio_7dias": "Hi, {1}. {0} reminds you that in one week you have your follow-up visit with {2}, on {3} at {4} (appointment {5}). If you can't make it, reply CHANGE. To stop receiving notices, reply STOP."
+  "agenda.recordatorio_7dias": "Hi, {1}. {0} reminds you that in one week you have your follow-up visit with {2}, on {3} at {4} (appointment {5}). If you can't make it, reply CHANGE. To stop receiving notices, reply STOP.",
+  "medico.verificado": "Done, {0}: your number is verified. From here you can create follow-ups, check your schedule and block days.",
+  "medico.codigo_invalido": "The code is not valid or has expired. Ask for a new one in the clinic dashboard.",
+  "medico.resumen_texto": "{0} can send you an administrative summary of your day every morning on WhatsApp: appointments, extra-slot requests to decide and follow-up patients with no answer. Only names, times and administrative reasons; never health data. You can opt out by writing STOP. Would you like it? Reply YES or NO.",
+  "medico.resumen_aceptado": "Done: you will get the summary every morning. To stop receiving it, write STOP.",
+  "medico.resumen_rechazado": "Understood, we will not send you the daily summary.",
+  "medico.baja": "Done, we will not send you the daily summary anymore.",
+  "medico.sin_citas": "You have no appointments today.",
+  "agenda.resumen_medico": "Good morning, {1}. Summary from {0} for today: {2} appointments, {3} extra-slot requests to decide and {4} follow-up patients with no answer. Reply AGENDA to see the details. To stop receiving this summary, reply STOP."
 }

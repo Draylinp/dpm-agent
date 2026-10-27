@@ -47,6 +47,11 @@ public sealed class Sesion
 
     public string? ConsentimientoVersion { get; set; }
 
+    /// <summary>Acción del médico propuesta (crear seguimiento, bloquear) y el turno en que se propuso.</summary>
+    public string? PropuestaMedico { get; set; }
+
+    public int? PropuestaMedicoTurno { get; set; }
+
     /// <summary>Texto fijo que el servidor agrega al final de la respuesta de este turno (no lo escribe el modelo).</summary>
     internal string? AnexoRespuesta { get; set; }
 
@@ -86,6 +91,8 @@ public sealed class Sesion
         CancelacionPropuestaTurno = CancelacionPropuestaTurno,
         ConsentimientoOfrecidoTurno = ConsentimientoOfrecidoTurno,
         ConsentimientoVersion = ConsentimientoVersion,
+        PropuestaMedico = PropuestaMedico,
+        PropuestaMedicoTurno = PropuestaMedicoTurno,
         Mensajes = new List<JsonObject>(Mensajes),
         MensajesGuardados = Mensajes.Count,
     };

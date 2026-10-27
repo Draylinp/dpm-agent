@@ -27,6 +27,13 @@ public static partial class PedidosDirectos
         return PalabrasBaja.Contains(limpio);
     }
 
+    /// <summary>"VERIFICAR 123456": el médico confirma su teléfono con el código que le dio el panel.</summary>
+    public static string? CodigoVerificacion(string? mensaje) =>
+        mensaje is not null && Verificar().Match(mensaje.Trim()) is { Success: true } m ? m.Groups[1].Value : null;
+
+    [GeneratedRegex(@"^(?:verificar|verify|verifye)\s+(\d{6})$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex Verificar();
+
     public static bool EsPedidoDePersona(string? mensaje) =>
         !string.IsNullOrWhiteSpace(mensaje) && Persona().IsMatch(SinAcentos(mensaje));
 
@@ -41,7 +48,7 @@ public static partial class PedidosDirectos
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex Persona();
 
-    private static string SinAcentos(string texto)
+    internal static string SinAcentos(string texto)
     {
         var sb = new StringBuilder(texto.Length);
         foreach (var c in texto.Normalize(NormalizationForm.FormD))

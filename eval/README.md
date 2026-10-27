@@ -1,6 +1,6 @@
 # Evaluation bank
 
-165 cases (`casos/`), the judge rubric (`RUBRICA.md`) and reports (`resultados/`). See [docs/EVALUATION.md](../docs/EVALUATION.md) · [docs/es/EVALUACION.md](../docs/es/EVALUACION.md).
+177 cases (`casos/`), the judge rubric (`RUBRICA.md`) and reports (`resultados/`). See [docs/EVALUATION.md](../docs/EVALUATION.md) · [docs/es/EVALUACION.md](../docs/es/EVALUACION.md).
 
 ```bash
 dotnet run --project tools/DpmAgent.Eval                    # scripted model (CI)

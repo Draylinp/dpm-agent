@@ -25,6 +25,9 @@ public static class CategoriasConsentimiento
 
     public static readonly string[] Todas = [Recordatorios, Seguimientos, ListaEspera];
 
+    /// <summary>Del médico, no del paciente: resumen diario de su agenda.</summary>
+    public const string ResumenMedico = "resumen_medico";
+
     /// <summary>Categoría de consentimiento que necesita cada tipo de mensaje proactivo.</summary>
     public static string? DeTipoMensaje(string tipo) => tipo switch
     {

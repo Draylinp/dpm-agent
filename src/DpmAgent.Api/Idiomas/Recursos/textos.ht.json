@@ -36,5 +36,13 @@
   "agenda.seguimiento_creado": "Bonjou {1}. {0} fè w konnen {2} mande pou w retounen fè yon kontwòl anviwon {3}. Kèk semèn anvan, n ap ekri w pou w chwazi lè a. Pou pa resevwa plis avi, reponn STOP.",
   "agenda.seguimiento_agendado": "Bonjou {1}. {0} fè w konnen {2} mande yon kontwòl e nou rezève yon randevou pou ou jou {3} a {4} (randevou {5}). Reponn KONFIME pou konfime l oswa CHANJE si ou prefere yon lòt lè. Pou pa resevwa plis avi, reponn STOP.",
   "agenda.seguimiento_contacto": "Bonjou {1}. {0} raple w {2} mande yon kontwòl anviwon {3}. Èske ou vle nou chèche yon lè pou ou? Reponn WI e n ap montre w opsyon yo. Pou pa resevwa plis avi, reponn STOP.",
-  "agenda.recordatorio_7dias": "Bonjou {1}. {0} raple w nan yon semèn ou gen kontwòl ou ak {2}, jou {3} a {4} (randevou {5}). Si ou pa ka vini, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP."
+  "agenda.recordatorio_7dias": "Bonjou {1}. {0} raple w nan yon semèn ou gen kontwòl ou ak {2}, jou {3} a {4} (randevou {5}). Si ou pa ka vini, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP.",
+  "medico.verificado": "Fini, {0}: nimewo w verifye. Isit la ou ka kreye swivi, gade orè w epi bloke jou.",
+  "medico.codigo_invalido": "Kòd la pa valab oswa li ekspire. Mande yon lòt nan panèl klinik la.",
+  "medico.resumen_texto": "{0} ka voye ba ou chak maten yon rezime administratif jounen w sou WhatsApp: randevou, demann plas siplemantè pou deside ak pasyan swivi ki pa reponn. Sèlman non, lè ak rezon administratif; janm done sante. Ou ka sispann li si w ekri STOP. Èske ou vle l? Reponn WI oswa NON.",
+  "medico.resumen_aceptado": "Fini: w ap resevwa rezime a chak maten. Pou sispann resevwa l, ekri STOP.",
+  "medico.resumen_rechazado": "Dakò, nou p ap voye w rezime chak jou a.",
+  "medico.baja": "Fini, nou p ap voye w rezime chak jou a ankò.",
+  "medico.sin_citas": "Ou pa gen randevou jodi a.",
+  "agenda.resumen_medico": "Bonjou {1}. Rezime {0} pou jodi a: {2} randevou, {3} demann plas siplemantè pou deside ak {4} pasyan swivi ki pa reponn. Reponn AGENDA pou wè detay yo. Pou pa resevwa rezime sa a ankò, reponn STOP."
 }

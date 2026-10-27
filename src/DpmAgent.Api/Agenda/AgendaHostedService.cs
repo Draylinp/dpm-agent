@@ -73,6 +73,7 @@ public sealed class AgendaHostedService : BackgroundService
             if (r.OfertasEnviadas + r.OfertasVencidas + r.HuecosCerrados + r.Recordatorios > 0)
                 _logger.LogInformation("Agenda consultorio {Id}: {Resultado}", id, r);
             var s = await scope.ServiceProvider.GetRequiredService<ServicioSeguimientos>().ProcesarAsync(ct);
+            await scope.ServiceProvider.GetRequiredService<Medicos.ServicioMedicos>().ProcesarResumenesAsync(ct);
             if (s.Contactos + s.Reintentos + s.SinRespuesta + s.Recordatorios + s.Recurrencias + s.Reabiertos > 0)
                 _logger.LogInformation("Seguimientos consultorio {Id}: {Resultado}", id, s);
         }

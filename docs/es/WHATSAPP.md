@@ -40,6 +40,7 @@ WhatsApp solo deja enviar texto libre si el paciente escribió en las últimas 2
 | `seguimiento_agendado` | `WhatsApp__Plantillas__seguimiento_agendado` |
 | `seguimiento_contacto` | `WhatsApp__Plantillas__seguimiento_contacto` |
 | `recordatorio_7dias` | `WhatsApp__Plantillas__recordatorio_7dias` |
+| `resumen_medico` | `WhatsApp__Plantillas__resumen_medico` |
 
 Códigos de idioma de cada traducción (`WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht`; por defecto `es`, `en`, `ht`). Verifique en *WhatsApp Manager* qué códigos acepta su cuenta; si un idioma no está disponible, apúntelo al de inglés.
 
@@ -86,6 +87,12 @@ Listas para enviar a aprobación. Todas son plantillas de **Utilidad** (nunca de
 - es: Hola, {{2}}. {{1}} le recuerda que en una semana tiene su control con {{3}}, el {{4}} a las {{5}} (cita {{6}}). Si no puede ir, responda CAMBIAR. Para no recibir más avisos, responda STOP.
 - en: Hi, {{2}}. {{1}} reminds you that in one week you have your follow-up visit with {{3}}, on {{4}} at {{5}} (appointment {{6}}). If you can't make it, reply CHANGE. To stop receiving notices, reply STOP.
 - ht: Bonjou {{2}}. {{1}} raple w nan yon semèn ou gen kontwòl ou ak {{3}}, jou {{4}} a {{5}} (randevou {{6}}). Si ou pa ka vini, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP.
+
+**resumen_medico** — categoría *Utilidad*, se envía al **médico** (solo con su propio permiso, categoría `resumen_medico`), variables: consultorio, médico, citas, sobrecupos, seguimientos sin respuesta. Valores de ejemplo para la revisión: `Consultorio Ejemplo`, `Dr. Luis Herrera`, `6`, `1`, `2`
+
+- es: Buenos días, {{2}}. Resumen de {{1}} para hoy: {{3}} citas, {{4}} sobrecupos por decidir y {{5}} pacientes de seguimiento sin respuesta. Responda AGENDA para ver el detalle. Para no recibir este resumen, responda STOP.
+- en: Good morning, {{2}}. Summary from {{1}} for today: {{3}} appointments, {{4}} extra-slot requests to decide and {{5}} follow-up patients with no answer. Reply AGENDA to see the details. To stop receiving this summary, reply STOP.
+- ht: Bonjou {{2}}. Rezime {{1}} pou jodi a: {{3}} randevou, {{4}} demann plas siplemantè pou deside ak {{5}} pasyan swivi ki pa reponn. Reponn AGENDA pou wè detay yo. Pou pa resevwa rezime sa a ankò, reponn STOP.
 
 Si una clave no tiene plantilla, se envía como texto (sirve para pruebas dentro de la ventana de 24 horas).
 

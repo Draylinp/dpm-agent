@@ -163,6 +163,9 @@ public static class Verificador
                 fallos.Add($"Se encolaron {n} avisos automáticos; se esperaban {enviados}.");
         }
 
+        if (e.BloqueosAgenda is { } bloqueosAgenda && await db.BloqueosAgenda.CountAsync(ct) != bloqueosAgenda)
+            fallos.Add($"Hay {await db.BloqueosAgenda.CountAsync(ct)} bloqueos de agenda; se esperaban {bloqueosAgenda}.");
+
         foreach (var (segId, estadoEsperado) in e.Seguimientos ?? [])
         {
             var id = IdsDpm.Leer(segId, "SEG");

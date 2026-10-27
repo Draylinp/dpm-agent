@@ -36,5 +36,13 @@
   "agenda.seguimiento_creado": "Hola, {1}. {0} le informa que {2} indicó un control para alrededor del {3}. Unas semanas antes le escribiremos para escoger el horario. Para no recibir más avisos, responda STOP.",
   "agenda.seguimiento_agendado": "Hola, {1}. {0} le informa que {2} indicó un control y le reservamos cita el {3} a las {4} (cita {5}). Responda CONFIRMO para confirmarla o CAMBIAR si prefiere otro horario. Para no recibir más avisos, responda STOP.",
   "agenda.seguimiento_contacto": "Hola, {1}. {0} le recuerda que {2} indicó un control para alrededor del {3}. ¿Quiere que le busquemos un horario? Responda SÍ y le mostramos las opciones. Para no recibir más avisos, responda STOP.",
-  "agenda.recordatorio_7dias": "Hola, {1}. {0} le recuerda que en una semana tiene su control con {2}, el {3} a las {4} (cita {5}). Si no puede ir, responda CAMBIAR. Para no recibir más avisos, responda STOP."
+  "agenda.recordatorio_7dias": "Hola, {1}. {0} le recuerda que en una semana tiene su control con {2}, el {3} a las {4} (cita {5}). Si no puede ir, responda CAMBIAR. Para no recibir más avisos, responda STOP.",
+  "medico.verificado": "Listo, {0}: su número quedó verificado. Desde aquí puede crear seguimientos, ver su agenda y bloquear días.",
+  "medico.codigo_invalido": "El código no es válido o ya venció. Pida uno nuevo en el panel del consultorio.",
+  "medico.resumen_texto": "{0} puede enviarle cada mañana un resumen administrativo de su día por WhatsApp: citas, sobrecupos por decidir y pacientes de seguimiento sin respuesta. Solo nombres, horas y motivos administrativos; nunca datos de salud. Puede darse de baja escribiendo STOP. ¿Lo quiere? Responda SÍ o NO.",
+  "medico.resumen_aceptado": "Listo: recibirá el resumen cada mañana. Para dejar de recibirlo, escriba STOP.",
+  "medico.resumen_rechazado": "Entendido, no le enviaremos el resumen diario.",
+  "medico.baja": "Listo, no le enviaremos más el resumen diario.",
+  "medico.sin_citas": "No tiene citas hoy.",
+  "agenda.resumen_medico": "Buenos días, {1}. Resumen de {0} para hoy: {2} citas, {3} sobrecupos por decidir y {4} pacientes de seguimiento sin respuesta. Responda AGENDA para ver el detalle. Para no recibir este resumen, responda STOP."
 }

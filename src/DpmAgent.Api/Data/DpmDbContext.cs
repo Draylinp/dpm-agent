@@ -60,6 +60,8 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<BloqueoAgenda> BloqueosAgenda => Set<BloqueoAgenda>();
 
+    public DbSet<SolicitudSobrecupo> SolicitudesSobrecupo => Set<SolicitudSobrecupo>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
         // SQLite devuelve DateTime sin Kind y PostgreSQL exige UTC: todo entra y sale como UTC.
@@ -95,6 +97,9 @@ public abstract class DpmDbContext : DbContext
         {
             e.Property(x => x.Nombre).HasMaxLength(200);
             e.Property(x => x.Especialidad).HasMaxLength(100);
+            e.Property(x => x.Telefono).HasMaxLength(20);
+            e.Property(x => x.CodigoVerificacionHash).HasMaxLength(100);
+            e.HasIndex(x => x.Telefono);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
@@ -262,6 +267,7 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.TelefonoCanal).HasMaxLength(20);
             e.Property(x => x.CancelacionPropuesta).HasMaxLength(30);
             e.Property(x => x.ConsentimientoVersion).HasMaxLength(20);
+            e.Property(x => x.PropuestaMedico).HasMaxLength(1000);
             e.Property(x => x.Idioma).HasMaxLength(10);
             e.HasIndex(x => new { x.ConsultorioId, x.SesionId }).IsUnique();
             e.HasIndex(x => x.ActualizadaUtc);
@@ -283,6 +289,19 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.RecurrenciaUnidad).HasMaxLength(10);
             e.Property(x => x.Estado).HasMaxLength(20);
             e.Property(x => x.CreadoPor).HasMaxLength(60);
+            e.HasIndex(x => new { x.ConsultorioId, x.Estado });
+            e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Medico>().WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<SolicitudSobrecupo>(e =>
+        {
+            e.ToTable("SolicitudesSobrecupo");
+            e.Property(x => x.SesionId).HasMaxLength(100);
+            e.Property(x => x.Estado).HasMaxLength(20);
+            e.Property(x => x.DecididaPor).HasMaxLength(60);
             e.HasIndex(x => new { x.ConsultorioId, x.Estado });
             e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne<Medico>().WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Restrict);
@@ -322,6 +341,7 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.RegistradoPor).HasMaxLength(60);
             e.HasIndex(x => new { x.ConsultorioId, x.PacienteId, x.Categoria });
             e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Medico>().WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });

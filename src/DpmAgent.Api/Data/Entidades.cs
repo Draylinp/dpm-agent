@@ -34,6 +34,9 @@ public sealed class Consultorio
     /// <summary>Días antes de la fecha objetivo en que se contacta al paciente de un seguimiento lejano.</summary>
     public int DiasContactoSeguimiento { get; set; } = 21;
 
+    /// <summary>Hora (0-23, hora de RD) del resumen diario a los médicos.</summary>
+    public int HoraResumenMedico { get; set; } = 7;
+
     public DateTime CreadoUtc { get; set; }
 }
 
@@ -76,6 +79,19 @@ public sealed class Medico
     public required string Especialidad { get; set; }
 
     public bool Activo { get; set; } = true;
+
+    /// <summary>Teléfono del médico (10 dígitos). Solo da acceso al canal del médico una vez verificado.</summary>
+    public string? Telefono { get; set; }
+
+    public DateTime? TelefonoVerificadoUtc { get; set; }
+
+    /// <summary>Hash del código de verificación de un solo uso que el médico envía desde su teléfono.</summary>
+    public string? CodigoVerificacionHash { get; set; }
+
+    public DateTime? CodigoVenceUtc { get; set; }
+
+    /// <summary>Día (hora de RD) en que se envió el último resumen diario.</summary>
+    public DateOnly? UltimoResumen { get; set; }
 }
 
 public sealed class Paciente
@@ -433,6 +449,11 @@ public sealed class Conversacion
 
     public string? ConsentimientoVersion { get; set; }
 
+    /// <summary>Acción del médico propuesta y pendiente de su confirmación (JSON), y en qué turno.</summary>
+    public string? PropuestaMedico { get; set; }
+
+    public int? PropuestaMedicoTurno { get; set; }
+
     public DateTime CreadaUtc { get; set; }
 
     public DateTime ActualizadaUtc { get; set; }
@@ -490,7 +511,11 @@ public sealed class Consentimiento
 
     public int ConsultorioId { get; set; }
 
-    public int PacienteId { get; set; }
+    /// <summary>Paciente al que se refiere; null si es el permiso de un médico (resumen diario).</summary>
+    public int? PacienteId { get; set; }
+
+    /// <summary>Médico, para la categoría resumen_medico.</summary>
+    public int? MedicoId { get; set; }
 
     /// <summary>Teléfono de contacto al que se refiere (10 dígitos).</summary>
     public required string Telefono { get; set; }
@@ -594,4 +619,39 @@ public sealed class BloqueoAgenda
     public required string CreadoPor { get; set; }
 
     public DateTime CreadoUtc { get; set; }
+}
+
+/// <summary>
+/// El paciente pidió que lo vean lo antes posible y no había hueco: la secretaria o el médico deciden si lo atienden
+/// fuera de agenda. El agente nunca la aprueba; solo comunica la decisión.
+/// </summary>
+public sealed class SolicitudSobrecupo
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    /// <summary>Día para el que se pide (hoy o el siguiente día hábil).</summary>
+    public DateOnly Fecha { get; set; }
+
+    public required string SesionId { get; set; }
+
+    /// <summary>pendiente, aprobada, rechazada o cancelada.</summary>
+    public required string Estado { get; set; }
+
+    /// <summary>Hora a la que el personal lo citó, si se aprobó.</summary>
+    public DateTime? HoraAprobadaUtc { get; set; }
+
+    public string? DecididaPor { get; set; }
+
+    public DateTime? DecididaUtc { get; set; }
+
+    /// <summary>Ya se le comunicó la decisión al paciente.</summary>
+    public bool Comunicada { get; set; }
+
+    public DateTime CreadaUtc { get; set; }
 }

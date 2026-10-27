@@ -6,6 +6,7 @@ using DpmAgent.Api.Carnet;
 using DpmAgent.Api.Cumplimiento;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
+using DpmAgent.Api.Medicos;
 using DpmAgent.Api.Model;
 using DpmAgent.Api.Seguridad;
 using DpmAgent.Api.Voz;
@@ -130,6 +131,7 @@ public sealed class Ejecutor
         s.AddScoped<ProcesadorNotaVoz>();
         s.AddScoped<ProcesadorCarnet>();
         s.AddCumplimiento(config);
+        s.AddCanalMedico(config);
         s.AddScoped<AgentTools>();
         s.AddScoped<ReceptionAgent>();
         s.AddFiltroSalida(config);
@@ -166,6 +168,14 @@ public sealed class Ejecutor
 
         if (prep.SinConsentimientos)
             await db.Consentimientos.ExecuteDeleteAsync(ct);
+
+        foreach (var (medicoId, telefono) in prep.Medicos)
+        {
+            var m = await db.Medicos.FirstAsync(x => x.Id == IdsDpm.Leer(medicoId, "MED"), ct);
+            m.Telefono = Telefono.Normalizar(telefono);
+            m.TelefonoVerificadoUtc = Ahora.UtcDateTime;
+            await db.SaveChangesAsync(ct);
+        }
 
         foreach (var s in prep.Seguimientos)
         {

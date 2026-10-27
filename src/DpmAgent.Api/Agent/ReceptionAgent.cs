@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Text.Json.Nodes;
+using DpmAgent.Api.Agenda;
+using DpmAgent.Api.Canales;
 using DpmAgent.Api.Cumplimiento;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
@@ -42,6 +44,8 @@ public sealed class ReceptionAgent
     private readonly LimitadorSesiones? _limitador;
     private readonly IFiltroSalida? _filtro;
     private readonly IConsultorioActual? _consultorio;
+    private readonly Medicos.ServicioMedicos? _medicos;
+    private readonly HerramientasMedico? _herramientasMedico;
 
     public ReceptionAgent(
         IChatModel model,
@@ -51,8 +55,12 @@ public sealed class ReceptionAgent
         TimeProvider? clock = null,
         LimitadorSesiones? limitador = null,
         IFiltroSalida? filtro = null,
-        IConsultorioActual? consultorio = null)
+        IConsultorioActual? consultorio = null,
+        Medicos.ServicioMedicos? medicos = null,
+        HerramientasMedico? herramientasMedico = null)
     {
+        _medicos = medicos;
+        _herramientasMedico = herramientasMedico;
         _consultorio = consultorio;
         _limitador = limitador;
         _filtro = filtro;
@@ -96,8 +104,32 @@ public sealed class ReceptionAgent
             : Textos.Obtener("agente.presentacion", sesion.Idioma, consultorio.Asistente, consultorio.NombreVisible);
         historial.Add(Message("user", mensaje));
         var pasos = new List<AgentStep>();
-        var accionesSensibles = 0;
         sesion.AnexoRespuesta = null;
+
+        // "VERIFICAR 123456" desde el teléfono que el admin registró como de un médico.
+        if (_medicos is not null && PedidosDirectos.CodigoVerificacion(textoPaciente) is { } codigo &&
+            (CanalesConocidos.DeSesion(sesion.Id) == CanalesConocidos.WhatsApp || _medicos.PermiteChatWeb))
+        {
+            var verificado = await _medicos.VerificarAsync(sesion.TelefonoCanal, codigo, sesion.Id, ct);
+            return await ResponderFijoAsync(sesion, pasos, "servidor:verificar_medico", verificado is null
+                ? Textos.Obtener("medico.codigo_invalido", sesion.Idioma)
+                : Textos.Obtener("medico.verificado", sesion.Idioma, verificado.Nombre), null, ct);
+        }
+
+        // Médico verificado por un canal confiable: su propio prompt y sus herramientas (nunca las del paciente).
+        if (_medicos is not null && _herramientasMedico is not null &&
+            await _medicos.MedicoDelCanalAsync(sesion.TelefonoCanal, CanalesConocidos.DeSesion(sesion.Id), ct) is { } medico)
+        {
+            if (PedidosDirectos.EsBaja(textoPaciente))
+            {
+                await _medicos.RegistrarResumenAsync(medico.Id, false, CanalConsentimiento(sesion), Bitacora.Agente, ct);
+                return await ResponderFijoAsync(sesion, pasos, "servidor:baja", Textos.Obtener("medico.baja", sesion.Idioma), null, ct);
+            }
+
+            return await BucleAsync(sesion, consultorio, null, () => _herramientasMedico.Prompt(sesion, medico, consultorio, _clock),
+                HerramientasMedico.Definiciones, (nombre, args) => _herramientasMedico.ExecuteAsync(sesion, medico, nombre, args, ct),
+                HerramientasMedico.AccionesSensibles, ct);
+        }
 
         // Pedidos que siempre funcionan, sin depender del modelo.
         if (PedidosDirectos.EsBaja(textoPaciente))
@@ -114,12 +146,29 @@ public sealed class ReceptionAgent
                 Textos.Obtener("agente.persona", sesion.Idioma, consultorio.NombreVisible), presentacion, ct);
         }
 
+        return await BucleAsync(sesion, consultorio, presentacion, () => SystemPrompt(sesion, consultorio), _tools.Definitions,
+            (nombre, args) => _tools.ExecuteAsync(sesion, nombre, args, ct), AccionesSensibles, ct);
+    }
+
+    /// <summary>
+    /// El ciclo modelo → herramientas → modelo, igual para el paciente y para el médico: límites por respuesta y por turno,
+    /// filtro de salida, presentación y textos fijos del servidor.
+    /// </summary>
+    private async Task<AgentReply> BucleAsync(
+        Sesion sesion, InfoConsultorio consultorio, string? presentacion, Func<string> prompt, JsonArray definiciones,
+        Func<string, string?, Task<string>> ejecutar, HashSet<string> sensibles, CancellationToken ct)
+    {
+        var sesionId = sesion.Id;
+        var historial = sesion.Mensajes;
+        var pasos = new List<AgentStep>();
+        var accionesSensibles = 0;
+
         for (var i = 0; i < MaxIteraciones; i++)
         {
-            var enviados = new List<JsonObject> { Message("system", SystemPrompt(sesion, consultorio)) };
+            var enviados = new List<JsonObject> { Message("system", prompt()) };
             enviados.AddRange(historial);
 
-            var respuesta = await _model.CompleteAsync(enviados, _tools.Definitions, ct);
+            var respuesta = await _model.CompleteAsync(enviados, definiciones, ct);
             respuesta["role"] = "assistant";
             historial.Add(respuesta);
 
@@ -167,7 +216,7 @@ public sealed class ReceptionAgent
                 {
                     resultado = """{"error":"Demasiadas herramientas en una sola respuesta. Haz una cosa a la vez."}""";
                 }
-                else if (AccionesSensibles.Contains(nombre) && ++accionesSensibles > MaxAccionesSensiblesPorTurno)
+                else if (sensibles.Contains(nombre) && ++accionesSensibles > MaxAccionesSensiblesPorTurno)
                 {
                     // Un mensaje normal nunca necesita tantas acciones: puede ser una instrucción colada en un dato.
                     resultado = """{"error":"Demasiadas acciones en un solo mensaje. Confirma con el paciente antes de seguir."}""";
@@ -176,7 +225,7 @@ public sealed class ReceptionAgent
                 else
                 {
                     var inicio = _clock.GetTimestamp();
-                    resultado = await _tools.ExecuteAsync(sesion, nombre, args, ct);
+                    resultado = await ejecutar(nombre, args);
                     // Sin argumentos ni resultados: llevan datos del paciente.
                     _logger.LogInformation("Herramienta {Tool}: {Resultado} en {Ms} ms",
                         nombre, resultado.StartsWith("{\"error\"", StringComparison.Ordinal) ? "error" : "ok",
@@ -199,6 +248,8 @@ public sealed class ReceptionAgent
         await _store.GuardarAsync(sesion, ct);
         return new AgentReply(sesionId, limite, pasos, sesion.Idioma);
     }
+
+    private static string CanalConsentimiento(Sesion sesion) => AgentTools.CanalDeSesion(sesion);
 
     private async Task<AgentReply> ResponderFijoAsync(
         Sesion sesion, List<AgentStep> pasos, string paso, string texto, string? presentacion, CancellationToken ct)

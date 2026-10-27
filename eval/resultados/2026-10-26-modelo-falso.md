@@ -2,7 +2,7 @@
 
 - **Model:** scripted model (deterministic layer only)
 - **Judge:** not used
-- **Cases:** 165 — **passed:** 165 (100.0%)
+- **Cases:** 177 — **passed:** 177 (100.0%)
 - **Clock of the cases:** Monday 2026-10-26 12:00 (Dominican Republic); fictional data only.
 
 > With the scripted model, the cases check what the **server** guarantees regardless of the model:
@@ -15,30 +15,31 @@
 
 | Category | Cases | Passed | % | Filter blocks | Avg tokens in / out | Avg cost (USD) | Latency p50 / p95 (ms) |
 |---|---|---|---|---|---|---|---|
-| agendar | 14 | 14 | 100.0% | 0 | 0 / 0 | n/a | 8 / 119 |
-| cambio_idioma | 8 | 8 | 100.0% | 0 | 0 / 0 | n/a | 2 / 5 |
-| cancelar | 6 | 6 | 100.0% | 0 | 0 / 0 | n/a | 5 / 8 |
-| carnet | 9 | 9 | 100.0% | 0 | 0 / 0 | n/a | 3 / 25 |
+| agendar | 14 | 14 | 100.0% | 0 | 0 / 0 | n/a | 8 / 134 |
+| cambio_idioma | 8 | 8 | 100.0% | 0 | 0 / 0 | n/a | 3 / 6 |
+| cancelar | 6 | 6 | 100.0% | 0 | 0 / 0 | n/a | 5 / 9 |
+| carnet | 9 | 9 | 100.0% | 0 | 0 / 0 | n/a | 4 / 30 |
 | cita_ajena | 6 | 6 | 100.0% | 0 | 0 / 0 | n/a | 4 / 5 |
-| consentimiento | 12 | 12 | 100.0% | 0 | 0 / 0 | n/a | 4 / 9 |
-| emergencia | 10 | 10 | 100.0% | 0 | 0 / 0 | n/a | 2 / 4 |
+| consentimiento | 12 | 12 | 100.0% | 0 | 0 / 0 | n/a | 4 / 10 |
+| emergencia | 10 | 10 | 100.0% | 0 | 0 / 0 | n/a | 2 / 5 |
 | fuera_de_tema | 20 | 20 | 100.0% | 3 | 0 / 0 | n/a | 1 / 2 |
-| lista_espera | 6 | 6 | 100.0% | 0 | 0 / 0 | n/a | 4 / 38 |
-| paciente_nuevo | 6 | 6 | 100.0% | 0 | 0 / 0 | n/a | 5 / 9 |
-| pregunta_clinica | 24 | 24 | 100.0% | 5 | 0 / 0 | n/a | 2 / 4 |
-| privacidad | 9 | 9 | 100.0% | 0 | 0 / 0 | n/a | 1 / 4 |
-| prompt_injection | 9 | 9 | 100.0% | 0 | 0 / 0 | n/a | 3 / 10 |
-| reprogramar | 6 | 6 | 100.0% | 0 | 0 / 0 | n/a | 8 / 21 |
-| seguimiento | 9 | 9 | 100.0% | 0 | 0 / 0 | n/a | 4 / 34 |
-| transparencia | 11 | 11 | 100.0% | 0 | 0 / 0 | n/a | 2 / 6 |
+| lista_espera | 6 | 6 | 100.0% | 0 | 0 / 0 | n/a | 7 / 46 |
+| medico | 12 | 12 | 100.0% | 0 | 0 / 0 | n/a | 4 / 22 |
+| paciente_nuevo | 6 | 6 | 100.0% | 0 | 0 / 0 | n/a | 7 / 13 |
+| pregunta_clinica | 24 | 24 | 100.0% | 5 | 0 / 0 | n/a | 3 / 5 |
+| privacidad | 9 | 9 | 100.0% | 0 | 0 / 0 | n/a | 1 / 5 |
+| prompt_injection | 9 | 9 | 100.0% | 0 | 0 / 0 | n/a | 2 / 9 |
+| reprogramar | 6 | 6 | 100.0% | 0 | 0 / 0 | n/a | 9 / 27 |
+| seguimiento | 9 | 9 | 100.0% | 0 | 0 / 0 | n/a | 5 / 39 |
+| transparencia | 11 | 11 | 100.0% | 0 | 0 / 0 | n/a | 2 / 7 |
 
 ## By language
 
 | Language | Tier | Cases | Passed | % | Filter blocks | Avg tokens in / out | Avg cost (USD) | Latency p50 / p95 (ms) |
 |---|---|---|---|---|---|---|---|---|
-| es | 1 | 49 | 49 | 100.0% | 2 | 0 / 0 | n/a | 4 / 34 |
-| en | 1 | 48 | 48 | 100.0% | 2 | 0 / 0 | n/a | 3 / 9 |
-| ht | 1 | 48 | 48 | 100.0% | 2 | 0 / 0 | n/a | 3 / 9 |
+| es | 1 | 53 | 53 | 100.0% | 2 | 0 / 0 | n/a | 5 / 39 |
+| en | 1 | 52 | 52 | 100.0% | 2 | 0 / 0 | n/a | 4 / 11 |
+| ht | 1 | 52 | 52 | 100.0% | 2 | 0 / 0 | n/a | 4 / 9 |
 | fr | 2 | 10 | 10 | 100.0% | 1 | 0 / 0 | n/a | 2 / 8 |
 | pt | 2 | 10 | 10 | 100.0% | 1 | 0 / 0 | n/a | 2 / 8 |
 

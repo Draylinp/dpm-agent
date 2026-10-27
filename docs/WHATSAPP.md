@@ -40,6 +40,7 @@ WhatsApp only allows free-form text if the patient wrote in the last 24 hours. S
 | `seguimiento_agendado` | `WhatsApp__Plantillas__seguimiento_agendado` |
 | `seguimiento_contacto` | `WhatsApp__Plantillas__seguimiento_contacto` |
 | `recordatorio_7dias` | `WhatsApp__Plantillas__recordatorio_7dias` |
+| `resumen_medico` | `WhatsApp__Plantillas__resumen_medico` |
 
 Language code for each translation: `WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht` (defaults `es`, `en`, `ht`). Check in *WhatsApp Manager* which codes your account accepts; if a language is not available, point it to the English one.
 
@@ -86,6 +87,12 @@ Ready to submit for approval. All of them are **Utility** templates (never Marke
 - es: Hola, {{2}}. {{1}} le recuerda que en una semana tiene su control con {{3}}, el {{4}} a las {{5}} (cita {{6}}). Si no puede ir, responda CAMBIAR. Para no recibir más avisos, responda STOP.
 - en: Hi, {{2}}. {{1}} reminds you that in one week you have your follow-up visit with {{3}}, on {{4}} at {{5}} (appointment {{6}}). If you can't make it, reply CHANGE. To stop receiving notices, reply STOP.
 - ht: Bonjou {{2}}. {{1}} raple w nan yon semèn ou gen kontwòl ou ak {{3}}, jou {{4}} a {{5}} (randevou {{6}}). Si ou pa ka vini, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP.
+
+**resumen_medico** — category *Utility*, sent to the **doctor** (only with their own permission, category `resumen_medico`), variables: clinic, doctor, appointments, extra-slot requests, follow-ups with no answer. Sample values for review: `Consultorio Ejemplo`, `Dr. Luis Herrera`, `6`, `1`, `2`
+
+- es: Buenos días, {{2}}. Resumen de {{1}} para hoy: {{3}} citas, {{4}} sobrecupos por decidir y {{5}} pacientes de seguimiento sin respuesta. Responda AGENDA para ver el detalle. Para no recibir este resumen, responda STOP.
+- en: Good morning, {{2}}. Summary from {{1}} for today: {{3}} appointments, {{4}} extra-slot requests to decide and {{5}} follow-up patients with no answer. Reply AGENDA to see the details. To stop receiving this summary, reply STOP.
+- ht: Bonjou {{2}}. Rezime {{1}} pou jodi a: {{3}} randevou, {{4}} demann plas siplemantè pou deside ak {{5}} pasyan swivi ki pa reponn. Reponn AGENDA pou wè detay yo. Pou pa resevwa rezime sa a ankò, reponn STOP.
 
 If a key has no template, the message is sent as text (useful for testing inside the 24-hour window).
 

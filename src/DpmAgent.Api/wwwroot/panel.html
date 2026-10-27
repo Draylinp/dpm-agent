@@ -86,6 +86,7 @@
       <button data-tab="autorizaciones" data-i18n="tab.autorizaciones"></button>
       <button data-tab="seguimientos" data-i18n="tab.seguimientos"></button>
       <button data-tab="llamadas" data-i18n="tab.llamadas"></button>
+      <button data-tab="medicos" data-i18n="tab.medicos"></button>
       <button data-tab="pacientes" data-i18n="tab.pacientes"></button>
       <button data-tab="costos" data-i18n="tab.costos"></button>
       <button data-tab="bitacora" data-i18n="tab.bitacora"></button>
@@ -169,7 +170,7 @@
     $('error').textContent = '';
     const vista = $('vista');
     try {
-      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, seguimientos, llamadas, pacientes, costos, bitacora })[tab]();
+      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, seguimientos, llamadas, medicos, pacientes, costos, bitacora })[tab]();
       vista.replaceChildren(contenido);
     } catch (err) {
       $('error').textContent = err.message;
@@ -356,6 +357,29 @@
         alert(t('seg.bloqueo_listo').replace('{n}', r.citasParaReprogramar));
       }) }, t('seg.bloquear')),
       resultado);
+  }
+
+  // Médicos: teléfono verificado para el canal del médico y permiso para su resumen diario.
+  let codigoMedico = null;
+  async function medicos() {
+    const lista = await api('/api/panel/medicos');
+    return el('div', {},
+      el('p', { class: 'muted' }, t('med.nota')),
+      codigoMedico ? el('p', { role: 'status', class: 'item' }, codigoMedico) : '',
+      lista.map(m => {
+        const tel = el('input', { type: 'tel', value: m.telefono || '', 'aria-label': `${t('pac.telefono')} · ${m.nombre}` });
+        return el('div', { class: 'item' },
+          el('div', { class: 'fila-acciones' }, el('strong', {}, m.nombre),
+            el('span', { class: 'chip' }, m.verificado ? t('med.verificado') : t('med.sin_verificar')),
+            el('span', { class: 'chip' }, m.resumen ? t('med.con_resumen') : t('med.sin_resumen'))),
+          el('div', { class: 'fila-acciones' }, tel,
+            el('button', { class: 'sec', onclick: () => accion(async () => {
+              const r = await api(`/api/panel/medicos/${m.id}/telefono`, { method: 'POST', body: JSON.stringify({ telefono: tel.value.trim() }) });
+              codigoMedico = t('med.codigo').replace('{c}', r.codigo);
+            }) }, t('med.registrar')),
+            el('button', { class: 'sec', onclick: () => accion(() => api(`/api/panel/medicos/${m.id}/resumen`, { method: 'POST', body: JSON.stringify({ acepta: !m.resumen }) })) },
+              m.resumen ? t('med.quitar_resumen') : t('med.dar_resumen'))));
+      }));
   }
 
   // Avisos que no se enviaron porque el paciente no dio permiso: hay que llamarle.

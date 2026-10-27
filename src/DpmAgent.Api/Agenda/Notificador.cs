@@ -109,6 +109,36 @@ public sealed class Notificador
     /// Encola la respuesta del agente a un mensaje que llegó por un canal externo (WhatsApp).
     /// No se agrega al historial: el agente ya la guardó.
     /// </summary>
+    /// <summary>
+    /// Mensaje al médico por su conversación de WhatsApp (el resumen diario). El permiso lo revisa quien llama;
+    /// queda en su historial para que el agente entienda su respuesta ("AGENDA").
+    /// </summary>
+    public async Task NotificarMedicoAsync(string telefono, MensajeAgenda mensaje, string tipo, CancellationToken ct)
+    {
+        var sesionId = CanalesConocidos.SesionWhatsApp(telefono);
+        var sesion = await _conversaciones.ObtenerAsync(sesionId, ct);
+        sesion.VincularTelefono(telefono);
+        sesion.Mensajes.Add(new JsonObject { ["role"] = "assistant", ["content"] = mensaje.Texto });
+        await _conversaciones.GuardarAsync(sesion, ct);
+
+        _db.MensajesSalientes.Add(new MensajeSaliente
+        {
+            ConsultorioId = _db.ConsultorioId,
+            SesionId = sesionId,
+            Canal = CanalesConocidos.WhatsApp,
+            Destino = telefono,
+            Texto = mensaje.Texto.Length > 2000 ? mensaje.Texto[..2000] : mensaje.Texto,
+            Tipo = tipo,
+            Idioma = mensaje.Idioma,
+            Plantilla = mensaje.Plantilla,
+            ParametrosJson = JsonSerializer.Serialize(mensaje.Parametros),
+            Estado = "pendiente",
+            CreadoUtc = _clock.GetUtcNow().UtcDateTime,
+        });
+        await _db.SaveChangesAsync(ct);
+        _despertador.Despertar();
+    }
+
     /// <summary>Estado de un aviso que no se envió por falta de consentimiento: la secretaria debe llamar.</summary>
     public const string EstadoLlamar = "llamar";
 

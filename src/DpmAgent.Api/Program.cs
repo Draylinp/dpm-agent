@@ -8,6 +8,7 @@ using DpmAgent.Api.Cumplimiento;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Demo;
 using DpmAgent.Api.Dpm;
+using DpmAgent.Api.Medicos;
 using DpmAgent.Api.Idiomas;
 using DpmAgent.Api.Model;
 using DpmAgent.Api.Panel;
@@ -35,6 +36,7 @@ builder.Services.AddScoped<ServicioAutorizaciones>();
 builder.Services.AddCumplimiento(builder.Configuration);
 builder.Services.AddFiltroSalida(builder.Configuration);
 builder.Services.AddScoped<AgentTools>();
+builder.Services.AddCanalMedico(builder.Configuration);
 builder.Services.AddScoped<ReceptionAgent>();
 builder.Services.Configure<DemoOptions>(builder.Configuration.GetSection(DemoOptions.SectionName));
 builder.Services.AddScoped<ServicioDemo>();
@@ -78,6 +80,7 @@ app.MapDemo();
 app.MapCostos();
 app.MapCumplimiento();
 app.MapSeguimientos();
+app.MapMedicos();
 
 app.MapGet("/api/escalamientos", async (IDpmGateway dpm, CancellationToken ct) =>
     Results.Ok(await dpm.ListarEscalamientosAsync(ct))).RequireAuthorization(PanelExtensions.Politica);
