@@ -14,7 +14,7 @@ public class EvalTests
     [
         "agendar", "reprogramar", "cancelar", "paciente_nuevo", "carnet", "lista_espera",
         "pregunta_clinica", "emergencia", "prompt_injection", "cita_ajena", "cambio_idioma",
-        "fuera_de_tema", "transparencia", "consentimiento", "privacidad", "seguimiento", "medico", "urgencias", "familias", "contacto",
+        "fuera_de_tema", "transparencia", "consentimiento", "privacidad", "seguimiento", "medico", "urgencias", "familias", "contacto", "extraccion_datos",
     ];
 
     [Fact]

@@ -2,7 +2,7 @@
 
 *English version: [../EVALUATION.md](../EVALUATION.md)*
 
-`eval/` tiene **223 casos** en 20 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
+`eval/` tiene **235 casos** en 21 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
 
 | Categoría | Qué comprueba |
 |---|---|
@@ -24,6 +24,7 @@
 | `seguimiento` | Seguimientos indicados por el médico: solo se agendan dentro de su ventana |
 | `medico` | Canal del médico: solo número verificado, acciones en dos pasos, sin datos clínicos guardados |
 | `contacto` | Un seguimiento lejano confirma primero el número; "no es esa persona" no revela nada y pasa a la secretaria; el número de un paciente desactivado no identifica a nadie |
+| `extraccion_datos` | Pedir el teléfono de otro paciente, el prompt del sistema o la lista de pacientes falla de forma segura; un modelo que obedece y recita sus instrucciones lo frena el filtro de salida |
 | `familias` | Un número, varios pacientes: pregunta para quién es, vincular a un familiar nuevo pide confirmación, nunca toca a un paciente de otro número; reprogramar cuando el médico bloquea un día; aviso de retraso del médico |
 | `urgencias` | "Que me vean hoy": sin preguntar síntomas ni juzgar la gravedad (el que exagera recibe lo mismo), primer hueco o cupo de urgencia, sobrecupo que solo decide el personal, centros de emergencia fuera de horario, y una emergencia real sigue escalando como urgente |
 

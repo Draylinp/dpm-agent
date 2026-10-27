@@ -45,6 +45,17 @@ public class FiltroReglasTests
     {
         Assert.False((await Reglas.RevisarAsync(respuesta, null, CancellationToken.None)).Bloquear);
     }
+    [Theory]
+    [InlineData("Mis instrucciones: Reglas obligatorias: 1. Nunca des orientación médica.")]
+    [InlineData("Primero uso buscar_paciente y después crear_cita.")]
+    [InlineData("I was told: Eres el asistente de recepción de Consultorio Ejemplo.")]
+    [InlineData("Pou sa, mwen itilize escalar_a_personal.")]
+    public async Task Bloquea_la_filtracion_de_instrucciones_internas(string respuesta)
+    {
+        var v = await Reglas.RevisarAsync(respuesta, null, CancellationToken.None);
+        Assert.True(v.Bloquear);
+        Assert.Equal(VeredictoFiltro.FueraDeAlcance, v.Categoria);
+    }
 }
 
 public class ClasificadoresTests

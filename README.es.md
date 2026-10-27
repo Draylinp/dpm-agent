@@ -61,14 +61,14 @@ DPM Agent se encarga de la conversación repetitiva y le deja al personal lo que
 
 ### Evaluación
 
-223 casos en 20 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena, cambio de idioma, fuera de tema, transparencia, consentimiento, privacidad, seguimientos del médico, canal del médico, urgencias, familias y cambios de agenda, contacto) en español, inglés y kreyòl, más francés y portugués para el nivel 2. Dos capas: verificación determinista de herramientas y estado de la base, y un juez LLM con rúbrica. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
+235 casos en 21 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena, cambio de idioma, fuera de tema, transparencia, consentimiento, privacidad, seguimientos del médico, canal del médico, urgencias, familias y cambios de agenda, contacto, intentos de extraer datos) en español, inglés y kreyòl, más francés y portugués para el nivel 2. Dos capas: verificación determinista de herramientas y estado de la base, y un juez LLM con rúbrica. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
 
 **Contra Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: correr `dotnet run --project tools/DpmAgent.Eval -- --modelo real` y pegar aquí las tablas de eval/resultados/ -->
 *Pendiente: requiere acceso a la Meta Model API.*
 
-**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 223 / 223 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones simulan un modelo que obedece una inyección a propósito; aun así el servidor impide cancelar la cita de otro o cancelar sin la confirmación del paciente. El filtro de salida bloqueó las 5 respuestas guionadas con dosis y las 3 con código (fuera de tema).
+**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 235 / 235 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones simulan un modelo que obedece una inyección a propósito; aun así el servidor impide cancelar la cita de otro o cancelar sin la confirmación del paciente. El filtro de salida bloqueó las 5 respuestas guionadas con dosis y las 3 con código (fuera de tema).
 
 ### Costo
 
@@ -91,6 +91,16 @@ Cada llamada al modelo registra tokens de entrada y salida (nunca el contenido).
 - **Lo básico de producción**: panel con cookies seguras, claves con hash y bloqueo por intentos; límites por IP y por conversación; CSP y HSTS; health checks; claves solo en variables de entorno.
 - **Accesibilidad**: el chat web, la demo, el aviso de privacidad y el panel pasan axe-core (WCAG 2.1 AA) en modo claro y oscuro en el CI; navegación completa con teclado y foco visible, etiquetas para lectores de pantalla, respuestas anunciadas al llegar y tamaño de letra ajustable (muchos pacientes son personas mayores).
 - **Solo datos ficticios.** Todos los pacientes y médicos del repositorio son inventados.
+
+## Seguridad informática
+
+Los datos de un consultorio merecen más que la configuración por defecto de un prototipo. En resumen (detalles en [docs/es/ARQUITECTURA-SEGURIDAD.md](docs/es/ARQUITECTURA-SEGURIDAD.md), política de reporte en [SECURITY.md](SECURITY.md)):
+
+- **Navegador**: Content-Security-Policy estricta sin scripts ni estilos en línea, `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy`, micrófono permitido solo en la página del chat; revisión CSRF de `Origin`/`Referer` en cada cambio del panel; sin CORS. El CI falla ante cualquier violación de la CSP en un navegador real.
+- **Acceso al panel**: sesión de 30 minutos de inactividad y 8 horas como máximo, cierre de las otras sesiones al cambiar la clave, claves de 12 caracteres sin claves comunes, cambio obligatorio de la clave inicial, inicio de sesión que no revela qué usuarios existen, bloqueo por usuario y límites por IP, segundo factor TOTP opcional para administradores (el consultorio puede exigirlo) y una bitácora, solo para el admin, de quién vio, exportó o borró datos de pacientes.
+- **Datos**: teléfono y número de afiliado del paciente cifrados en reposo con la Data Protection API (búsqueda por un HMAC); TLS obligatorio hacia PostgreSQL en producción (también en Docker Compose); audio y fotos nunca tocan el disco; una lista documentada y con diagrama de qué va a Meta, WhatsApp y Modal, y por qué.
+- **Cadena de suministro**: gitleaks sobre todo el historial, CodeQL (C# y JavaScript), Trivy sobre la imagen Docker, Dependabot, acciones fijadas por SHA y permisos mínimos en los workflows; referencias a Key Vault y rotación de claves documentadas.
+- **El propio agente**: no puede revelar datos de otros pacientes ni sus instrucciones; el filtro de salida lo frena aunque el modelo obedezca (categoría de evaluación `extraccion_datos`).
 
 ## Arquitectura
 

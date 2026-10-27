@@ -74,6 +74,11 @@ public sealed partial class FiltroReglas : IFiltroSalida
         if (BloqueDeCodigo().IsMatch(respuesta))
             return Task.FromResult(new VeredictoFiltro(true, "La respuesta contiene código (fuera del alcance del consultorio).", "reglas", VeredictoFiltro.FueraDeAlcance));
 
+        // Las instrucciones internas (el prompt del sistema, los nombres de las herramientas) nunca se le muestran a nadie,
+        // aunque el modelo obedezca a quien se las pide.
+        if (InstruccionesInternas().IsMatch(respuesta))
+            return Task.FromResult(new VeredictoFiltro(true, "La respuesta muestra instrucciones internas del agente.", "reglas", VeredictoFiltro.FueraDeAlcance));
+
         return Task.FromResult(VeredictoFiltro.Permitir);
     }
 
@@ -87,6 +92,15 @@ public sealed partial class FiltroReglas : IFiltroSalida
 
     [GeneratedRegex(@"```|^\s*(def|function|class|import|public static|SELECT|#include)\b[^\n]*[({:;]", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
     private static partial Regex BloqueDeCodigo();
+
+    [GeneratedRegex(
+        @"\b(buscar_paciente|seleccionar_paciente|registrar_paciente|consultar_disponibilidad|crear_cita|citas_del_paciente|cancelar_cita|"
+        + @"escalar_a_personal|confirmar_datos_carnet|agregar_lista_espera|responder_oferta|confirmar_asistencia|ofrecer_consentimiento|"
+        + @"registrar_consentimiento|darse_de_baja|seguimientos_del_paciente|pedir_cita_urgente|reservar_urgente|reprogramar_cita|"
+        + @"confirmar_numero|crear_seguimiento|bloquear_agenda|resumen_diario|decidir_sobrecupo|avisar_retraso|mi_agenda)\b"
+        + @"|Reglas obligatorias|Eres (el|la) asistente (de recepción|administrativ)",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex InstruccionesInternas();
 
     [GeneratedRegex(@"\b\d+([.,]\d+)?\s*(mg|mcg|µg|ml|cc|gotas|drops|gout|ui|iu)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex Dosis();

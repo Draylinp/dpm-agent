@@ -61,14 +61,14 @@ DPM Agent takes over the repetitive conversation and leaves the staff what truly
 
 ### Evaluation
 
-223 cases in 20 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy, doctor follow-ups, doctor channel, urgent requests, families and schedule changes, contact) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
+235 cases in 21 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy, doctor follow-ups, doctor channel, urgent requests, families and schedule changes, contact, data extraction attempts) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
 **Against Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: run `dotnet run --project tools/DpmAgent.Eval -- --modelo real` and paste the tables from eval/resultados/ here -->
 *Pending: requires access to the Meta Model API.*
 
-**Server guarantees (scripted model, runs in CI on every push):** 223 / 223 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
+**Server guarantees (scripted model, runs in CI on every push):** 235 / 235 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
 
 ### Cost
 
@@ -91,6 +91,16 @@ Every model call records tokens in and out (never content). Prices are set per m
 - **Production basics**: dashboard with secure cookies, hashed passwords and lockout; rate limiting per IP and per conversation; CSP and HSTS; health checks; keys only in environment variables.
 - **Accessibility**: web chat, demo, privacy notice and dashboard pass axe-core (WCAG 2.1 AA) in light and dark mode in CI; full keyboard navigation with visible focus, labels for screen readers, replies announced as they arrive, and an adjustable text size (many patients are older adults).
 - **Fictional data only.** Every patient and doctor in the repository is made up.
+
+## Security
+
+Clinic data deserves more than a prototype's defaults. In short (details in [docs/SECURITY-ARCHITECTURE.md](docs/SECURITY-ARCHITECTURE.md), reporting policy in [SECURITY.md](SECURITY.md)):
+
+- **Browser**: strict Content-Security-Policy with no inline scripts or styles, `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy`, microphone allowed only on the chat page; CSRF check on `Origin`/`Referer` for every dashboard change; no CORS. CI fails on any CSP violation in a real browser.
+- **Dashboard access**: 30-minute idle and 8-hour absolute session limits, sign-out of other sessions on password change, 12-character passwords with a common-password check, forced change of the initial password, sign-in that does not reveal which users exist, per-user lockout and per-IP limits, optional TOTP second factor for administrators (the clinic can require it), and an admin-only log of who viewed, exported or deleted patient data.
+- **Data**: patient phone and insurance member number encrypted at rest with the Data Protection API (lookups through an HMAC); TLS required to PostgreSQL in production (also in Docker Compose); audio and photos never touch the disk; a documented, diagrammed list of what goes to Meta, WhatsApp and Modal, and why.
+- **Supply chain**: gitleaks over the whole history, CodeQL (C# and JavaScript), Trivy on the Docker image, Dependabot, actions pinned by SHA and minimal workflow permissions; Key Vault references and key rotation documented.
+- **The agent itself**: it cannot reveal other patients' data or its own instructions; the output filter stops it even if the model obeys (evaluation category `extraccion_datos`).
 
 ## Architecture
 
