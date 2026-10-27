@@ -57,14 +57,14 @@ DPM Agent takes over the repetitive conversation and leaves the staff what truly
 
 ### Evaluation
 
-144 cases in 15 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
+147 cases in 15 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
 **Against Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: run `dotnet run --project tools/DpmAgent.Eval -- --modelo real` and paste the tables from eval/resultados/ here -->
 *Pending: requires access to the Meta Model API.*
 
-**Server guarantees (scripted model, runs in CI on every push):** 144 / 144 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
+**Server guarantees (scripted model, runs in CI on every push):** 147 / 147 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
 
 ### Cost
 
@@ -83,6 +83,7 @@ Every model call records tokens in and out (never content). Prices are set per m
 - **Prompt-injection defense on the server**: tool results, transcriptions and text read from photos are data. Cancelling takes two turns controlled by the server; a turn cannot perform more than 3 data-changing actions nor more than 5 tools; appointment reasons only accept administrative values.
 - **Privacy**: audio and photos are never stored; logs carry no patient data (tested); conversations are deleted after 30 days (configurable); the receptionist can export or delete a patient's data on request. See [docs/PRIVACY.md](docs/PRIVACY.md).
 - **Production basics**: dashboard with secure cookies, hashed passwords and lockout; rate limiting per IP and per conversation; CSP and HSTS; health checks; keys only in environment variables.
+- **Accessibility**: web chat, demo, privacy notice and dashboard pass axe-core (WCAG 2.1 AA) in light and dark mode in CI; full keyboard navigation with visible focus, labels for screen readers, replies announced as they arrive, and an adjustable text size (many patients are older adults).
 - **Fictional data only.** Every patient and doctor in the repository is made up.
 
 ## Architecture

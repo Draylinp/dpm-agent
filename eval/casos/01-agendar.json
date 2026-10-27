@@ -124,6 +124,66 @@
     }
   },
   {
+    "id": "agendar-es-sencillo",
+    "categoria": "agendar",
+    "idioma": "es",
+    "descripcion": "Plain-language message (all caps, misspellings, abbreviations), common among older patients: still booked, with a short and clear reply.",
+    "turnos": [
+      "QUIERO SITA PARA MAÑANA EN LA MAÑANA CON LA DOTORA",
+      "SI"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Claro, María. Mañana martes a las 10:00 a. m. está libre con la Dra. Ana Valdez. ¿Se la reservo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T10:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo. Su cita es mañana martes a las 10:00 a. m. con la Dra. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T10:00"
+      },
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
     "id": "agendar-en-1",
     "categoria": "agendar",
     "idioma": "en",
@@ -248,6 +308,66 @@
     }
   },
   {
+    "id": "agendar-en-sencillo",
+    "categoria": "agendar",
+    "idioma": "en",
+    "descripcion": "Plain-language message (all caps, misspellings, abbreviations), common among older patients: still booked, with a short and clear reply.",
+    "turnos": [
+      "NEED APPOINTMENT TOMORROW MORNING W DOCTOR PLS",
+      "YES"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Sure, María. Tomorrow, Tuesday, at 10:00 AM is free with Dr. Ana Valdez. Shall I book it?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T10:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done. Your appointment is tomorrow, Tuesday, at 10:00 AM with Dr. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T10:00"
+      },
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
     "id": "agendar-ht-1",
     "categoria": "agendar",
     "idioma": "ht",
@@ -367,6 +487,66 @@
         "fechaHora": "2026-10-28T15:00"
       },
       "escalado": false,
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "agendar-ht-sencillo",
+    "categoria": "agendar",
+    "idioma": "ht",
+    "descripcion": "Plain-language message (all caps, misspellings, abbreviations), common among older patients: still booked, with a short and clear reply.",
+    "turnos": [
+      "MWEN BEZWEN YON RANDEVOU DEMEN MATEN AK DOKTÈ A",
+      "WI"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Dakò, María. Demen madi a 10:00 AM gen plas ak Dr. Ana Valdez. Èske m pran l pou ou?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T10:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Fini. Randevou ou se demen madi a 10:00 AM ak Dr. Ana Valdez."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T10:00"
+      },
       "idiomaSesion": "ht",
       "idiomaRespuesta": "ht"
     }

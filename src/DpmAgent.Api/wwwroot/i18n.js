@@ -4,6 +4,10 @@
   const TEXTOS = {
     es: {
       'idioma': 'Idioma',
+      'a11y.letra': 'Tamaño de letra',
+      'chat.conversacion': 'Conversación con el asistente',
+      'chat.mensaje': 'Escriba su mensaje',
+      'panel.secciones': 'Secciones del panel',
       'chat.titulo': 'DPM Agent: recepción del consultorio',
       'chat.subtitulo': 'Prototipo con datos ficticios. Solo tareas administrativas, sin orientación médica.',
       'chat.telefono': 'Número de WhatsApp (simulado):',
@@ -121,6 +125,10 @@
     },
     en: {
       'idioma': 'Language',
+      'a11y.letra': 'Text size',
+      'chat.conversacion': 'Conversation with the assistant',
+      'chat.mensaje': 'Type your message',
+      'panel.secciones': 'Dashboard sections',
       'chat.titulo': 'DPM Agent: clinic front desk',
       'chat.subtitulo': 'Prototype with fictional data. Administrative tasks only, never medical advice.',
       'chat.telefono': 'WhatsApp number (simulated):',
@@ -267,6 +275,7 @@
     raiz.querySelectorAll('[data-i18n]').forEach(e => { e.textContent = t(e.dataset.i18n); });
     raiz.querySelectorAll('[data-i18n-placeholder]').forEach(e => { e.placeholder = t(e.dataset.i18nPlaceholder); });
     raiz.querySelectorAll('[data-i18n-title]').forEach(e => { e.title = t(e.dataset.i18nTitle); });
+    raiz.querySelectorAll('[data-i18n-aria]').forEach(e => { e.setAttribute('aria-label', t(e.dataset.i18nAria)); });
     raiz.querySelectorAll('select[data-selector-idioma]').forEach(s => { s.value = actual; });
   }
 

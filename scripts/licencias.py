@@ -43,7 +43,7 @@ PYTHON_DEPLOY = [
 ]
 # Herramientas de desarrollo y de CI: no se distribuyen con la app.
 DESARROLLO = [
-    ("Playwright (Node)", "preinstalado en CI", "Apache-2.0", "scripts/generar_carnet.mjs, pruebas de accesibilidad"),
+    ("Playwright (Node)", "1.48.2", "Apache-2.0", "tests/accesibilidad (CI), scripts/generar_carnet.mjs"),
     ("axe-core", "4.10.2", "MPL-2.0", "pruebas de accesibilidad en CI (no se incluye en la app)"),
     ("Mermaid (GitHub)", "-", "MIT", "diagrama del README, lo dibuja GitHub"),
 ]

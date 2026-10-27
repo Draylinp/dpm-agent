@@ -45,5 +45,22 @@ jobs:
           POSTGRES_PASSWORD=solo-ci docker compose --profile glimmer config -q
           # La imagen de vLLM del perfil glimmer debe existir (sin descargarla).
           docker manifest inspect "$(grep '^VLLM_IMAGEN=' .env.example | cut -d= -f2)" > /dev/null
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Accesibilidad (axe-core WCAG 2.1 AA, teclado y tamaño de letra)
+        env:
+          BaseDatos__Proveedor: Memoria
+          Demo__Habilitado: "true"
+          Panel__ClaveInicial: clave-solo-ci-123
+          ASPNETCORE_URLS: http://127.0.0.1:5199
+        run: |
+          cd tests/accesibilidad
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          cd ../..
+          dotnet run --project src/DpmAgent.Api -c Release --no-build --no-launch-profile > app.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:5199/health/live && break; sleep 1; done
+          PANEL_CLAVE=clave-solo-ci-123 BASE_URL=http://127.0.0.1:5199 node tests/accesibilidad/auditar.mjs
       - name: Imagen de Docker
         run: docker build -t dpm-agent:ci .

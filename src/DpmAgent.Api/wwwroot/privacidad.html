@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Aviso de privacidad · Privacy notice</title>
   <script src="i18n.js"></script>
+  <script src="accesibilidad.js"></script>
   <style>
     :root { --bg:#f4f6f8; --card:#fff; --text:#1d2430; --muted:#5b6470; --brand:#0b6b5e; --line:#d5dbe1; }
     @media (prefers-color-scheme: dark) {
@@ -18,7 +19,8 @@
     h2 { font-size:1.1rem; margin:1.4em 0 .4em; }
     .barra { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
     a { color:var(--brand); }
-    a:focus-visible, select:focus-visible { outline:3px solid var(--brand); outline-offset:2px; }
+    a:focus-visible, select:focus-visible, button:focus-visible { outline:3px solid var(--brand); outline-offset:2px; }
+    button { padding:6px 10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:1rem; cursor:pointer; }
     .nota { color:var(--muted); font-size:.9rem; }
     select { padding:6px 8px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:1rem; }
   </style>
@@ -27,7 +29,7 @@
 <main>
   <div class="barra">
     <a href="./" data-i18n="priv.volver"></a>
-    <span><label for="selectorIdioma" data-i18n="idioma"></label> <select id="selectorIdioma" data-selector-idioma></select></span>
+    <span><button id="tamanoLetra" type="button">A+</button> <label for="selectorIdioma" data-i18n="idioma"></label> <select id="selectorIdioma" data-selector-idioma></select></span>
   </div>
 
   <article lang="es" data-idioma="es">

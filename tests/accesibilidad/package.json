@@ -1,0 +1,13 @@
+{
+  "name": "dpm-agent-accesibilidad",
+  "private": true,
+  "description": "Prueba de accesibilidad del chat, la demo y el panel (axe-core + Playwright). Solo para CI.",
+  "type": "module",
+  "scripts": {
+    "auditar": "node auditar.mjs"
+  },
+  "devDependencies": {
+    "axe-core": "4.10.2",
+    "playwright": "1.48.2"
+  }
+}

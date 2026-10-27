@@ -5,43 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Panel del consultorio</title>
   <script src="i18n.js"></script>
+  <script src="accesibilidad.js"></script>
   <style>
-    :root { --bg:#f4f6f8; --card:#fff; --text:#1d2430; --muted:#6b7480; --brand:#0f7b6c; --line:#e3e7eb; --warn:#c0392b; --soft:#eef7f5; }
+    :root { --bg:#f4f6f8; --card:#fff; --text:#1d2430; --muted:#4f5864; --brand:#0f7b6c; --on-brand:#fff; --line:#c9d1d9; --warn:#b42318; --on-warn:#fff; --soft:#e3f2ef; --foco:#1d4ed8; }
     @media (prefers-color-scheme: dark) {
-      :root { --bg:#12161b; --card:#1b2129; --text:#e6e9ed; --muted:#9aa3ad; --brand:#3fbfa8; --line:#2a313a; --warn:#e57368; --soft:#1f3b35; }
+      :root { --bg:#12161b; --card:#1b2129; --text:#e6e9ed; --muted:#aeb7c1; --brand:#3fbfa8; --on-brand:#062a24; --line:#3a434e; --warn:#ff8a7a; --on-warn:#2a0603; --soft:#1f3b35; --foco:#93c5fd; }
     }
     * { box-sizing:border-box; }
     body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
     main { max-width:1100px; margin:0 auto; padding:16px; }
     .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
-    h1 { font-size:18px; margin:0; }
-    .muted { color:var(--muted); font-size:13px; }
+    h1 { font-size:1.125rem; margin:0; }
+    .muted { color:var(--muted); font-size:0.8125rem; }
     header.top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }
     nav { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
     nav button { background:transparent; color:var(--text); border:1px solid var(--line); }
-    nav button.activa { background:var(--brand); color:#fff; border-color:var(--brand); }
-    button { padding:8px 14px; border:0; border-radius:8px; background:var(--brand); color:#fff; font-weight:600; cursor:pointer; font-size:14px; }
+    nav button.activa { background:var(--brand); color:var(--on-brand); border-color:var(--brand); }
+    button { padding:8px 14px; border:0; border-radius:8px; background:var(--brand); color:var(--on-brand); font-weight:600; cursor:pointer; font-size:0.875rem; }
     button.sec { background:transparent; color:var(--text); border:1px solid var(--line); }
-    button.peligro { background:var(--warn); }
+    button.peligro { background:var(--warn); color:var(--on-warn); }
+    a { color:var(--brand); }
+    :focus-visible { outline:3px solid var(--foco); outline-offset:2px; }
+    blockquote { margin:8px 0; padding:8px 12px; border-left:3px solid var(--brand); background:var(--soft); }
     button:disabled { opacity:.5; }
-    input { padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:14px; }
-    label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
-    table { width:100%; border-collapse:collapse; font-size:14px; }
+    input { padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:0.875rem; }
+    label { display:block; font-size:0.8125rem; color:var(--muted); margin:10px 0 4px; }
+    table { width:100%; border-collapse:collapse; font-size:0.875rem; }
     th, td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
-    th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; }
+    th { color:var(--muted); font-weight:600; font-size:0.75rem; text-transform:uppercase; }
     .tabla { overflow-x:auto; }
-    .chip { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:var(--soft); }
-    .chip.urgente { background:var(--warn); color:#fff; }
+    .chip { display:inline-block; padding:2px 8px; border-radius:999px; font-size:0.75rem; background:var(--soft); }
+    .chip.urgente { background:var(--warn); color:var(--on-warn); }
     .fila-acciones { display:flex; gap:6px; flex-wrap:wrap; }
     .item { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; }
     .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; }
     .grid input { width:100%; }
     .vacio { color:var(--muted); padding:16px 0; }
-    .error { color:var(--warn); font-size:13px; min-height:18px; }
+    .error { color:var(--warn); font-size:0.8125rem; min-height:18px; }
     #login { max-width:360px; margin:10vh auto; }
     #login input { width:100%; }
     #login button { width:100%; margin-top:14px; }
-    .idioma { display:flex; gap:6px; align-items:center; font-size:13px; color:var(--muted); }
+    .idioma { display:flex; gap:6px; align-items:center; font-size:0.8125rem; color:var(--muted); }
     select { padding:6px 8px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); }
     .original { border-left:3px solid var(--line); padding:4px 8px; margin:6px 0; color:var(--muted); font-style:italic; }
     textarea { width:100%; min-height:220px; padding:10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font:13px/1.5 ui-monospace,Consolas,monospace; }
@@ -50,6 +54,7 @@
 <body>
 <main>
   <div class="idioma" style="justify-content:flex-end;margin-bottom:8px">
+    <button id="tamanoLetra" type="button" class="sec">A+</button>
     <label for="selectorIdioma" data-i18n="idioma"></label>
     <select id="selectorIdioma" data-selector-idioma></select>
   </div>
@@ -62,7 +67,7 @@
       <label for="clave" data-i18n="panel.clave"></label>
       <input id="clave" type="password" autocomplete="current-password" required>
       <button data-i18n="panel.entrar"></button>
-      <p id="errorLogin" class="error"></p>
+      <p id="errorLogin" class="error" role="alert"></p>
     </form>
   </section>
 
@@ -74,8 +79,8 @@
       </div>
       <button id="salir" class="sec" data-i18n="panel.salir"></button>
     </header>
-    <nav id="tabs">
-      <button data-tab="citas" class="activa" data-i18n="tab.citas"></button>
+    <nav id="tabs" data-i18n-aria="panel.secciones">
+      <button data-tab="citas" class="activa" aria-current="page" data-i18n="tab.citas"></button>
       <button data-tab="escalamientos" data-i18n="tab.escalamientos"></button>
       <button data-tab="carnets" data-i18n="tab.carnets"></button>
       <button data-tab="autorizaciones" data-i18n="tab.autorizaciones"></button>
@@ -85,7 +90,7 @@
       <button data-tab="bitacora" data-i18n="tab.bitacora"></button>
     </nav>
     <div class="card">
-      <p id="error" class="error"></p>
+      <p id="error" class="error" role="alert"></p>
       <div id="vista"></div>
     </div>
   </section>
@@ -152,7 +157,10 @@
     const b = e.target.closest('button[data-tab]');
     if (!b) return;
     tab = b.dataset.tab;
-    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('activa', x === b));
+    document.querySelectorAll('#tabs button').forEach(x => {
+      x.classList.toggle('activa', x === b);
+      if (x === b) x.setAttribute('aria-current', 'page'); else x.removeAttribute('aria-current');
+    });
     await cargar();
   });
 
@@ -177,7 +185,7 @@
 
   async function citas() {
     const lista = await api(`/api/panel/citas?fecha=${fechaCitas}`);
-    const fecha = el('input', { type: 'date', value: fechaCitas, onchange: async (e) => { fechaCitas = e.target.value; await cargar(); } });
+    const fecha = el('input', { type: 'date', value: fechaCitas, 'aria-label': t('citas.fecha'), onchange: async (e) => { fechaCitas = e.target.value; await cargar(); } });
     const filas = lista.map(c => el('tr', {},
       el('td', {}, c.hora),
       el('td', {}, c.paciente, el('div', { class: 'muted' }, c.telefono)),
