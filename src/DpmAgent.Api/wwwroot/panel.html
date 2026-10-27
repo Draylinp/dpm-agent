@@ -6,6 +6,7 @@
   <title>Panel del consultorio</title>
   <script src="i18n.js"></script>
   <script src="accesibilidad.js"></script>
+  <script src="dialogos.js"></script>
   <style>
     :root { --bg:#f4f6f8; --card:#fff; --text:#1d2430; --muted:#4f5864; --brand:#0f7b6c; --on-brand:#fff; --line:#c9d1d9; --warn:#b42318; --on-warn:#fff; --soft:#e3f2ef; --foco:#1d4ed8; }
     @media (prefers-color-scheme: dark) {
@@ -38,6 +39,11 @@
     .chip.urgente { background:var(--warn); color:var(--on-warn); }
     .fila-acciones { display:flex; gap:6px; flex-wrap:wrap; }
     .item { border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; }
+    dialog.dialogo { max-width:min(32rem, calc(100vw - 32px)); border:1px solid var(--line); border-radius:12px; background:var(--card); color:var(--text); padding:16px; }
+    dialog.dialogo::backdrop { background:rgba(0,0,0,.45); }
+    dialog.dialogo h2 { font-size:1rem; margin:0 0 8px; }
+    dialog.dialogo input { width:100%; }
+    dialog.dialogo .fila-acciones { margin-top:14px; justify-content:flex-end; }
     .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px; }
     .grid input { width:100%; }
     .vacio { color:var(--muted); padding:16px 0; }
@@ -315,7 +321,7 @@
       const r = await api('/api/panel/seguimientos', { method: 'POST', body: JSON.stringify({
         pacienteId: p.id, medicoId: med.value, enCantidad: Number(cant.value), enUnidad: unidad.value, toleranciaDias: Number(tol.value),
         motivo: 'control', recurrenciaCada: rec.value ? Number(rec.value) : null, recurrenciaUnidad: rec.value ? 'meses' : null }) });
-      if (r.requiereConsentimiento) { telefonoPaciente = tel.value.trim(); alert(t('seg.sin_permiso')); }
+      if (r.requiereConsentimiento) { telefonoPaciente = tel.value.trim(); await Dialogo.aviso(t('seg.sin_permiso')); }
     }) }, t('seg.crear'));
 
     const filas = lista.map(s => el('tr', {},
@@ -362,7 +368,7 @@
       el('div', { class: 'grid' }, campo('bloMed', 'citas.medico', bMed), campo('bloDesde', 'seg.desde', bDesde), campo('bloHasta', 'seg.hasta', bHasta)),
       el('button', { class: 'sec', onclick: () => accion(async () => {
         const r = await api('/api/panel/bloqueos', { method: 'POST', body: JSON.stringify({ medicoId: bMed.value, desde: bDesde.value, hasta: bHasta.value, motivo: 'otro' }) });
-        alert(t('seg.bloqueo_listo').replace('{n}', r.citasParaReprogramar));
+        await Dialogo.aviso(t('seg.bloqueo_listo').replace('{n}', r.citasParaReprogramar));
       }) }, t('seg.bloquear')),
       resultado,
       await cambiosAgenda(medicos));
@@ -532,13 +538,13 @@
       el('h3', {}, t('priv.enlace')),
       el('div', { class: 'fila-acciones' },
         el('a', { href: `/api/panel/pacientes/${p.id}/exportar`, download: `${p.id}.json` }, t('pac.exportar')),
-        el('button', { class: 'peligro', onclick: () => {
-          const respuesta = prompt(t('pac.confirmar_borrado'));
+        el('button', { class: 'peligro', onclick: async () => {
+          const respuesta = await Dialogo.pedirTexto(t('pac.confirmar_borrado'), t('dlg.escriba_borrar'));
           if (respuesta !== 'BORRAR') return;
-          accion(async () => {
+          await accion(async () => {
             await api(`/api/panel/pacientes/${p.id}/borrar`, { method: 'POST', body: JSON.stringify({ confirmacion: respuesta }) });
             telefonoPaciente = '';
-            alert(t('pac.borrado'));
+            await Dialogo.aviso(t('pac.borrado'));
           });
         } }, t('pac.borrar'))));
   }

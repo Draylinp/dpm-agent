@@ -147,6 +147,77 @@ public class PrivacidadTests
             Assert.DoesNotContain("soy María", l);
         });
     }
+
+    /// <summary>Las funciones de la fase 3 (seguimientos, médico, urgencias, familias, contacto) tampoco dejan datos en los logs.</summary>
+    [Fact]
+    public async Task Los_logs_de_seguimientos_medico_urgencias_y_familias_no_llevan_datos_de_pacientes()
+    {
+        var captura = new CapturaLogs();
+        var reloj = new RelojAjustable(new DateTimeOffset(2026, 10, 26, 12, 0, 0, TimeSpan.FromHours(-4)));
+        var modelo = new ScriptedChatModel()
+            .ThenTool("buscar_paciente", new { })
+            .ThenTool("registrar_paciente", new { nombre = "Sofía Rodríguez (ficticia)" })
+            .ThenText("¿Confirma?")
+            .ThenTool("registrar_paciente", new { nombre = "Sofía Rodríguez (ficticia)" })
+            .ThenTool("seleccionar_paciente", new { paciente_id = "PAC-001" })
+            .ThenTool("pedir_cita_urgente", new { medico_id = "MED-02" })
+            .ThenText("Le pasé su pedido a la secretaria y al médico.")
+            .ThenTool("decidir_sobrecupo", new { solicitud_id = "SOB-001", decision = "aprobar", hora = "17:30" })
+            .ThenText("¿Confirma?")
+            .ThenTool("decidir_sobrecupo", new { solicitud_id = "SOB-001", decision = "aprobar", hora = "17:30" })
+            .ThenText("Listo.");
+        using var app = new AppDePrueba(modelo, s =>
+        {
+            s.AddSingleton<ILoggerProvider>(captura);
+            s.RemoveAll<TimeProvider>();
+            s.AddSingleton<TimeProvider>(reloj);
+        });
+        Task<Api.Agent.AgentReply> WhatsApp(string mensaje, string tel) =>
+            app.EnAmbito(sp => sp.GetRequiredService<Api.Agent.ReceptionAgent>().RunAsync("wa-" + tel, mensaje, tel, CancellationToken.None));
+
+        await app.IniciarSesionAsync();
+        var codigo = (await (await app.Cliente.PostAsJsonAsync("/api/panel/medicos/MED-02/telefono", new { telefono = "8495550111" }))
+            .Content.ReadFromJsonAsync<JsonObject>())!["codigo"]!.ToString();
+        await WhatsApp($"VERIFICAR {codigo}", "8495550111");
+        await app.Cliente.PostAsJsonAsync("/api/panel/medicos/MED-02/resumen", new { acepta = true });
+        await app.Cliente.PostAsJsonAsync("/api/panel/seguimientos", new { pacienteId = "PAC-001", medicoId = "MED-01", enCantidad = 6, enUnidad = "meses", toleranciaDias = 7 });
+
+        // Agenda llena hoy y mañana con José, para que el pedido urgente termine en sobrecupo.
+        foreach (var dia in new[] { new DateOnly(2026, 10, 26), new DateOnly(2026, 10, 27) })
+        foreach (var med in new[] { "MED-01", "MED-02" })
+        foreach (var t in await app.ConGateway(g => g.ConsultarDisponibilidadAsync(med, dia, CancellationToken.None)))
+            await app.ConGateway(g => g.CrearCitaAsync("PAC-002", med, t, "control", CancellationToken.None));
+
+        await WhatsApp("Quiero registrar a mi hija Sofía, mi cédula es 001-1234567-8", "8095550101");
+        await WhatsApp("Sí. Necesito que el doctor me vea hoy", "8095550101");
+        await WhatsApp("APROBAR SOB-001 17:30", "8495550111");
+        await WhatsApp("Sí", "8495550111");
+
+        await app.Cliente.PostAsJsonAsync("/api/panel/bloqueos", new { medicoId = "MED-01", desde = "2026-10-27", hasta = "2026-10-27", motivo = "congreso" });
+        await app.Cliente.PostAsJsonAsync("/api/panel/medicos/MED-02/retraso", new { minutos = 30 });
+        await app.Cliente.PostAsJsonAsync("/api/panel/familias", new { telefono = "8095550101", nombre = "Pedro Rodríguez (ficticio)", confirmado = true });
+        await app.Services.GetRequiredService<AgendaHostedService>().VueltaAsync(CancellationToken.None);
+        foreach (var ruta in new[] { "urgencias/sobrecupos", "urgencias/cupos", "seguimientos", "reprogramaciones", "medicos", "familias?telefono=8095550101" })
+            Assert.Equal(HttpStatusCode.OK, (await app.Cliente.GetAsync("/api/panel/" + ruta)).StatusCode);
+        reloj.Avanzar(TimeSpan.FromDays(1));
+        await app.IniciarSesionAsync();
+        var citaPasada = await app.EnAmbito(sp => sp.GetRequiredService<DpmDbContext>().Citas.Where(c => c.PacienteId == 2 && c.Estado == "confirmada").OrderBy(c => c.Id).Select(c => c.Id).FirstAsync());
+        await app.Cliente.PostAsync($"/api/panel/citas/{IdsDpm.Cita(citaPasada)}/no-asistio", null);
+        await app.Cliente.PostAsync("/api/panel/pacientes/PAC-003/desactivar", null);
+        await app.Services.GetRequiredService<AgendaHostedService>().VueltaAsync(CancellationToken.None);
+
+        var logs = captura.Lineas.ToList();
+        Assert.NotEmpty(logs);
+        Assert.Contains(logs, l => l.Contains("Reprogramación consultorio"));
+        Assert.All(logs, l =>
+        {
+            Assert.DoesNotMatch(Telefono, l);
+            Assert.DoesNotContain("1234567", l);
+            Assert.DoesNotContain("Rodríguez", l);
+            Assert.DoesNotContain("Martínez", l);
+            Assert.DoesNotContain("cédula", l);
+        });
+    }
 }
 
 public class DerechosDelPacienteTests

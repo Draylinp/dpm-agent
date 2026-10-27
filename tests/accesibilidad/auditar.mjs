@@ -41,6 +41,8 @@ if (process.env.PANEL_CLAVE) {
     await pagina.fill('#clave', process.env.PANEL_CLAVE);
     await pagina.click('#formLogin button');
     await pagina.waitForSelector('#app:not([hidden])');
+    // El panel no usa alert/prompt/confirm del navegador: sus diálogos son propios y accesibles.
+    pagina.on('dialog', async (d) => { fallos.push(`/panel.html [${esquema}] diálogo nativo del navegador: ${d.type()}`); await d.dismiss(); });
     for (const tab of ['citas', 'escalamientos', 'carnets', 'autorizaciones', 'urgencias', 'seguimientos', 'llamadas', 'medicos', 'familias', 'pacientes', 'costos', 'bitacora']) {
       await pagina.click(`#tabs button[data-tab="${tab}"]`);
       await pagina.waitForTimeout(500);
@@ -52,6 +54,21 @@ if (process.env.PANEL_CLAVE) {
         fallos.push(`/panel.html#${tab} [${esquema}] ${v.id}: ${v.help} → ${v.nodes.slice(0, 3).map(n => n.target.join(' ')).join(' | ')}`);
       }
     }
+
+    // Diálogo propio abierto (el de borrar datos): axe, foco dentro y Escape lo cierra.
+    await pagina.evaluate(() => { window.__dlg = Dialogo.pedirTexto(I18N.t('pac.confirmar_borrado'), I18N.t('dlg.escriba_borrar')); });
+    await pagina.waitForSelector('dialog.dialogo[open]');
+    const foco = await pagina.evaluate(() => !!document.activeElement.closest('dialog.dialogo'));
+    if (!foco) fallos.push(`/panel.html diálogo [${esquema}]: el foco no está dentro del diálogo`);
+    const rd = await pagina.evaluate(async () => await window.axe.run(document, {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
+    }));
+    for (const v of rd.violations) {
+      fallos.push(`/panel.html diálogo [${esquema}] ${v.id}: ${v.help} → ${v.nodes.slice(0, 3).map(n => n.target.join(' ')).join(' | ')}`);
+    }
+    await pagina.keyboard.press('Escape');
+    const cerrado = await pagina.evaluate(async () => (await window.__dlg) === null && !document.querySelector('dialog.dialogo'));
+    if (!cerrado) fallos.push(`/panel.html diálogo [${esquema}]: Escape no lo cierra`);
     await contexto.close();
   }
 }
