@@ -52,6 +52,9 @@ public sealed class AgentTools
 
     public JsonArray Definitions => Definiciones;
 
+    /// <summary>Dirección del aviso de privacidad (para el prompt), si está configurada.</summary>
+    public string? UrlPrivacidad => _consentimientos?.UrlPrivacidad;
+
     /// <summary>Datos del consultorio de la conversación (número de emergencias, idioma predeterminado).</summary>
     public Task<InfoConsultorio> ConsultorioAsync(CancellationToken ct) => _dpm.ObtenerConsultorioAsync(ct);
 

@@ -26,7 +26,7 @@ public sealed class WhatsAppCloudChannel : IMessageChannel
         var remitente = mensaje.RemitenteId ?? (string.IsNullOrWhiteSpace(_options.PhoneNumberId) ? null : _options.PhoneNumberId)
                         ?? throw new InvalidOperationException("Falta el phone_number_id de WhatsApp del consultorio.");
         var destino = Telefono.Internacional(mensaje.Destino)
-                      ?? throw new InvalidOperationException($"Número de destino no válido: {mensaje.Destino}.");
+                      ?? throw new InvalidOperationException("Número de destino no válido.");
 
         if (mensaje.Plantilla is not null && _options.Plantillas.TryGetValue(mensaje.Plantilla, out var plantilla) &&
             !string.IsNullOrWhiteSpace(plantilla))

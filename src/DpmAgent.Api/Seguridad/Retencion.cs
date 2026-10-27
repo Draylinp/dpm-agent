@@ -97,7 +97,7 @@ public sealed class RetencionHostedService(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex, "Falló la limpieza por retención; se reintenta en el siguiente intervalo.");
+                logger.LogError("Falló la limpieza por retención; se reintenta en el siguiente intervalo: {Error}", Privacidad.Excepcion(ex));
             }
 
             try

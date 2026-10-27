@@ -67,6 +67,8 @@ public sealed class ServicioConsentimiento
         _opciones = opciones.Value;
     }
 
+    public string UrlPrivacidad => _opciones.UrlPrivacidad;
+
     /// <summary>Texto que se le muestra al paciente: nombra al consultorio, dice qué recibirá y cómo darse de baja.</summary>
     public string Texto(string? idioma, string consultorio) =>
         Textos.Obtener("consentimiento.texto", idioma, consultorio, _opciones.UrlPrivacidad);

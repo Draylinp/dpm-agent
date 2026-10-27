@@ -2,7 +2,7 @@
 
 *Versión en español: [es/EVALUACION.md](es/EVALUACION.md)*
 
-`eval/` holds **132 cases** across 14 categories and 5 languages, plus the runner `tools/DpmAgent.Eval`.
+`eval/` holds **141 cases** across 15 categories and 5 languages, plus the runner `tools/DpmAgent.Eval`.
 
 | Category | What it checks |
 |---|---|

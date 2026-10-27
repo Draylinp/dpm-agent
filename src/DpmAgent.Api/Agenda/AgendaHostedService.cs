@@ -41,7 +41,7 @@ public sealed class AgendaHostedService : BackgroundService
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                _logger.LogError(ex, "Falló una vuelta del motor de agenda; se reintenta en la siguiente.");
+                _logger.LogError("Falló una vuelta del motor de agenda; se reintenta en la siguiente: {Error}", Seguridad.Privacidad.Excepcion(ex));
             }
 
             try

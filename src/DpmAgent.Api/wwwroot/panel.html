@@ -312,7 +312,19 @@
       el('blockquote', {}, texto.texto),
       el('div', { class: 'fila-acciones' },
         el('button', { onclick: () => registrar(true) }, t('pac.registrar')),
-        el('button', { class: 'peligro', onclick: () => registrar(false) }, t('pac.retirar'))));
+        el('button', { class: 'peligro', onclick: () => registrar(false) }, t('pac.retirar'))),
+      el('h3', {}, t('priv.enlace')),
+      el('div', { class: 'fila-acciones' },
+        el('a', { href: `/api/panel/pacientes/${p.id}/exportar`, download: `${p.id}.json` }, t('pac.exportar')),
+        el('button', { class: 'peligro', onclick: () => {
+          const respuesta = prompt(t('pac.confirmar_borrado'));
+          if (respuesta !== 'BORRAR') return;
+          accion(async () => {
+            await api(`/api/panel/pacientes/${p.id}/borrar`, { method: 'POST', body: JSON.stringify({ confirmacion: respuesta }) });
+            telefonoPaciente = '';
+            alert(t('pac.borrado'));
+          });
+        } }, t('pac.borrar'))));
   }
 
   async function bitacora() {

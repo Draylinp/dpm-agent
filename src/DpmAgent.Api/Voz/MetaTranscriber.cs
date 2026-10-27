@@ -64,7 +64,7 @@ public sealed class MetaTranscriber : ITranscriber
         if (!response.IsSuccessStatusCode)
         {
             // No se registra el cuerpo enviado: es la voz del paciente.
-            _logger.LogError("Transcripción respondió {Status}: {Body}", (int)response.StatusCode, raw);
+            _logger.LogError("Transcripción respondió {Status}: {Body}", (int)response.StatusCode, Seguridad.Privacidad.Enmascarar(raw));
             throw new HttpRequestException(
                 $"El servicio de transcripción respondió {(int)response.StatusCode}.", null, response.StatusCode);
         }

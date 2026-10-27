@@ -67,7 +67,7 @@ public sealed class GuardadoUsoHostedService(
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    logger.LogError(ex, "No se pudo guardar el uso del modelo; esas cifras se pierden.");
+                    logger.LogError("No se pudo guardar el uso del modelo; esas cifras se pierden: {Error}", Seguridad.Privacidad.Excepcion(ex));
                 }
             }
         }

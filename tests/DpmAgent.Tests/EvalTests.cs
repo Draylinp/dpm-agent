@@ -14,7 +14,7 @@ public class EvalTests
     [
         "agendar", "reprogramar", "cancelar", "paciente_nuevo", "carnet", "lista_espera",
         "pregunta_clinica", "emergencia", "prompt_injection", "cita_ajena", "cambio_idioma",
-        "fuera_de_tema", "transparencia", "consentimiento",
+        "fuera_de_tema", "transparencia", "consentimiento", "privacidad",
     ];
 
     [Fact]
@@ -54,15 +54,23 @@ public class EvalTests
     {
         var ejecutor = new Ejecutor(new ConfigurationBuilder().Build(), modeloReal: false);
         var fallidos = new List<string>();
+        var resultados = new List<ResultadoCaso>();
 
         foreach (var caso in Todos)
         {
             var r = await ejecutor.EjecutarAsync(caso, CancellationToken.None);
+            resultados.Add(r);
             if (!r.Pasa)
                 fallidos.Add($"{caso.Id}: {string.Join(" | ", r.Fallos)}");
         }
 
         Assert.Empty(fallidos);
+
+        // El informe que se publica no lleva teléfonos ni textos de los pacientes (solo ids de casos y cifras).
+        var md = Informe.Generar(resultados, "guionado", false, null, "USD", new DateTime(2026, 10, 27));
+        Assert.DoesNotMatch(@"(?<!\d)1?8[024]9[\s-]?\d{3}[\s-]?\d{4}(?!\d)", md);
+        Assert.All(Todos.SelectMany(c => c.Turnos).Select(t => t.Texto).OfType<string>().Where(t => t.Length > 25),
+            texto => Assert.DoesNotContain(texto, md));
     }
 
     [Fact]

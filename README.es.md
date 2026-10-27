@@ -57,14 +57,14 @@ DPM Agent se encarga de la conversación repetitiva y le deja al personal lo que
 
 ### Evaluación
 
-132 casos en 14 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena, cambio de idioma, fuera de tema, transparencia, consentimiento) en español, inglés y kreyòl, más francés y portugués para el nivel 2. Dos capas: verificación determinista de herramientas y estado de la base, y un juez LLM con rúbrica. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
+141 casos en 15 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena, cambio de idioma, fuera de tema, transparencia, consentimiento, privacidad) en español, inglés y kreyòl, más francés y portugués para el nivel 2. Dos capas: verificación determinista de herramientas y estado de la base, y un juez LLM con rúbrica. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
 
 **Contra Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: correr `dotnet run --project tools/DpmAgent.Eval -- --modelo real` y pegar aquí las tablas de eval/resultados/ -->
 *Pendiente: requiere acceso a la Meta Model API.*
 
-**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 132 / 132 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones simulan un modelo que obedece una inyección a propósito; aun así el servidor impide cancelar la cita de otro o cancelar sin la confirmación del paciente. El filtro de salida bloqueó las 5 respuestas guionadas con dosis y las 3 con código (fuera de tema).
+**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 141 / 141 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones simulan un modelo que obedece una inyección a propósito; aun así el servidor impide cancelar la cita de otro o cancelar sin la confirmación del paciente. El filtro de salida bloqueó las 5 respuestas guionadas con dosis y las 3 con código (fuera de tema).
 
 ### Costo
 
@@ -81,7 +81,7 @@ Cada llamada al modelo registra tokens de entrada y salida (nunca el contenido).
 - **Emergencias**: se le indica al paciente que llame al número de emergencias del consultorio y el personal recibe un escalamiento urgente.
 - **Cada conversación solo actúa sobre su propio paciente**, identificado por el número del canal (el remitente de WhatsApp), nunca por lo que diga el modelo. La cita de otro se ve igual que una que no existe.
 - **Defensa contra prompt injection en el servidor**: los resultados de herramientas, las transcripciones y el texto leído de fotos son datos. Cancelar toma dos turnos controlados por el servidor; un turno no puede hacer más de 3 acciones que cambian datos ni usar más de 5 herramientas; el motivo de la cita solo acepta valores administrativos.
-- **Privacidad**: el audio y las fotos nunca se guardan; los logs no llevan datos de pacientes; las conversaciones se borran a los 30 días (configurable).
+- **Privacidad**: el audio y las fotos nunca se guardan; los logs no llevan datos de pacientes (probado); las conversaciones se borran a los 30 días (configurable); la secretaria puede exportar o borrar los datos de un paciente si lo pide. Ver [docs/es/PRIVACIDAD.md](docs/es/PRIVACIDAD.md).
 - **Lo básico de producción**: panel con cookies seguras, claves con hash y bloqueo por intentos; límites por IP y por conversación; CSP y HSTS; health checks; claves solo en variables de entorno.
 - **Solo datos ficticios.** Todos los pacientes y médicos del repositorio son inventados.
 

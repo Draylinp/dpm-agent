@@ -61,7 +61,7 @@ public sealed class ProcesadorWhatsApp
             {
                 m.Intentos++;
                 m.Error = ex.Message.Length > 500 ? ex.Message[..500] : ex.Message;
-                _logger.LogWarning(ex, "No se pudo procesar el mensaje de WhatsApp {Id} (intento {Intento})", m.Id, m.Intentos);
+                _logger.LogWarning("No se pudo procesar el mensaje de WhatsApp {Id} (intento {Intento}): {Error}", m.Id, m.Intentos, Seguridad.Privacidad.Excepcion(ex));
 
                 if (m.Intentos >= _opciones.MaxIntentos)
                 {
@@ -160,7 +160,7 @@ public sealed class ProcesadorWhatsApp
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogError(ex, "Tampoco se pudo avisar del fallo en la sesión {Sesion}", sesionId);
+            _logger.LogError("Tampoco se pudo avisar del fallo en la sesión {Sesion}: {Error}", Seguridad.Privacidad.Seudonimo(sesionId), Seguridad.Privacidad.Excepcion(ex));
         }
     }
 
@@ -195,7 +195,7 @@ public sealed class ProcesadorWhatsAppHostedService(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex, "Falló el procesador de WhatsApp; se reintenta.");
+                logger.LogError("Falló el procesador de WhatsApp; se reintenta: {Error}", Seguridad.Privacidad.Excepcion(ex));
             }
 
             try

@@ -135,7 +135,7 @@ public sealed class WhatsAppCloudApi : IWhatsAppCloudApi
         {
             // El mensaje de error de Meta no trae datos del paciente: se puede registrar.
             var detalle = TryParse(raw)?["error"]?["message"]?.ToString() ?? raw;
-            _logger.LogError("WhatsApp respondió {Status} al {Accion}: {Detalle}", (int)response.StatusCode, accion, detalle);
+            _logger.LogError("WhatsApp respondió {Status} al {Accion}: {Detalle}", (int)response.StatusCode, accion, Seguridad.Privacidad.Enmascarar(detalle));
             throw new HttpRequestException($"WhatsApp respondió {(int)response.StatusCode} al {accion}: {detalle}", null, response.StatusCode);
         }
 

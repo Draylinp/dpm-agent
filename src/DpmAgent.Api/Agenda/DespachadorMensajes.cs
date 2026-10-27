@@ -69,11 +69,11 @@ public sealed class DespachadorMensajes
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 m.Intentos++;
-                m.Error = ex.Message.Length > 500 ? ex.Message[..500] : ex.Message;
+                m.Error = Seguridad.Privacidad.Enmascarar(ex.Message, 500);
                 if (m.Intentos >= _opciones.MaxIntentosEnvio)
                     m.Estado = "fallido";
                 _logger.LogWarning("No se pudo entregar el mensaje {Id} por {Canal} (intento {Intento}): {Error}",
-                    m.Id, m.Canal, m.Intentos, ex.Message);
+                    m.Id, m.Canal, m.Intentos, Seguridad.Privacidad.Enmascarar(ex.Message));
             }
 
             await _db.SaveChangesAsync(ct);

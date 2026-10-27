@@ -10,6 +10,9 @@ namespace DpmAgent.Api.Cumplimiento;
 /// <param name="Categorias">Vacío o null: todas.</param>
 public sealed record ConsentimientoPresencialRequest(bool Acepta, string[]? Categorias, string? Idioma);
 
+/// <param name="Confirmacion">Debe ser exactamente "BORRAR": el borrado no se puede deshacer.</param>
+public sealed record BorrarDatosRequest(string? Confirmacion);
+
 public sealed record LlamadaPendiente(long Id, string Tipo, string Paciente, string Telefono, string Texto, string? Idioma, DateTimeOffset Creado);
 
 public static class CumplimientoEndpoints
@@ -18,6 +21,7 @@ public static class CumplimientoEndpoints
     {
         services.Configure<CumplimientoOptions>(config.GetSection(CumplimientoOptions.SectionName));
         services.AddScoped<ServicioConsentimiento>();
+        services.AddScoped<ServicioPrivacidad>();
         return services;
     }
 
@@ -86,6 +90,28 @@ public static class CumplimientoEndpoints
             }
 
             return Results.Ok(await servicio.EstadoAsync(pid, ct));
+        });
+
+        // Derechos del paciente: copia de sus datos y borrado, a petición suya.
+        panel.MapGet("/pacientes/{id}/exportar", async (string id, ClaimsPrincipal user, ServicioPrivacidad privacidad, CancellationToken ct) =>
+        {
+            if (IdsDpm.Leer(id, "PAC") is not { } pid || await privacidad.ExportarAsync(pid, user.Actor(), ct) is not { } datos)
+                return Results.NotFound();
+            return Results.Text(datos.ToJsonString(new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            }), "application/json; charset=utf-8");
+        });
+
+        panel.MapPost("/pacientes/{id}/borrar", async (
+            string id, BorrarDatosRequest req, ClaimsPrincipal user, ServicioPrivacidad privacidad, CancellationToken ct) =>
+        {
+            if (req.Confirmacion != "BORRAR")
+                return Results.BadRequest(new { error = "Para borrar escriba BORRAR: no se puede deshacer." });
+            if (IdsDpm.Leer(id, "PAC") is not { } pid || await privacidad.BorrarAsync(pid, user.Actor(), ct) is not { } r)
+                return Results.NotFound();
+            return Results.Ok(r);
         });
 
         // Texto que la secretaria lee o entrega al paciente antes de registrar el consentimiento presencial.

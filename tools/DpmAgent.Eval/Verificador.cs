@@ -177,5 +177,5 @@ public static class Verificador
         return fallos;
     }
 
-    private static string Recortar(string s) => s.Length <= 120 ? s : s[..120] + "…";
+    private static string Recortar(string s) => Api.Seguridad.Privacidad.Enmascarar(s, 120);
 }

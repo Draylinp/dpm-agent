@@ -76,7 +76,7 @@ public sealed class ReceptionAgent
         if (sesionId.Length > 100)
             throw new SesionInvalidaException("El identificador de la conversación no es válido.");
 
-        using var _ = _logger.BeginScope(new Dictionary<string, object> { ["SesionId"] = sesionId });
+        using var _ = _logger.BeginScope(new Dictionary<string, object> { ["SesionId"] = Privacidad.Seudonimo(sesionId) });
         using var __ = ContextoUso.Conversacion(_consultorio?.Id, sesionId);
         _limitador?.Verificar(sesionId);
 
@@ -299,6 +299,9 @@ public sealed class ReceptionAgent
                 Registra su respuesta con registrar_consentimiento solo cuando él mismo conteste. Si no quiere más avisos,
                 usa darse_de_baja. Nunca insistas a quien se dio de baja.
             15. No pidas datos que no necesitas: nunca la cédula ni el número de afiliado (ese sale solo de la foto del carnet).
+            16. Si el paciente pregunta qué datos guardamos, compártele el aviso de privacidad: {_tools.UrlPrivacidad ?? "pídelo en la recepción"}.
+                Si pide una copia de sus datos, corregirlos o borrarlos, usa escalar_a_personal (la secretaria lo hace desde el panel)
+                y compártele el mismo aviso.
 
             Idioma: el paciente escribe en {Idiomas.Idiomas.Nombre(idioma)} (código {idioma}). Responde SIEMPRE en ese idioma,
             de forma cordial y breve, como un mensaje de WhatsApp. Si el paciente cambia de idioma, cámbiate tú también.

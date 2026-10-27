@@ -44,6 +44,11 @@ public static class ProduccionExtensions
             builder.Logging.AddSimpleConsole(o => o.IncludeScopes = true);
         }
 
+        // Errores no controlados: ASP.NET registra la excepción completa (puede traer datos del paciente);
+        // se apaga ese log y la registra ManejadorErroresPrivado ya enmascarada.
+        builder.Logging.AddFilter("Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware", LogLevel.None);
+        services.AddExceptionHandler<ManejadorErroresPrivado>();
+
         if (limites.ConfiarEncabezadosReenviados)
         {
             services.Configure<ForwardedHeadersOptions>(o =>

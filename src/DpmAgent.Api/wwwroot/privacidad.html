@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aviso de privacidad · Privacy notice</title>
+  <script src="i18n.js"></script>
+  <style>
+    :root { --bg:#f4f6f8; --card:#fff; --text:#1d2430; --muted:#5b6470; --brand:#0b6b5e; --line:#d5dbe1; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#12161b; --card:#1b2129; --text:#e6e9ed; --muted:#aab3bd; --brand:#5fd0bb; --line:#2f3741; }
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); line-height:1.55; font-size:1rem; }
+    main { max-width:760px; margin:0 auto; padding:16px; }
+    article { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 20px; margin-bottom:16px; }
+    h1 { font-size:1.4rem; margin:.2em 0 .6em; }
+    h2 { font-size:1.1rem; margin:1.4em 0 .4em; }
+    .barra { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+    a { color:var(--brand); }
+    a:focus-visible, select:focus-visible { outline:3px solid var(--brand); outline-offset:2px; }
+    .nota { color:var(--muted); font-size:.9rem; }
+    select { padding:6px 8px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:1rem; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="barra">
+    <a href="./" data-i18n="priv.volver"></a>
+    <span><label for="selectorIdioma" data-i18n="idioma"></label> <select id="selectorIdioma" data-selector-idioma></select></span>
+  </div>
+
+  <article lang="es" data-idioma="es">
+    <h1>Aviso de privacidad del asistente del consultorio</h1>
+    <p>El consultorio que usa este asistente es el responsable de sus datos. El asistente es <strong>automático</strong> y solo atiende asuntos administrativos (citas, horarios, trámites de la ARS). En cualquier momento puede escribir <em>"hablar con una persona"</em>.</p>
+
+    <h2>Qué datos guardamos</h2>
+    <ul>
+      <li>Su nombre y su número de teléfono (con el número le identificamos).</li>
+      <li>Su ARS y número de afiliado, solo si los confirma después de enviar la foto del carnet.</li>
+      <li>Sus citas, su lugar en la lista de espera y los mensajes de la conversación.</li>
+      <li>Sus permisos para recibir avisos: categoría, fecha, canal y versión del texto que aceptó.</li>
+      <li>Los casos que el asistente pasa al personal, con su mensaje original.</li>
+    </ul>
+    <p><strong>No guardamos</strong> los audios de las notas de voz ni las fotos del carnet (solo el texto que se extrae), ni su cédula. El asistente no pide ni interpreta información clínica: si la menciona, su mensaje pasa al personal del consultorio.</p>
+
+    <h2>Para qué los usamos</h2>
+    <p>Para agendar y gestionar sus citas, enviarle los avisos que usted autorizó (recordatorios, seguimiento de trámites, turnos liberados) y pasar su caso al personal cuando hace falta. <strong>Nunca para publicidad.</strong> No vendemos sus datos. Solo los procesan los proveedores técnicos necesarios: Meta (modelos de IA y WhatsApp) para procesar los mensajes, y el servidor donde funciona el sistema.</p>
+
+    <h2>Cuánto tiempo</h2>
+    <ul>
+      <li>Conversaciones y mensajes de WhatsApp: 30 días.</li>
+      <li>Datos de carnets ya revisados: 30 días.</li>
+      <li>Bitácora de acciones (quién hizo qué y cuándo): 1 año, sin el texto de sus mensajes después de 30 días.</li>
+      <li>Permisos para avisos: mientras sea paciente, como prueba de que los dio o los retiró.</li>
+      <li>Citas: según las reglas del consultorio.</li>
+    </ul>
+
+    <h2>Sus derechos</h2>
+    <p>Según la Ley 172-13 de protección de datos personales, puede pedir <strong>acceso</strong> a sus datos, <strong>corregirlos</strong>, <strong>borrarlos</strong> u <strong>oponerse</strong> a su uso. Pídalo en la recepción o escriba "hablar con una persona": la secretaria puede entregarle una copia de sus datos o borrarlos. Para dejar de recibir avisos, escriba <strong>STOP</strong> en cualquier momento.</p>
+
+    <h2>Seguridad</h2>
+    <p>Las conexiones van cifradas (HTTPS). Al panel del personal solo se entra con usuario y clave, y los registros técnicos del sistema no llevan datos de pacientes.</p>
+    <p class="nota">Este aviso describe las medidas técnicas del sistema. No es asesoría legal: cada consultorio debe revisarlo con su asesor antes de usarlo.</p>
+  </article>
+
+  <article lang="en" data-idioma="en">
+    <h1>Privacy notice of the clinic assistant</h1>
+    <p>The clinic that uses this assistant is responsible for your data. The assistant is <strong>automated</strong> and only handles administrative matters (appointments, schedules, insurance paperwork). At any time you can write <em>"talk to a person"</em>.</p>
+
+    <h2>What we keep</h2>
+    <ul>
+      <li>Your name and phone number (your number is how we identify you).</li>
+      <li>Your health insurer and member number, only if you confirm them after sending a photo of your card.</li>
+      <li>Your appointments, your place on the waiting list and the messages of the conversation.</li>
+      <li>Your permissions to receive notices: category, date, channel and version of the text you accepted.</li>
+      <li>The cases the assistant passes to the staff, with your original message.</li>
+    </ul>
+    <p>We <strong>do not keep</strong> voice-note audio or card photos (only the text read from them), nor your national ID number. The assistant does not ask for or interpret clinical information: if you mention it, your message goes to the clinic staff.</p>
+
+    <h2>What we use it for</h2>
+    <p>To book and manage your appointments, send you the notices you allowed (reminders, paperwork follow-up, freed slots) and pass your case to the staff when needed. <strong>Never for advertising.</strong> We do not sell your data. Only the necessary technical providers process it: Meta (AI models and WhatsApp) to process the messages, and the server the system runs on.</p>
+
+    <h2>How long</h2>
+    <ul>
+      <li>Conversations and WhatsApp messages: 30 days.</li>
+      <li>Reviewed insurance card data: 30 days.</li>
+      <li>Audit log (who did what and when): 1 year, without the text of your messages after 30 days.</li>
+      <li>Notice permissions: while you are a patient, as proof that you gave or withdrew them.</li>
+      <li>Appointments: according to the clinic's rules.</li>
+    </ul>
+
+    <h2>Your rights</h2>
+    <p>Under Dominican Law 172-13 on personal data protection, you can ask to <strong>access</strong> your data, <strong>correct</strong> it, <strong>delete</strong> it or <strong>object</strong> to its use. Ask at the front desk or write "talk to a person": the receptionist can give you a copy of your data or delete it. To stop receiving notices, write <strong>STOP</strong> at any time.</p>
+
+    <h2>Security</h2>
+    <p>Connections are encrypted (HTTPS). The staff dashboard needs a username and password, and the system's technical logs carry no patient data.</p>
+    <p class="nota">This notice describes the system's technical measures. It is not legal advice: each clinic should review it with its advisor before using it.</p>
+  </article>
+
+  <article lang="ht">
+    <h1>Rezime an kreyòl</h1>
+    <p>Asistan sa a se yon asistan otomatik klinik la; li okipe sèlman randevou ak papye. Nou kenbe non w, nimewo telefòn ou, randevou w, mesaj konvèsasyon an ak pèmisyon w pou resevwa avi. Nou pa kenbe odyo nòt vokal yo ni foto kat asirans lan, ni nimewo kat idantite w. Nou pa janm voye piblisite.</p>
+    <p>Konvèsasyon yo efase apre 30 jou. Ou ka mande yon kopi done w oswa efase yo nan resepsyon an, oswa ekri "pale ak yon moun". Pou sispann resevwa avi, ekri <strong>STOP</strong>.</p>
+  </article>
+</main>
+<script>
+  function mostrarIdioma() {
+    document.querySelectorAll('article[data-idioma]').forEach(a => { a.hidden = a.dataset.idioma !== I18N.idioma; });
+  }
+  I18N.alCambiar(mostrarIdioma);
+  document.addEventListener('DOMContentLoaded', mostrarIdioma);
+</script>
+</body>
+</html>

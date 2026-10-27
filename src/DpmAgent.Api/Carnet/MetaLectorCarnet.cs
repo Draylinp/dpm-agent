@@ -96,7 +96,7 @@ public sealed class MetaLectorCarnet : ILectorCarnet
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogError("Lectura de carnet: Meta respondió {Status}: {Body}", (int)response.StatusCode, raw);
+            _logger.LogError("Lectura de carnet: Meta respondió {Status}: {Body}", (int)response.StatusCode, Seguridad.Privacidad.Enmascarar(raw));
             throw new HttpRequestException(
                 $"Meta Model API respondió {(int)response.StatusCode}.", null, response.StatusCode);
         }

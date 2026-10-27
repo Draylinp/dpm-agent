@@ -40,7 +40,8 @@ public static class ContextoUso
 
     /// <summary>Uso de una llamada con el propósito y la conversación actuales.</summary>
     public static UsoModelo Uso(string proveedor, string modelo, int entrada, int salida, int milisegundos) =>
-        new(proveedor, modelo, Proposito, entrada, salida, milisegundos, DateTimeOffset.UtcNow, ConsultorioId, SesionId);
+        new(proveedor, modelo, Proposito, entrada, salida, milisegundos, DateTimeOffset.UtcNow, ConsultorioId,
+            SesionId is null ? null : Seguridad.Privacidad.Seudonimo(SesionId));
 
     private static IDisposable Cambiar(Estado nuevo)
     {

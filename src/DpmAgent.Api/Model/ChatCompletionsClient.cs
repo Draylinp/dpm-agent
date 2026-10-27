@@ -67,7 +67,7 @@ public abstract class ChatCompletionsClient : IChatModel
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogError("{Proveedor} respondió {Status}: {Body}", Proveedor, (int)response.StatusCode, raw);
+            _logger.LogError("{Proveedor} respondió {Status}: {Body}", Proveedor, (int)response.StatusCode, Seguridad.Privacidad.Enmascarar(raw));
             throw new HttpRequestException($"{Proveedor} respondió {(int)response.StatusCode}.", null, response.StatusCode);
         }
 
