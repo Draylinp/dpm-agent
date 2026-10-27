@@ -16,7 +16,8 @@ services:
     env_file: .env
     environment:
       BaseDatos__Proveedor: Postgres
-      ConnectionStrings__Dpm: "Host=db;Port=5432;Database=dpm;Username=dpm;Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}"
+      # TLS hacia la base: en producción la app no arranca sin él.
+      ConnectionStrings__Dpm: "Host=db;Port=5432;Database=dpm;Username=dpm;Password=${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env};SSL Mode=Require"
       # Claves que cifran las cookies del panel: en un volumen para que sobrevivan a los reinicios.
       DataProtection__Ruta: /data/claves
     volumes:
@@ -28,12 +29,16 @@ services:
   db:
     image: postgres:16
     restart: unless-stopped
+    # Arranca con TLS y un certificado propio de esta instalación (docker/postgres/iniciar-con-tls.sh).
+    entrypoint: ["/bin/sh", "/usr/local/bin/iniciar-con-tls.sh"]
     environment:
       POSTGRES_DB: dpm
       POSTGRES_USER: dpm
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env}"
     volumes:
       - datos:/var/lib/postgresql/data
+      - certificados:/var/lib/postgresql/certs
+      - ./docker/postgres/iniciar-con-tls.sh:/usr/local/bin/iniciar-con-tls.sh:ro
     # Sin puerto publicado: solo la app llega a la base.
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dpm -d dpm"]
@@ -76,5 +81,6 @@ services:
 
 volumes:
   datos:
+  certificados:
   claves:
   modelos:

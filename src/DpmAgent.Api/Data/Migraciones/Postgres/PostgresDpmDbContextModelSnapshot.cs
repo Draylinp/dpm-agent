@@ -991,17 +991,21 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .HasColumnType("character varying(200)");
 
                     b.Property<string>("NumeroAfiliado")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("Telefono")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TelefonoHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConsultorioId", "Telefono");
+                    b.HasIndex("ConsultorioId", "TelefonoHash");
 
                     b.ToTable("Pacientes");
                 });
@@ -1116,6 +1120,22 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.HasIndex("ConsultorioId", "FechaUtc");
 
                     b.ToTable("UsosModelo", (string)null);
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.SecretoApp", b =>
+                {
+                    b.Property<string>("Nombre")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("ValorProtegido")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Nombre");
+
+                    b.ToTable("SecretosApp", (string)null);
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Seguimiento", b =>

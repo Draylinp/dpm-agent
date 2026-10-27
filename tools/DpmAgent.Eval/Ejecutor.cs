@@ -123,6 +123,8 @@ public sealed class Ejecutor
         s.Configure<PreciosOptions>(config.GetSection(PreciosOptions.SectionName));
 
         s.AddPersistencia(config);
+        // Cada caso tiene su base; el cifrado (y con él el modelo de EF) se comparte entre casos.
+        s.AddSingleton(CifradoCampos.SinContenedor);
         s.AddAgenda(config);
         s.Configure<TranscripcionOptions>(config.GetSection(TranscripcionOptions.SectionName));
         s.Configure<CarnetOptions>(config.GetSection(CarnetOptions.SectionName));

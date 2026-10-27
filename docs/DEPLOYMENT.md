@@ -47,7 +47,7 @@ az webapp config appsettings set -g $GROUP -n $APP --settings \
   WhatsApp__PhoneNumberId='<phone-number-id>'
 ```
 
-The PostgreSQL connection string looks like `Host=<pg>.postgres.database.azure.com;Database=dpm;Username=dpmadmin;Password=<password>;Ssl Mode=Require`.
+The PostgreSQL connection string looks like `Host=<pg>.postgres.database.azure.com;Database=dpm;Username=dpmadmin;Password=<password>;Ssl Mode=Require`. `Ssl Mode=Require` (or `VerifyFull`) is mandatory: in production the app does not start without TLS to the database. On App Service the Data Protection keys (which also encrypt patient phone and member numbers) are persisted by the platform; in a container, `DataProtection__Ruta` must point to a volume or the app does not start.
 
 For App Service to read Key Vault, enable the app's managed identity (`az webapp identity assign`) and give it the **Key Vault Secrets User** role on the vault.
 

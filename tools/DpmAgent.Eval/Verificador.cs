@@ -79,7 +79,8 @@ public static class Verificador
         await using var scope = sp.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<DpmDbContext>();
         var telefono = Telefono.Normalizar(caso.Telefono);
-        var paciente = await db.Pacientes.AsNoTracking().OrderBy(p => p.Id).FirstOrDefaultAsync(p => p.Telefono == telefono, ct);
+        var hashCaso = db.HashTelefono(telefono);
+        var paciente = await db.Pacientes.AsNoTracking().OrderBy(p => p.Id).FirstOrDefaultAsync(p => p.TelefonoHash == hashCaso, ct);
 
         if (e.IdiomaSesion is { } idiomaSesion)
         {
@@ -192,7 +193,7 @@ public static class Verificador
         if (e.PacientesEnTelefono is { } enTelefono)
         {
             var tel = Telefono.Normalizar(caso.Telefono);
-            var n = await db.Pacientes.CountAsync(p => p.Telefono == tel, ct);
+            var n = await db.Pacientes.CountAsync(p => p.TelefonoHash == hashCaso, ct);
             if (n != enTelefono)
                 fallos.Add($"Hay {n} pacientes con el teléfono del caso; se esperaban {enTelefono}.");
         }
@@ -207,7 +208,8 @@ public static class Verificador
         if (e.PacienteConTelefono is { } telefonoNuevo)
         {
             var normalizado = Telefono.Normalizar(telefonoNuevo);
-            if (!await db.Pacientes.AnyAsync(p => p.Telefono == normalizado, ct))
+            var hashNuevo = db.HashTelefono(normalizado);
+            if (!await db.Pacientes.AnyAsync(p => p.TelefonoHash == hashNuevo, ct))
                 fallos.Add($"No se registró el paciente con teléfono {telefonoNuevo}.");
         }
 

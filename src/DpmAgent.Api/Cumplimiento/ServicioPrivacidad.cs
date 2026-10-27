@@ -22,7 +22,7 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
         if (p is null)
             return null;
 
-        var familia = await db.Pacientes.AsNoTracking().Where(x => x.Telefono == p.Telefono && x.Id != pacienteId)
+        var familia = await db.Pacientes.AsNoTracking().Where(x => x.TelefonoHash == p.TelefonoHash && x.Id != pacienteId)
             .OrderBy(x => x.Id).Select(x => new { x.Id, x.Nombre }).ToListAsync(ct);
         var sesiones = await SesionesAsync(pacienteId, p.Telefono, familia.Count > 0, ct);
         var conversaciones = await db.Conversaciones.AsNoTracking().Where(c => sesiones.Contains(c.SesionId))
@@ -124,7 +124,7 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
         var internacional = Telefono.Internacional(telefono) ?? telefono;
         // Si el número también gestiona a otros pacientes (una familia), lo que es del número (conversaciones de ese
         // teléfono, mensajes del canal) también es de ellos: se borra solo lo que es de este paciente.
-        var compartido = await db.Pacientes.AnyAsync(x => x.Telefono == telefono && x.Id != pacienteId, ct);
+        var compartido = await db.Pacientes.AnyAsync(x => x.TelefonoHash == p.TelefonoHash && x.Id != pacienteId, ct);
         var sesiones = await SesionesAsync(pacienteId, telefono, compartido, ct);
         var idPaciente = IdsDpm.Paciente(pacienteId);
         var idsCitas = await db.Citas.Where(c => c.PacienteId == pacienteId).Select(c => c.Id).ToListAsync(ct);

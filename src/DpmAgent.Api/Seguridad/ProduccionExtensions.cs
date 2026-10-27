@@ -119,8 +119,13 @@ public static class ProduccionExtensions
 
         // Las cookies del panel se cifran con estas claves: deben sobrevivir reinicios y ser las mismas
         // en todas las instancias. App Service las guarda solo; en contenedores, monte un volumen.
+        // También cifran el teléfono y el afiliado de los pacientes: si se pierden, esos datos no se pueden leer.
+        // Por eso en producción la app no arranca sin llaves persistentes.
         if (config["DataProtection:Ruta"] is { Length: > 0 } ruta)
             services.AddDataProtection().SetApplicationName("dpm-agent").PersistKeysToFileSystem(new DirectoryInfo(ruta));
+        else if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing") && !EnAppService())
+            throw new InvalidOperationException(
+                "Defina DataProtection__Ruta con una carpeta persistente (un volumen): ahí se guardan las llaves que cifran los datos de los pacientes. Ver docs/SECURITY-ARCHITECTURE.md.");
 
         services.Configure<RetencionOptions>(config.GetSection(RetencionOptions.SectionName));
         services.AddScoped<ServicioRetencion>();
@@ -171,6 +176,9 @@ public static class ProduccionExtensions
         app.UseRateLimiter();
         return app;
     }
+
+    /// <summary>Azure App Service guarda las llaves de Data Protection por su cuenta en una carpeta persistente.</summary>
+    private static bool EnAppService() => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME"));
 
     public static WebApplication MapSalud(this WebApplication app)
     {

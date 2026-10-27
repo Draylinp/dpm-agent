@@ -26,13 +26,16 @@ public static class PersistenciaExtensions
     /// Registra el gateway del consultorio y el historial de conversaciones según <c>BaseDatos:Proveedor</c>.
     /// La cadena de conexión se lee de <c>ConnectionStrings:Dpm</c> (en la nube, por variable de entorno).
     /// </summary>
-    public static IServiceCollection AddPersistencia(this IServiceCollection services, IConfiguration config)
+    /// <param name="produccion">En producción, la conexión a PostgreSQL debe exigir TLS o la app no arranca.</param>
+    public static IServiceCollection AddPersistencia(this IServiceCollection services, IConfiguration config, bool produccion = false)
     {
         var opciones = config.GetSection(BaseDatosOptions.SectionName).Get<BaseDatosOptions>() ?? new BaseDatosOptions();
         services.AddSingleton(opciones);
 
         var proveedor = opciones.Proveedor.Trim().ToLowerInvariant();
         var conexion = config.GetConnectionString("Dpm");
+        services.AddDataProtection();
+        services.AddSingleton<CifradoCampos>();
         services.AddScoped(_ => new ConsultorioDelAmbito(opciones.ConsultorioId));
         services.AddScoped<IConsultorioActual>(sp => sp.GetRequiredService<ConsultorioDelAmbito>());
 
@@ -55,6 +58,8 @@ public static class PersistenciaExtensions
             case "postgres":
                 if (string.IsNullOrWhiteSpace(conexion))
                     throw new InvalidOperationException("Falta ConnectionStrings:Dpm para PostgreSQL (variable ConnectionStrings__Dpm).");
+                if (produccion)
+                    ExigirTls(conexion);
                 services.AddDbContext<PostgresDpmDbContext>(o => o.UseNpgsql(conexion));
                 services.AddScoped<DpmDbContext>(sp => sp.GetRequiredService<PostgresDpmDbContext>());
                 break;
@@ -71,6 +76,15 @@ public static class PersistenciaExtensions
         return services;
     }
 
+    /// <summary>Los datos de pacientes no viajan en claro: SSL Mode debe ser Require, VerifyCA o VerifyFull.</summary>
+    public static void ExigirTls(string conexion)
+    {
+        var modo = new Npgsql.NpgsqlConnectionStringBuilder(conexion).SslMode;
+        if (modo is not (Npgsql.SslMode.Require or Npgsql.SslMode.VerifyCA or Npgsql.SslMode.VerifyFull))
+            throw new InvalidOperationException(
+                $"La conexión a PostgreSQL debe exigir TLS en producción (SSL Mode={modo}). Agregue \"SSL Mode=Require\" (o VerifyFull) a ConnectionStrings__Dpm.");
+    }
+
     /// <summary>Aplica las migraciones pendientes y siembra los datos de demo, según la configuración.</summary>
     public static async Task InicializarBaseDatosAsync(this IServiceProvider services, CancellationToken ct = default)
     {
@@ -82,6 +96,12 @@ public static class PersistenciaExtensions
 
         if (opciones.MigrarAlIniciar)
             await db.Database.MigrateAsync(ct);
+
+        // Llave del HMAC del teléfono y cifrado de los pacientes guardados antes de esta versión.
+        await db.Cifrado.InicializarAsync(db, ct);
+        var cifrados = await CifradoCampos.CifrarExistentesAsync(db, ct);
+        if (cifrados > 0)
+            scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("BaseDatos").LogInformation("Se cifraron {N} pacientes existentes.", cifrados);
 
         if (opciones.SembrarDatosDemo)
             await DatosDemo.SembrarAsync(db, scope.ServiceProvider.GetRequiredService<TimeProvider>(), ct);

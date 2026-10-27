@@ -13,12 +13,46 @@ public abstract class DpmDbContext : DbContext
 {
     private readonly int _consultorioId;
 
-    protected DpmDbContext(DbContextOptions options, IConsultorioActual consultorio) : base(options)
+    protected DpmDbContext(DbContextOptions options, IConsultorioActual consultorio, CifradoCampos? cifrado) : base(options)
     {
         _consultorioId = consultorio.Id;
+        Cifrado = cifrado ?? CifradoCampos.SinContenedor;
     }
 
     public int ConsultorioId => _consultorioId;
+
+    /// <summary>Cifrado del teléfono y el afiliado del paciente (uno por aplicación; el modelo se arma con él).</summary>
+    public CifradoCampos Cifrado { get; }
+
+    /// <summary>HMAC del teléfono para buscar pacientes: <c>Pacientes.Where(p => p.TelefonoHash == db.HashTelefono(tel))</c>.</summary>
+    public string? HashTelefono(string? telefono) => Cifrado.HashTelefono(telefono);
+
+    public DbSet<SecretoApp> SecretosApp => Set<SecretoApp>();
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
+        optionsBuilder.ReplaceService<Microsoft.EntityFrameworkCore.Infrastructure.IModelCacheKeyFactory, ClaveModeloPorCifrado>();
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        CalcularHashes();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        CalcularHashes();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>El HMAC del teléfono siempre corresponde al teléfono guardado.</summary>
+    private void CalcularHashes()
+    {
+        foreach (var e in ChangeTracker.Entries<Paciente>())
+        {
+            if (e.State is EntityState.Added or EntityState.Modified)
+                e.Entity.TelefonoHash = Cifrado.HashTelefono(e.Entity.Telefono);
+        }
+    }
 
     public DbSet<Consultorio> Consultorios => Set<Consultorio>();
 
@@ -112,6 +146,14 @@ public abstract class DpmDbContext : DbContext
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
 
+        b.Entity<SecretoApp>(e =>
+        {
+            e.ToTable("SecretosApp");
+            e.HasKey(x => x.Nombre);
+            e.Property(x => x.Nombre).HasMaxLength(60);
+            e.Property(x => x.ValorProtegido).HasMaxLength(2000);
+        });
+
         b.Entity<AccesoDatos>(e =>
         {
             e.ToTable("AccesosDatos");
@@ -125,11 +167,14 @@ public abstract class DpmDbContext : DbContext
         b.Entity<Paciente>(e =>
         {
             e.Property(x => x.Nombre).HasMaxLength(200);
-            e.Property(x => x.Telefono).HasMaxLength(20);
+            // Cifrados en la base; en memoria, en claro.
+            var cifrado = new ValueConverter<string?, string?>(v => Cifrado.Proteger(v), v => Cifrado.Desproteger(v));
+            e.Property(x => x.Telefono).HasMaxLength(500).HasConversion(cifrado!);
+            e.Property(x => x.NumeroAfiliado).HasMaxLength(500).HasConversion(cifrado);
+            e.Property(x => x.TelefonoHash).HasMaxLength(64);
             e.Property(x => x.Ars).HasMaxLength(100);
-            e.Property(x => x.NumeroAfiliado).HasMaxLength(50);
             e.Property(x => x.Idioma).HasMaxLength(10);
-            e.HasIndex(x => new { x.ConsultorioId, x.Telefono });
+            e.HasIndex(x => new { x.ConsultorioId, x.TelefonoHash });
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
@@ -392,8 +437,18 @@ public abstract class DpmDbContext : DbContext
         v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
 }
 
-public sealed class SqliteDpmDbContext(DbContextOptions<SqliteDpmDbContext> options, IConsultorioActual consultorio)
-    : DpmDbContext(options, consultorio);
+public sealed class SqliteDpmDbContext(DbContextOptions<SqliteDpmDbContext> options, IConsultorioActual consultorio, CifradoCampos? cifrado = null)
+    : DpmDbContext(options, consultorio, cifrado);
 
-public sealed class PostgresDpmDbContext(DbContextOptions<PostgresDpmDbContext> options, IConsultorioActual consultorio)
-    : DpmDbContext(options, consultorio);
+public sealed class PostgresDpmDbContext(DbContextOptions<PostgresDpmDbContext> options, IConsultorioActual consultorio, CifradoCampos? cifrado = null)
+    : DpmDbContext(options, consultorio, cifrado);
+
+/// <summary>
+/// El modelo usa el <see cref="CifradoCampos"/> de su contexto en los conversores, así que se arma uno por instancia de
+/// cifrado (una por aplicación) en vez de uno por tipo de contexto.
+/// </summary>
+public sealed class ClaveModeloPorCifrado : Microsoft.EntityFrameworkCore.Infrastructure.IModelCacheKeyFactory
+{
+    public object Create(DbContext context, bool designTime) =>
+        (context.GetType(), (context as DpmDbContext)?.Cifrado, designTime);
+}

@@ -38,8 +38,11 @@ public static class CumplimientoEndpoints
                 .Take(200)
                 .ToListAsync(ct);
             var telefonos = pendientes.Select(m => m.Destino).Distinct().ToList();
-            var nombres = await db.Pacientes.AsNoTracking().Where(p => telefonos.Contains(p.Telefono))
-                .ToDictionaryAsync(p => p.Telefono, p => p.Nombre, ct);
+            var hashes = telefonos.Select(db.HashTelefono).OfType<string>().ToList();
+            // Con una familia en el mismo número, el nombre del primero (el aviso lleva el nombre del paciente).
+            var nombres = (await db.Pacientes.AsNoTracking().Where(p => p.TelefonoHash != null && hashes.Contains(p.TelefonoHash))
+                    .OrderBy(p => p.Id).Select(p => new { p.Telefono, p.Nombre }).ToListAsync(ct))
+                .GroupBy(p => p.Telefono).ToDictionary(g => g.Key, g => g.First().Nombre);
 
             return Results.Ok(pendientes.Select(m => new LlamadaPendiente(
                 m.Id, m.Tipo, nombres.GetValueOrDefault(m.Destino, "?"), m.Destino, m.Texto, m.Idioma,
@@ -62,7 +65,8 @@ public static class CumplimientoEndpoints
             var normalizado = Telefono.Normalizar(telefono);
             if (normalizado is null)
                 return Results.BadRequest(new { error = "Indique un teléfono válido." });
-            var p = await db.Pacientes.AsNoTracking().FirstOrDefaultAsync(x => x.Telefono == normalizado, ct);
+            var hash = db.HashTelefono(normalizado);
+            var p = await db.Pacientes.AsNoTracking().FirstOrDefaultAsync(x => x.TelefonoHash == hash, ct);
             if (p is null)
                 return Results.NotFound();
             await Panel.RegistroAccesos.RegistrarAsync(db, user, Panel.RegistroAccesos.VerFicha, [p.Id], clock, ct);

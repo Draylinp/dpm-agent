@@ -950,17 +950,21 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<string>("NumeroAfiliado")
-                        .HasMaxLength(50)
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Telefono")
                         .IsRequired()
-                        .HasMaxLength(20)
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TelefonoHash")
+                        .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ConsultorioId", "Telefono");
+                    b.HasIndex("ConsultorioId", "TelefonoHash");
 
                     b.ToTable("Pacientes");
                 });
@@ -1071,6 +1075,22 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.HasIndex("ConsultorioId", "FechaUtc");
 
                     b.ToTable("UsosModelo", (string)null);
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.SecretoApp", b =>
+                {
+                    b.Property<string>("Nombre")
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ValorProtegido")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Nombre");
+
+                    b.ToTable("SecretosApp", (string)null);
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Seguimiento", b =>

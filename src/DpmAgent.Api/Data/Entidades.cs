@@ -95,6 +95,14 @@ public sealed class UsuarioPanel
     public long? TotpUltimoPaso { get; set; }
 }
 
+/// <summary>Secretos de la aplicación guardados en la base, protegidos con la Data Protection API (la llave del HMAC).</summary>
+public sealed class SecretoApp
+{
+    public required string Nombre { get; set; }
+
+    public required string ValorProtegido { get; set; }
+}
+
 /// <summary>Quién vio, exportó o borró los datos de un paciente. Solo ids y acción, sin datos personales.</summary>
 public sealed class AccesoDatos
 {
@@ -147,8 +155,11 @@ public sealed class Paciente
 
     public required string Nombre { get; set; }
 
-    /// <summary>Normalizado a 10 dígitos con <see cref="Dpm.Telefono.Normalizar"/>.</summary>
+    /// <summary>Normalizado a 10 dígitos con <see cref="Dpm.Telefono.Normalizar"/>. En la base va cifrado (<see cref="CifradoCampos"/>).</summary>
     public required string Telefono { get; set; }
+
+    /// <summary>HMAC-SHA256 del teléfono normalizado: permite buscar por teléfono sin guardarlo en claro. Lo calcula SaveChanges.</summary>
+    public string? TelefonoHash { get; set; }
 
     public string? Ars { get; set; }
 

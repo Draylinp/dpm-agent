@@ -37,6 +37,9 @@ public sealed class AppDePrueba : IDisposable
             {
                 s.RemoveAll<IChatModel>();
                 s.AddSingleton<IChatModel>(Modelo);
+                // Un solo cifrado de campos para todas las pruebas: así comparten el modelo de EF (se arma uno por cifrado).
+                s.RemoveAll<Api.Data.CifradoCampos>();
+                s.AddSingleton(Api.Data.CifradoCampos.SinContenedor);
                 servicios?.Invoke(s);
             });
         });

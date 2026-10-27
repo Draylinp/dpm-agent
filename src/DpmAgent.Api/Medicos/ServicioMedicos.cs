@@ -64,7 +64,8 @@ public sealed class ServicioMedicos(
         var id = IdsDpm.Leer(medicoId, "MED") ?? throw new ArgumentException($"No existe el médico {medicoId}.");
         var medico = await db.Medicos.FirstOrDefaultAsync(m => m.Id == id, ct) ?? throw new ArgumentException($"No existe el médico {medicoId}.");
         var normalizado = Telefono.Normalizar(telefono) ?? throw new ArgumentException("El teléfono no es válido.");
-        if (await db.Pacientes.AnyAsync(p => p.Telefono == normalizado, ct) || await db.Medicos.AnyAsync(m => m.Id != id && m.Telefono == normalizado, ct))
+        var hash = db.HashTelefono(normalizado);
+        if (await db.Pacientes.AnyAsync(p => p.TelefonoHash == hash, ct) || await db.Medicos.AnyAsync(m => m.Id != id && m.Telefono == normalizado, ct))
             throw new ArgumentException("Ese teléfono ya pertenece a un paciente u otro médico.");
 
         var codigo = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("000000");

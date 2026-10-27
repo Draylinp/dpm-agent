@@ -143,7 +143,7 @@ public class DemoTests
 
         var (escalamientos, pacientes, citas, conversaciones, medicos) = await ConDb(app, async db => (
             await db.Escalamientos.CountAsync(),
-            await db.Pacientes.Select(p => p.Telefono).OrderBy(t => t).ToListAsync(),
+            (await db.Pacientes.Select(p => p.Telefono).ToListAsync()).Order().ToList(), // cifrado en la base: se ordena en memoria
             await db.Citas.CountAsync(),
             await db.Conversaciones.Select(c => c.SesionId).OrderBy(s => s).ToListAsync(),
             await db.Medicos.CountAsync()));

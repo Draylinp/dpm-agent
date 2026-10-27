@@ -28,7 +28,8 @@ builder.Services.AddScoped<ProcesadorNotaVoz>();
 builder.Services.AddScoped<ProcesadorCarnet>();
 
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddPersistencia(builder.Configuration);
+builder.Services.AddPersistencia(builder.Configuration,
+    produccion: !builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing"));
 builder.Services.AddAgenda(builder.Configuration);
 builder.Services.AddWhatsApp(builder.Configuration);
 builder.Services.AddPanel(builder.Configuration, builder.Environment);

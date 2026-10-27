@@ -46,7 +46,13 @@ public sealed record ArchivoSubido(byte[]? Datos, IResult? Error)
         IFormCollection form;
         try
         {
-            form = await http.ReadFormAsync(new FormOptions { MultipartBodyLengthLimit = maxCuerpo }, ct);
+            // Todo en memoria: con el umbral igual al límite, ASP.NET no escribe el archivo en un temporal en disco.
+            form = await http.ReadFormAsync(new FormOptions
+            {
+                MultipartBodyLengthLimit = maxCuerpo,
+                MemoryBufferThreshold = (int)Math.Min(maxCuerpo, int.MaxValue),
+                BufferBodyLengthLimit = maxCuerpo,
+            }, ct);
         }
         catch (Exception ex) when (ex is InvalidDataException or BadHttpRequestException)
         {

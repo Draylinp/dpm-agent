@@ -34,3 +34,41 @@ CI checks it twice: `tests/DpmAgent.Tests/SeguridadNavegadorTests.cs` asserts th
 - **Data access log**: who viewed a patient's record, exported or deleted their data: only the staff username, the action, the patient id and the time, never personal data. Only administrators see it (dashboard → Data access log).
 
 Tests: `tests/DpmAgent.Tests/SesionesPanelTests.cs`.
+
+## Data at rest
+
+- **Field-level encryption.** The patient's phone number and insurance member number are encrypted in the database with the ASP.NET Core Data Protection API (`Data/CifradoCampos.cs`, an EF Core value converter): the column holds `dpm1:` plus the protected text, never the number. Because protected text changes on every write, lookups by phone use a separate `TelefonoHash` column: an HMAC-SHA256 of the normalized number. The HMAC key is random, stored in the `SecretosApp` table and itself protected with Data Protection. Patients stored before this version are encrypted on startup, after the migrations (`CifrarExistentesAsync`).
+- **The keys must survive restarts.** The same Data Protection keys encrypt the dashboard cookie, the TOTP secrets, the patient fields and the HMAC key: losing them means those fields can no longer be read. In production the app refuses to start unless the keys are persisted: `DataProtection__Ruta` pointing to a volume (Docker Compose does it), or Azure App Service, which keeps them on its own. Back up that folder with the database.
+- **What stays in clear, and why.** Channel tables (conversations, outgoing and incoming WhatsApp messages, consent records) keep the phone number the message is sent to: the WhatsApp Cloud API needs it, and those rows are deleted after 30 days (`Retencion__*`). Names stay in clear because the receptionist searches and reads them every day.
+
+## Data in transit
+
+- **PostgreSQL over TLS.** In production the app does not start if `ConnectionStrings__Dpm` does not require TLS (`SSL Mode=Require`, `VerifyCA` or `VerifyFull`). Azure Database for PostgreSQL enforces TLS. The Docker Compose database starts with TLS and a certificate generated for each installation on first start (`docker/postgres/iniciar-con-tls.sh`); CI checks a real TLS connection to it.
+- **HTTPS** with HSTS outside development; every external API is called over HTTPS.
+- **Audio and photos** are read into memory with a size limit (the multipart buffer threshold equals the limit, so ASP.NET never writes them to a temporary file), sent to the model and dropped; no table, file or log keeps them. A test uploads a 320 KB voice note and card photo, also with the transcription service failing, and checks that no temporary file appeared and that their bytes are in no table.
+
+## What leaves the server, and why
+
+```mermaid
+flowchart LR
+    P["Patient<br/>WhatsApp · web chat"] -->|text, voice note, card photo| A["DPM Agent<br/>(clinic's server)"]
+    A -->|"conversation text, tool results<br/>(name, appointment times), no phone"| M["Meta Model API<br/>Muse Spark"]
+    A -->|"voice note audio (in memory)"| T["Meta Model API<br/>Muse Voice Transcribe"]
+    A -->|"card photo (in memory)"| M
+    A -->|"same as Muse Spark, only if configured"| G["Muse Glimmer on Modal<br/>(clinic's own account) or local GPU"]
+    A -->|"reply text to check"| F["Output filter<br/>Llama Guard or the model"]
+    A -->|"phone number, message text,<br/>template parameters"| W["WhatsApp Cloud API"]
+    W --> P
+    A --> D[("Database<br/>phone and member number encrypted")]
+```
+
+| Service | What it receives | Why | What it does not receive |
+|---|---|---|---|
+| Meta Model API, Muse Spark | The conversation (patient and agent messages), tool results (patient name, appointment times, doctor), the system prompt | To understand the request and decide which tool to call | The phone number (the server identifies the patient; in the doctor's channel the model only sees the last 4 digits to tell namesakes apart), the member number, data of other patients |
+| Meta Model API, Muse Voice Transcribe | The voice note audio | To transcribe it | Who sent it |
+| Meta Model API, card reading | The card photo | To read name, insurer and member number for the patient to confirm | Anything else of the patient |
+| Muse Glimmer (Modal, Baseten or the clinic's GPU) | The same as Muse Spark, only if configured as fallback or local model | Availability, or keeping everything in the clinic | Same exclusions; on the clinic's GPU nothing leaves the clinic |
+| Output filter (Llama Guard or the configured model) | The agent's reply before it is sent | To block medical advice or off-topic content | The patient's identity |
+| WhatsApp Cloud API | The patient's phone number, the message text, template name and parameters | To deliver the message | Anything not in the message |
+
+API keys go only in environment variables or Key Vault references (see [DEPLOYMENT.md](DEPLOYMENT.md)); the logs never contain phone numbers or patient text (tested).

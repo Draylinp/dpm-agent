@@ -35,8 +35,9 @@ public sealed class ServicioContacto(DpmDbContext db, Bitacora bitacora, TimePro
         if (ultimos.Count < umbral || ultimos.Any(e => e != "fallido"))
             return false;
 
+        var hash = db.HashTelefono(destino);
         var pacientes = await db.Pacientes.IgnoreQueryFilters()
-            .Where(p => p.ConsultorioId == consultorioId && p.Telefono == destino && p.Activo && p.NoLocalizableUtc == null).ToListAsync(ct);
+            .Where(p => p.ConsultorioId == consultorioId && p.TelefonoHash == hash && p.Activo && p.NoLocalizableUtc == null).ToListAsync(ct);
         if (pacientes.Count == 0)
             return false;
         foreach (var p in pacientes)
@@ -58,8 +59,8 @@ public sealed class ServicioContacto(DpmDbContext db, Bitacora bitacora, TimePro
     /// <summary>El paciente volvió a escribir desde su número: es localizable otra vez.</summary>
     public async Task MarcarLocalizableAsync(string telefono, CancellationToken ct)
     {
-        var normalizado = Telefono.Normalizar(telefono);
-        await db.Pacientes.Where(p => p.Telefono == normalizado && p.NoLocalizableUtc != null)
+        var hash = db.HashTelefono(telefono);
+        await db.Pacientes.Where(p => p.TelefonoHash == hash && p.NoLocalizableUtc != null)
             .ExecuteUpdateAsync(s => s.SetProperty(p => p.NoLocalizableUtc, (DateTime?)null), ct);
     }
 

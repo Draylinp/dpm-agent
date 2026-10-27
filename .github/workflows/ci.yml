@@ -45,6 +45,21 @@ jobs:
           POSTGRES_PASSWORD=solo-ci docker compose --profile glimmer config -q
           # La imagen de vLLM del perfil glimmer debe existir (sin descargarla).
           docker manifest inspect "$(grep '^VLLM_IMAGEN=' .env.example | cut -d= -f2)" > /dev/null
+      - name: PostgreSQL de Docker Compose con TLS
+        env:
+          POSTGRES_PASSWORD: solo-ci
+        run: |
+          docker compose up -d db
+          # Conexión real por TCP exigiendo TLS (como la app con SSL Mode=Require); espera a que termine de iniciar.
+          ok=""
+          for i in $(seq 1 60); do
+            if docker compose exec -T -e PGPASSWORD=solo-ci -e PGSSLMODE=require db \
+                 psql -h localhost -U dpm -d dpm -tAc 'SELECT ssl FROM pg_stat_ssl WHERE pid = pg_backend_pid()' 2>/dev/null | grep -q t; then ok=1; break; fi
+            sleep 2
+          done
+          docker compose logs db | tail -20
+          docker compose down -v
+          test -n "$ok"
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -53,6 +68,8 @@ jobs:
           BaseDatos__Proveedor: Memoria
           Demo__Habilitado: "true"
           Panel__ClaveInicial: clave-solo-ci-123
+          # Producción exige llaves de Data Protection persistentes (cifran datos de pacientes).
+          DataProtection__Ruta: ${{ runner.temp }}/claves
           ASPNETCORE_URLS: http://127.0.0.1:5199
         run: |
           cd tests/accesibilidad

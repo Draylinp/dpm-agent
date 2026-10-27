@@ -47,7 +47,7 @@ az webapp config appsettings set -g $GRUPO -n $APP --settings \
   WhatsApp__PhoneNumberId='<phone-number-id>'
 ```
 
-La cadena de PostgreSQL tiene la forma `Host=<pg>.postgres.database.azure.com;Database=dpm;Username=dpmadmin;Password=<clave>;Ssl Mode=Require`.
+La cadena de PostgreSQL tiene la forma `Host=<pg>.postgres.database.azure.com;Database=dpm;Username=dpmadmin;Password=<clave>;Ssl Mode=Require`. `Ssl Mode=Require` (o `VerifyFull`) es obligatorio: en producción la app no arranca sin TLS hacia la base. En App Service la plataforma guarda las llaves de Data Protection (que también cifran el teléfono y el afiliado de los pacientes); en un contenedor, `DataProtection__Ruta` debe apuntar a un volumen o la app no arranca.
 
 Para que App Service lea Key Vault: activa la identidad administrada de la app (`az webapp identity assign`) y dale el rol **Key Vault Secrets User** sobre el vault.
 

@@ -62,8 +62,9 @@ public static class DatosDemo
 
         // María y José dieron su permiso para avisos en la recepción (ficticio): así la demo muestra
         // el recordatorio y la oferta de la lista de espera. Otros pacientes nuevos empiezan sin permiso.
+        var (hashMaria, hashJose) = (db.HashTelefono(TelefonoMaria), db.HashTelefono(TelefonoJose));
         var ids = await db.Pacientes.IgnoreQueryFilters()
-            .Where(p => p.ConsultorioId == consultorioId && (p.Telefono == TelefonoMaria || p.Telefono == TelefonoJose))
+            .Where(p => p.ConsultorioId == consultorioId && (p.TelefonoHash == hashMaria || p.TelefonoHash == hashJose))
             .Select(p => new { p.Id, p.Telefono })
             .ToListAsync(ct);
         foreach (var p in ids)

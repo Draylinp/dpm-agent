@@ -50,7 +50,8 @@ public static class CambiosAgendaEndpoints
         {
             if (Telefono.Normalizar(telefono) is not { } normalizado)
                 return Results.BadRequest(new { error = "Indique un teléfono válido." });
-            var familia = await db.Pacientes.AsNoTracking().Where(p => p.Telefono == normalizado).OrderBy(p => p.Id).ToListAsync(ct);
+            var hash = db.HashTelefono(normalizado);
+            var familia = await db.Pacientes.AsNoTracking().Where(p => p.TelefonoHash == hash).OrderBy(p => p.Id).ToListAsync(ct);
             var ausencias = await ServicioReprogramacion.AusenciasAsync(db, familia.Select(p => p.Id), ct);
             await RegistroAccesos.RegistrarAsync(db, user, RegistroAccesos.VerFicha, familia.Select(p => p.Id), clock, ct);
             var lista = new List<object>();
