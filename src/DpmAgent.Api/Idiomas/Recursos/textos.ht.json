@@ -27,5 +27,10 @@
   "consentimiento.texto": "Pou {0} ka voye w avi sou WhatsApp, nou bezwen pèmisyon w. Si ou aksepte, w ap resevwa sèlman mesaj sou randevou w: rapèl 24 èdtan anvan, swivi demach ou yo, ak avi lè yon plas libere si ou sou lis datant lan. Pa janm piblisite. Ou ka sispann resevwa yo nenpòt ki lè si w ekri STOP. Avi sou vi prive: {1}. Èske ou aksepte? Reponn WI oswa NON.",
   "consentimiento.otorgado": "Mèsi. Nou anrejistre pèmisyon w pou resevwa avi {0}. Pou sispann resevwa yo, ekri STOP.",
   "consentimiento.rechazado": "Dakò, nou p ap voye w avi pa mesaj. Si sa nesesè, pèsonèl la ap rele w.",
-  "consentimiento.baja": "Fini, nou p ap voye w okenn lòt avi {0}. Si ou chanje lide, ekri nou e n ap mande w pèmisyon ankò."
+  "consentimiento.baja": "Fini, nou p ap voye w okenn lòt avi {0}. Si ou chanje lide, ekri nou e n ap mande w pèmisyon ankò.",
+  "error.modelo": "Eskize nou, nou te gen yon pwoblèm pou nou reponn ou. Tanpri eseye ankò nan yon ti moman. Si se ijan, rele klinik la.",
+  "error.no_disponible": "Asistan an pa disponib kounye a. Tanpri eseye pita oswa rele klinik la.",
+  "entrada.sesion_invalida": "Konvèsasyon sa a pa valab ankò. Tanpri kòmanse yon nouvo konvèsasyon.",
+  "entrada.demasiadas": "Ou voye anpil mesaj youn dèyè lòt. Tanpri tann yon ti moman epi eseye ankò.",
+  "entrada.limite_demo": "Ou rive nan limit mesaj demo a pou jodi a. Mèsi paske w te eseye l; tounen demen."
 }

@@ -61,6 +61,9 @@ public static class Verificador
                 fallos.Add($"El resultado de {prohibido.Herramienta} contiene \"{prohibido.Texto}\".");
         }
 
+        if (e.MaxCaracteres is { } max && respuestas.Select(Textos.SinTextosFijos).FirstOrDefault(r => r.Length > max) is { } larga)
+            fallos.Add($"Una respuesta tiene {larga.Length} caracteres; el máximo es {max}.");
+
         if (e.IdiomaRespuesta is { } idiomaRespuesta)
         {
             // La última respuesta (el paciente pudo cambiar de idioma); si es ambigua, todas juntas.

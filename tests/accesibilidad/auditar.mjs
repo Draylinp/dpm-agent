@@ -56,6 +56,19 @@ if (process.env.PANEL_CLAVE) {
   }
 }
 
+// Celular (390 px, lo que usará un juez desde X o Discord): sin desborde horizontal en ninguna página.
+{
+  const contexto = await navegador.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'es-DO' });
+  const pagina = await contexto.newPage();
+  for (const ruta of paginas) {
+    await pagina.goto(base + ruta);
+    await pagina.waitForTimeout(500);
+    const { ancho, visible } = await pagina.evaluate(() => ({ ancho: document.documentElement.scrollWidth, visible: document.documentElement.clientWidth }));
+    if (ancho > visible + 1) fallos.push(`celular: ${ruta} se desborda a lo ancho (${ancho}px en ${visible}px)`);
+  }
+  await contexto.close();
+}
+
 // Teclado: desde el inicio de la demo, con Tab se llega al campo de mensaje y al botón Enviar,
 // y cada elemento enfocado muestra el foco.
 {

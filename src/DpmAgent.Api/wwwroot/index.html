@@ -15,9 +15,9 @@
     body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); }
     .banner { background:var(--aviso); border-bottom:1px solid var(--aviso-borde); padding:8px 16px; font-size:0.875rem; display:flex; gap:12px; align-items:center; justify-content:center; flex-wrap:wrap; }
     .barra { max-width:1100px; margin:0 auto; padding:12px 16px 0; display:flex; justify-content:flex-end; gap:8px; align-items:center; font-size:0.8125rem; color:var(--muted); }
-    main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:1fr; }
-    @media (min-width:900px) { main { grid-template-columns:3fr 2fr; } }
-    section { background:var(--card); border:1px solid var(--line); border-radius:12px; display:flex; flex-direction:column; min-height:0; }
+    main { max-width:1100px; margin:0 auto; padding:16px; display:grid; gap:16px; grid-template-columns:minmax(0,1fr); }
+    @media (min-width:900px) { main { grid-template-columns:minmax(0,3fr) minmax(0,2fr); } }
+    section { background:var(--card); border:1px solid var(--line); border-radius:12px; display:flex; flex-direction:column; min-height:0; min-width:0; }
     header { padding:12px 16px; border-bottom:1px solid var(--line); }
     header h1, header h2 { margin:0; font-size:1rem; }
     header p { margin:4px 0 0; color:var(--muted); font-size:0.8125rem; }
@@ -30,6 +30,7 @@
     .msg { max-width:85%; padding:8px 12px; border-radius:10px; white-space:pre-wrap; line-height:1.4; font-size:0.875rem; }
     .user { align-self:flex-end; background:var(--me); }
     .bot { align-self:flex-start; background:var(--bg); }
+    .escribiendo { color:var(--muted); font-style:italic; }
     .err { align-self:center; color:var(--err); font-size:0.8125rem; }
     .canal { display:flex; gap:8px; align-items:center; padding:8px 16px; border-bottom:1px solid var(--line); font-size:0.8125rem; color:var(--muted); flex-wrap:wrap; }
     .canal input { flex:0 1 160px; padding:6px 8px; }
@@ -50,6 +51,8 @@
     .step { border-left:3px solid var(--brand); padding:4px 8px; margin-bottom:10px; }
     .step b { color:var(--brand); }
     .step pre { margin:4px 0 0; white-space:pre-wrap; word-break:break-word; color:var(--muted); }
+    /* Celular: el campo de mensaje debe verse sin bajar demasiado. */
+    @media (max-width:600px) { main { padding:8px; } #chat { height:48vh; } #trace { height:40vh; } header { padding:10px 12px; } #ejemplos button { padding:6px 8px; } }
   </style>
 </head>
 <body>
@@ -153,12 +156,43 @@
     add('bot', data.respuesta);
   }
 
+  // Errores que el servidor ya explica en el idioma del paciente; si no trae texto, uno genérico amable.
+  class ErrorAmable extends Error {}
+
   async function leerError(res) {
     try {
       const data = await res.json();
-      return data.detail || data.error || res.statusText;
+      return new ErrorAmable(data.error || t('chat.error_generico'));
     } catch {
-      return res.statusText;
+      return new ErrorAmable(t('chat.error_generico'));
+    }
+  }
+
+  function mostrarError(err) {
+    add('err', err instanceof ErrorAmable ? err.message : t('chat.sin_conexion'));
+  }
+
+  // Indicador "escribiendo…" si la respuesta tarda más de medio segundo.
+  let temporizadorEscribiendo = null;
+  function escribiendo(activo) {
+    clearTimeout(temporizadorEscribiendo);
+    document.getElementById('escribiendo')?.remove();
+    if (!activo) return;
+    temporizadorEscribiendo = setTimeout(() => {
+      const div = add('bot escribiendo', t('chat.escribiendo'));
+      div.id = 'escribiendo';
+    }, 500);
+  }
+
+  // Todas las llamadas del chat: con el idioma de la interfaz y el indicador mientras esperan.
+  async function llamar(url, opciones) {
+    escribiendo(true);
+    try {
+      const res = await fetch(url, { ...opciones, headers: { ...(opciones.headers || {}), 'Accept-Language': I18N.idioma } });
+      if (!res.ok) throw await leerError(res);
+      return await res.json();
+    } finally {
+      escribiendo(false);
     }
   }
 
@@ -175,15 +209,13 @@
     add('user', mensaje);
     send.disabled = true;
     try {
-      const res = await fetch('/api/chat', {
+      mostrarRespuesta(await llamar('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sesionId, mensaje, telefono: telefono.value.trim() || null, idioma: I18N.idioma })
-      });
-      if (!res.ok) throw new Error(await leerError(res));
-      mostrarRespuesta(await res.json());
+      }));
     } catch (err) {
-      add('err', t('chat.error') + err.message);
+      mostrarError(err);
     } finally {
       send.disabled = false;
       input.focus();
@@ -225,11 +257,9 @@
     add('user', archivo.name, t('chat.foto_carnet'));
     send.disabled = foto.disabled = true;
     try {
-      const res = await fetch('/api/pacientes/carnet', { method: 'POST', body: formulario('imagen', archivo) });
-      if (!res.ok) throw new Error(await leerError(res));
-      mostrarRespuesta(await res.json());
+      mostrarRespuesta(await llamar('/api/pacientes/carnet', { method: 'POST', body: formulario('imagen', archivo) }));
     } catch (err) {
-      add('err', t('chat.error') + err.message);
+      mostrarError(err);
     } finally {
       send.disabled = foto.disabled = false;
     }
@@ -297,14 +327,12 @@
     const pendiente = add('user', '…', t('chat.nota_voz'));
     send.disabled = grabar.disabled = true;
     try {
-      const res = await fetch('/api/chat/audio', { method: 'POST', body: formulario('audio', blob) });
-      if (!res.ok) throw new Error(await leerError(res));
-      const data = await res.json();
+      const data = await llamar('/api/chat/audio', { method: 'POST', body: formulario('audio', blob) });
       pendiente.lastChild.textContent = data.transcripcion;
       mostrarRespuesta(data);
     } catch (err) {
       pendiente.lastChild.textContent = t('chat.no_procesado');
-      add('err', t('chat.error') + err.message);
+      mostrarError(err);
     } finally {
       send.disabled = grabar.disabled = false;
     }
@@ -367,7 +395,7 @@
     nuevaConversacion();
     notaActual = null;
     pintarNota();
-    add(res.ok ? 'bot' : 'err', res.ok ? t('demo.reiniciada') : t('chat.error') + await leerError(res));
+    add(res.ok ? 'bot' : 'err', res.ok ? t('demo.reiniciada') : (await leerError(res)).message);
   });
 
   I18N.alCambiar(pintarEjemplos);

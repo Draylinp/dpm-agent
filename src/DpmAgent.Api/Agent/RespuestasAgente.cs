@@ -1,3 +1,5 @@
+using DpmAgent.Api.Idiomas;
+
 namespace DpmAgent.Api.Agent;
 
 /// <summary>Traduce los fallos al ejecutar el agente a respuestas HTTP, igual para texto y para voz.</summary>
@@ -17,17 +19,18 @@ public static class RespuestasAgente
                 ? Results.BadRequest(new { error = mensaje })
                 : Results.Json(new { error = mensaje }, statusCode: ex.StatusCode);
         }
-        catch (SesionInvalidaException ex)
+        // Al paciente le llega un texto amable en su idioma; el detalle técnico no sale del servidor.
+        catch (SesionInvalidaException)
         {
-            return Results.Problem(ex.Message, statusCode: StatusCodes.Status409Conflict);
+            return Results.Json(new { error = Textos.Obtener("entrada.sesion_invalida", idioma) }, statusCode: StatusCodes.Status409Conflict);
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("clave", StringComparison.OrdinalIgnoreCase))
         {
-            return Results.Problem(ex.Message, statusCode: StatusCodes.Status503ServiceUnavailable);
+            return Results.Json(new { error = Textos.Obtener("error.no_disponible", idioma) }, statusCode: StatusCodes.Status503ServiceUnavailable);
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException { InnerException: TimeoutException })
         {
-            return Results.Problem($"El servicio de Meta no respondió: {ex.Message}", statusCode: StatusCodes.Status502BadGateway);
+            return Results.Json(new { error = Textos.Obtener("error.modelo", idioma) }, statusCode: StatusCodes.Status502BadGateway);
         }
     }
 

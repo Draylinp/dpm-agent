@@ -27,5 +27,10 @@
   "consentimiento.texto": "To send you notices on WhatsApp, {0} needs your permission. If you agree, you will only get messages about your appointments: reminders 24 hours before, follow-up on your paperwork, and notices of freed slots if you are on the waiting list. Never advertising. You can opt out at any time by writing STOP. Privacy notice: {1}. Do you agree? Reply YES or NO.",
   "consentimiento.otorgado": "Thank you. Your permission to receive notices from {0} has been recorded. To stop receiving them, write STOP.",
   "consentimiento.rechazado": "Understood, we will not send you notices by message. If needed, the staff will call you.",
-  "consentimiento.baja": "Done, we will not send you any more notices from {0}. If you change your mind, write to us and we will ask for your permission again."
+  "consentimiento.baja": "Done, we will not send you any more notices from {0}. If you change your mind, write to us and we will ask for your permission again.",
+  "error.modelo": "Sorry, we had a problem answering you. Please try again in a moment. If it is urgent, call the clinic.",
+  "error.no_disponible": "The assistant is not available right now. Please try later or call the clinic.",
+  "entrada.sesion_invalida": "This conversation is no longer valid. Please start a new conversation.",
+  "entrada.demasiadas": "You have sent many messages in a row. Please wait a moment and try again.",
+  "entrada.limite_demo": "You have reached today's message limit for the demo. Thanks for trying it; come back tomorrow."
 }

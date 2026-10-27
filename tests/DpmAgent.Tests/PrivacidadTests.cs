@@ -229,3 +229,74 @@ public class DerechosDelPacienteTests
         Assert.Equal(HttpStatusCode.NotFound, (await app.Cliente.GetAsync("/api/panel/pacientes/PAC-001/exportar")).StatusCode);
     }
 }
+
+public class ErroresAmablesTests
+{
+    [Theory]
+    [InlineData("es", "Disculpe, tuvimos un problema")]
+    [InlineData("en", "Sorry, we had a problem answering you")]
+    [InlineData("ht", "Eskize nou, nou te gen yon pwoblèm")]
+    public async Task Si_el_modelo_falla_el_paciente_recibe_un_mensaje_amable_en_su_idioma(string idioma, string esperado)
+    {
+        var modelo = new ScriptedChatModel().Then(_ => throw new HttpRequestException("Meta respondió 500 para 18095550101"));
+        using var app = new AppDePrueba(modelo);
+
+        var res = await app.Cliente.PostAsJsonAsync("/api/chat", new { mensaje = "Hola", telefono = "8095550101", idioma });
+        var cuerpo = await res.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.BadGateway, res.StatusCode);
+        Assert.Contains(esperado, cuerpo);
+        Assert.DoesNotContain("Meta respondió", cuerpo);
+        Assert.DoesNotContain("8095550101", cuerpo);
+    }
+
+    [Fact]
+    public async Task Una_sesion_de_otro_numero_da_un_mensaje_amable_sin_detalles()
+    {
+        var modelo = new ScriptedChatModel().ThenText("Hola.");
+        using var app = new AppDePrueba(modelo);
+        var r1 = await (await app.Cliente.PostAsJsonAsync("/api/chat", new { mensaje = "Hola", telefono = "8095550101" })).Content.ReadFromJsonAsync<JsonObject>();
+
+        var res = await app.Cliente.PostAsJsonAsync("/api/chat",
+            new { sesionId = r1!["sesionId"]!.ToString(), mensaje = "Hello", telefono = "8295550102", idioma = "en" });
+
+        Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
+        Assert.Equal("This conversation is no longer valid. Please start a new conversation.",
+            (await res.Content.ReadFromJsonAsync<JsonObject>())!["error"]!.ToString());
+    }
+
+    [Fact]
+    public async Task El_limite_de_uso_se_explica_en_el_idioma_de_la_interfaz()
+    {
+        using var app = new AppDePrueba(new ScriptedChatModel().ThenText("Hola.").ThenText("Hola."),
+            ajustes: new Dictionary<string, string?> { ["Limites:PeticionesPorMinutoPorIp"] = "1" });
+
+        var peticion = () =>
+        {
+            var m = new HttpRequestMessage(HttpMethod.Post, "/api/chat") { Content = JsonContent.Create(new { mensaje = "Mwen bezwen yon randevou" }) };
+            m.Headers.AcceptLanguage.ParseAdd("ht");
+            return app.Cliente.SendAsync(m);
+        };
+        await peticion();
+        var res = await peticion();
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, res.StatusCode);
+        Assert.Contains("Ou voye anpil mesaj", await res.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public void La_interfaz_tiene_los_mismos_textos_en_espanol_e_ingles()
+    {
+        var ruta = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "DpmAgent.Api", "wwwroot", "i18n.js");
+        var js = File.ReadAllText(ruta);
+        var es = js[js.IndexOf("es: {", StringComparison.Ordinal)..js.IndexOf("    en: {", StringComparison.Ordinal)];
+        var en = js[js.IndexOf("    en: {", StringComparison.Ordinal)..js.IndexOf("  };", StringComparison.Ordinal)];
+        static List<string> Claves(string bloque) =>
+            Regex.Matches(bloque, @"^\s+'([\w.]+)':", RegexOptions.Multiline).Select(m => m.Groups[1].Value).ToList();
+
+        var claveEs = Claves(es);
+        var claveEn = Claves(en);
+        Assert.Equal(claveEs.Count, claveEs.Distinct().Count());
+        Assert.Equal(claveEs.Order(), claveEn.Order());
+    }
+}

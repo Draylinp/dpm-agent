@@ -127,6 +127,9 @@ public sealed class Esperado
     /// <summary>Avisos que no salieron por falta de permiso y quedaron para que la secretaria llame.</summary>
     public int? AvisosParaLlamar { get; init; }
 
+    /// <summary>Largo máximo de cada respuesta del modelo (sin los textos fijos del sistema): mensajes de WhatsApp, no párrafos.</summary>
+    public int? MaxCaracteres { get; init; }
+
     /// <summary>Avisos automáticos (ofertas, recordatorios) que sí se encolaron para enviar.</summary>
     public int? AvisosEnviados { get; init; }
 

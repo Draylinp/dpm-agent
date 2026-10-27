@@ -83,7 +83,12 @@ public static class ProduccionExtensions
             {
                 if (contexto.Lease.TryGetMetadata(MetadataName.RetryAfter, out var espera))
                     contexto.HttpContext.Response.Headers.RetryAfter = ((int)espera.TotalSeconds).ToString();
-                await contexto.HttpContext.Response.WriteAsJsonAsync(new { error = "Demasiadas peticiones. Espere un momento." }, ct);
+                // En el idioma de la interfaz (Accept-Language). Una espera de horas es el tope diario de la demo.
+                var idioma = Agent.RespuestasAgente.IdiomaDe(contexto.HttpContext.Request);
+                var clave = contexto.Lease.TryGetMetadata(MetadataName.RetryAfter, out var resto) && resto > TimeSpan.FromHours(1)
+                    ? "entrada.limite_demo"
+                    : "entrada.demasiadas";
+                await contexto.HttpContext.Response.WriteAsJsonAsync(new { error = Idiomas.Textos.Obtener(clave, idioma) }, ct);
             };
 
             o.AddPolicy(PoliticaPublica, http => RateLimitPartition.GetFixedWindowLimiter(Ip(http), _ => new FixedWindowRateLimiterOptions

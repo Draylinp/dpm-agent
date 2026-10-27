@@ -27,5 +27,10 @@
   "consentimiento.texto": "Para enviarle avisos por WhatsApp, {0} necesita su permiso. Si acepta, recibirá solo mensajes sobre sus citas: recordatorios 24 horas antes, seguimiento de sus trámites y avisos de turnos liberados si está en la lista de espera. Nunca publicidad. Puede darse de baja cuando quiera escribiendo STOP. Aviso de privacidad: {1}. ¿Acepta? Responda SÍ o NO.",
   "consentimiento.otorgado": "Gracias. Quedó registrado su permiso para recibir avisos de {0}. Para dejar de recibirlos, escriba STOP.",
   "consentimiento.rechazado": "Entendido, no le enviaremos avisos por mensaje. Si hace falta, el personal le llamará.",
-  "consentimiento.baja": "Listo, no le enviaremos más avisos de {0}. Si cambia de opinión, escríbanos y le pediremos su permiso de nuevo."
+  "consentimiento.baja": "Listo, no le enviaremos más avisos de {0}. Si cambia de opinión, escríbanos y le pediremos su permiso de nuevo.",
+  "error.modelo": "Disculpe, tuvimos un problema para responderle. Intente de nuevo en un momento. Si es urgente, llame al consultorio.",
+  "error.no_disponible": "El asistente no está disponible en este momento. Intente más tarde o llame al consultorio.",
+  "entrada.sesion_invalida": "Esta conversación ya no es válida. Empiece una conversación nueva.",
+  "entrada.demasiadas": "Ha enviado muchos mensajes seguidos. Espere un momento y vuelva a intentarlo.",
+  "entrada.limite_demo": "Llegó al límite de mensajes de la demo por hoy. Gracias por probarla; vuelva mañana."
 }

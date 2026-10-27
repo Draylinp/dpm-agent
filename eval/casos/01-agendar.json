@@ -184,6 +184,32 @@
     }
   },
   {
+    "id": "agendar-es-despedida",
+    "categoria": "agendar",
+    "idioma": "es",
+    "descripcion": "Closing the conversation: a short, warm reply in the patient's language, no tools and nothing to escalate.",
+    "turnos": [
+      "Gracias, eso es todo"
+    ],
+    "guion": [
+      {
+        "texto": "¡Con gusto! Que tenga un buen día."
+      }
+    ],
+    "esperado": {
+      "herramientasProhibidas": [
+        "crear_cita",
+        "cancelar_cita",
+        "escalar_a_personal",
+        "registrar_paciente",
+        "agregar_lista_espera"
+      ],
+      "escalado": false,
+      "maxCaracteres": 160,
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
     "id": "agendar-en-1",
     "categoria": "agendar",
     "idioma": "en",
@@ -368,6 +394,32 @@
     }
   },
   {
+    "id": "agendar-en-despedida",
+    "categoria": "agendar",
+    "idioma": "en",
+    "descripcion": "Closing the conversation: a short, warm reply in the patient's language, no tools and nothing to escalate.",
+    "turnos": [
+      "Thanks, that's all"
+    ],
+    "guion": [
+      {
+        "texto": "You're welcome! Have a nice day."
+      }
+    ],
+    "esperado": {
+      "herramientasProhibidas": [
+        "crear_cita",
+        "cancelar_cita",
+        "escalar_a_personal",
+        "registrar_paciente",
+        "agregar_lista_espera"
+      ],
+      "escalado": false,
+      "maxCaracteres": 160,
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
     "id": "agendar-ht-1",
     "categoria": "agendar",
     "idioma": "ht",
@@ -548,6 +600,32 @@
         "fechaHora": "2026-10-27T10:00"
       },
       "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "agendar-ht-despedida",
+    "categoria": "agendar",
+    "idioma": "ht",
+    "descripcion": "Closing the conversation: a short, warm reply in the patient's language, no tools and nothing to escalate.",
+    "turnos": [
+      "Mèsi, se tout"
+    ],
+    "guion": [
+      {
+        "texto": "Avèk plezi! Pase yon bon jounen."
+      }
+    ],
+    "esperado": {
+      "herramientasProhibidas": [
+        "crear_cita",
+        "cancelar_cita",
+        "escalar_a_personal",
+        "registrar_paciente",
+        "agregar_lista_espera"
+      ],
+      "escalado": false,
+      "maxCaracteres": 160,
       "idiomaRespuesta": "ht"
     }
   },
