@@ -10,6 +10,10 @@ RUN dotnet publish src/DpmAgent.Api/DpmAgent.Api.csproj -c Release -o /app --no-
 
 # 2. Imagen final: solo el runtime de ASP.NET Core, con usuario sin privilegios
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+# Parches de seguridad de Debian que todavía no trae la imagen base (el CI la revisa con Trivy).
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV ASPNETCORE_HTTP_PORTS=8080 \
     ASPNETCORE_ENVIRONMENT=Production \
