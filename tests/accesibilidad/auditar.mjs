@@ -2,16 +2,31 @@
 // de privacidad, en modo claro y oscuro y en español e inglés, más una revisión de teclado y tamaño de letra.
 // Uso: BASE_URL=http://127.0.0.1:5199 node tests/accesibilidad/auditar.mjs   (la app con Demo:Habilitado=true)
 import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
-const axePath = require.resolve('axe-core/axe.min.js');
+// axe se inyecta con evaluate (no con una etiqueta <script> en línea), así la CSP estricta de la app sigue activa.
+const axeFuente = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
 const base = process.env.BASE_URL || 'http://127.0.0.1:5199';
 
 const paginas = ['/', '/panel.html', '/privacidad.html'];
 const fallos = [];
 
 const navegador = await chromium.launch();
+
+// Cualquier violación de la Content-Security-Policy o error de JavaScript en cualquier página es un fallo.
+function vigilar(pagina) {
+  pagina.on('console', (m) => {
+    if (m.type() === 'error' && /Content Security Policy|Refused to (execute|load|apply|connect|frame)/i.test(m.text()))
+      fallos.push(`CSP: ${pagina.url()} → ${m.text().slice(0, 200)}`);
+  });
+  pagina.on('pageerror', (e) => fallos.push(`JavaScript: ${pagina.url()} → ${String(e.message).slice(0, 200)}`));
+}
+const nuevoContexto = navegador.newContext.bind(navegador);
+navegador.newContext = async (opciones) => { const c = await nuevoContexto(opciones); c.on('page', vigilar); return c; };
+const nuevaPagina = navegador.newPage.bind(navegador);
+navegador.newPage = async (opciones) => { const p = await nuevaPagina(opciones); vigilar(p); return p; };
 for (const esquema of ['light', 'dark']) {
   for (const idioma of ['es', 'en']) {
     const contexto = await navegador.newContext({ colorScheme: esquema, locale: idioma === 'es' ? 'es-DO' : 'en-US', viewport: { width: 1280, height: 800 } });
@@ -19,7 +34,12 @@ for (const esquema of ['light', 'dark']) {
     for (const ruta of paginas) {
       await pagina.goto(base + ruta);
       await pagina.waitForLoadState('networkidle');
-      await pagina.addScriptTag({ path: axePath });
+      // En el chat, usar un ejemplo para que corra también el código de mensajes (bajo la CSP).
+      if (ruta === '/' && await pagina.locator('#ejemplos button').count() > 0) {
+        await pagina.locator('#ejemplos button').first().click();
+        await pagina.waitForTimeout(800);
+      }
+      await pagina.evaluate(axeFuente);
       const r = await pagina.evaluate(async () => await window.axe.run(document, {
         runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
       }));
@@ -46,7 +66,7 @@ if (process.env.PANEL_CLAVE) {
     for (const tab of ['citas', 'escalamientos', 'carnets', 'autorizaciones', 'urgencias', 'seguimientos', 'llamadas', 'medicos', 'familias', 'pacientes', 'costos', 'bitacora']) {
       await pagina.click(`#tabs button[data-tab="${tab}"]`);
       await pagina.waitForTimeout(500);
-      await pagina.addScriptTag({ path: axePath });
+      await pagina.evaluate(axeFuente);
       const r = await pagina.evaluate(async () => await window.axe.run(document, {
         runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
       }));
@@ -125,4 +145,4 @@ if (fallos.length) {
   console.log(`\n${fallos.length} problemas de accesibilidad.`);
   process.exit(1);
 }
-console.log('Accesibilidad: sin problemas (axe WCAG 2.1 AA, teclado y tamaño de letra).');
+console.log('Accesibilidad: sin problemas (axe WCAG 2.1 AA, teclado, tamaño de letra y sin violaciones de CSP).');

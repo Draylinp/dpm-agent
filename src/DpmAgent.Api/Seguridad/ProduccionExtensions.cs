@@ -153,12 +153,14 @@ public static class ProduccionExtensions
             h.XContentTypeOptions = "nosniff";
             h.XFrameOptions = "DENY";
             h["Referrer-Policy"] = "no-referrer";
-            h["Permissions-Policy"] = "camera=(), geolocation=(), microphone=(self)";
-            h.ContentSecurityPolicy =
-                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
-                "img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
+            h["Cross-Origin-Opener-Policy"] = "same-origin";
+            // El micrófono solo en la página del chat (notas de voz); en el panel y el resto, nada.
+            h["Permissions-Policy"] = EncabezadosSeguridad.PermisosPara(contexto.Request.Path);
+            h.ContentSecurityPolicy = EncabezadosSeguridad.Csp;
             await siguiente();
         });
+
+        app.UseMiddleware<ProteccionCsrf>();
 
         if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
         {

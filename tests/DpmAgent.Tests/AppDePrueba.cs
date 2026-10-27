@@ -41,6 +41,8 @@ public sealed class AppDePrueba : IDisposable
             });
         });
         Cliente = _factory.CreateClient();
+        // Como el navegador: las peticiones del panel llevan el origen del propio sitio (defensa CSRF).
+        Cliente.DefaultRequestHeaders.Add("Origin", Cliente.BaseAddress!.GetLeftPart(UriPartial.Authority));
     }
 
     public const string ClaveSecretaria = "clave-de-prueba-123";
