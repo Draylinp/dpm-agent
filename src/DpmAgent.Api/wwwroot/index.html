@@ -24,6 +24,7 @@
     #notaDemo { margin:0; padding:8px 16px; border-bottom:1px solid var(--line); font-size:13px; color:var(--muted); background:var(--aviso); }
     .banner a { color:inherit; }
     #ejemplos button { background:transparent; color:var(--text); border:1px solid var(--line); padding:6px 10px; font-weight:500; font-size:13px; }
+    #ejemplos a { margin-left:auto; color:var(--brand); font-size:13px; }
     #chat { height:56vh; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; }
     .msg { max-width:85%; padding:8px 12px; border-radius:10px; white-space:pre-wrap; line-height:1.4; font-size:14px; }
     .user { align-self:flex-end; background:var(--me); }
@@ -62,7 +63,7 @@
       <h1 data-i18n="chat.titulo"></h1>
       <p><span data-i18n="chat.subtitulo"></span> <a href="privacidad.html" data-i18n="priv.enlace"></a></p>
     </header>
-    <div id="ejemplos" hidden><span data-i18n="demo.probar"></span></div>
+    <div id="ejemplos" hidden><span data-i18n="demo.probar"></span><a id="carnetDemo" href="demo/carnet-ficticio.png" download data-i18n="demo.carnet"></a></div>
     <p id="notaDemo" hidden></p>
     <div class="canal">
       <label for="telefono" data-i18n="chat.telefono"></label>
@@ -333,7 +334,7 @@
         pintarNota();
         await enviarTexto(ej.mensaje[I18N.idioma] || ej.mensaje.en);
       });
-      caja.appendChild(b);
+      caja.insertBefore(b, document.getElementById('carnetDemo'));
     }
   }
 

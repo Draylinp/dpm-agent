@@ -174,7 +174,7 @@ public abstract class DpmGatewayContractTests
         var segundo = await dpm.GuardarCarnetPendienteAsync("s1", "8095550101", null,
             new DatosCarnet("María Rodríguez", "ARS Ejemplo", "AF-2"), CancellationToken.None);
         await dpm.GuardarCarnetPendienteAsync("s2", "8295550102", null,
-            new DatosCarnet(null, "ARS Otra", null), CancellationToken.None);
+            new DatosCarnet(null, "ARS Prueba", null), CancellationToken.None);
 
         Assert.Equal("pendiente", primero.Estado);
         Assert.Equal("PAC-001", primero.PacienteId);

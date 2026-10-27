@@ -317,8 +317,8 @@ public class WhatsAppFlujoTests
     [Fact]
     public async Task Foto_del_carnet_queda_pendiente_y_el_agente_pide_confirmacion()
     {
-        var modelo = new ScriptedChatModel().ThenText("Leí ARS Nueva, afiliado AF-1. ¿Correcto?");
-        var lector = new FakeLectorCarnet(new LecturaCarnet(true, new DatosCarnet("María Rodríguez", "ARS Nueva", "AF-1")));
+        var modelo = new ScriptedChatModel().ThenText("Leí ARS Demo Salud, afiliado AF-1. ¿Correcto?");
+        var lector = new FakeLectorCarnet(new LecturaCarnet(true, new DatosCarnet("María Rodríguez", "ARS Demo Salud", "AF-1")));
         var (app, api) = Crear(modelo, lector: lector);
         using var _app = app;
         api.Archivo = ImagenesDePrueba.Jpeg();

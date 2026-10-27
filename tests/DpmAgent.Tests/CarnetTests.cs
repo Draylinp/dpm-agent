@@ -143,14 +143,14 @@ public class ConfirmacionCarnetTests
     {
         var sesion = SesionCon("8095550101");
         await _dpm.GuardarCarnetPendienteAsync("s", "8095550101", null,
-            new DatosCarnet("MARIA RODRIGUEZ", "ARS Nueva", "AF-777"), CancellationToken.None);
+            new DatosCarnet("MARIA RODRIGUEZ", "ARS Demo Salud", "AF-777"), CancellationToken.None);
 
         var r = await _tools.ExecuteAsync(sesion, "confirmar_datos_carnet", "{}", CancellationToken.None);
 
         Assert.Contains("\"confirmado\":true", r);
         Assert.Equal("PAC-001", sesion.PacienteId);
         var maria = await _dpm.BuscarPacienteAsync("PAC-001", CancellationToken.None);
-        Assert.Equal("ARS Nueva", maria!.Ars);
+        Assert.Equal("ARS Demo Salud", maria!.Ars);
         Assert.Equal("AF-777", maria.NumeroAfiliado);
         Assert.Equal("María Rodríguez (ficticia)", maria.Nombre);
         Assert.Empty(await _dpm.ListarCarnetsPendientesAsync(CancellationToken.None));
@@ -177,7 +177,7 @@ public class ConfirmacionCarnetTests
     {
         var sesion = SesionCon("8095550101");
         await _dpm.GuardarCarnetPendienteAsync("s", "8095550101", null,
-            new DatosCarnet("Carlitos Pérez", "ARS Otra", "AF-999"), CancellationToken.None);
+            new DatosCarnet("Carlitos Pérez", "ARS Prueba", "AF-999"), CancellationToken.None);
 
         var r = await _tools.ExecuteAsync(sesion, "confirmar_datos_carnet", "{}", CancellationToken.None);
 
@@ -190,7 +190,7 @@ public class ConfirmacionCarnetTests
     public async Task No_se_puede_confirmar_el_carnet_de_otra_conversacion()
     {
         await _dpm.GuardarCarnetPendienteAsync("otra", "8295550102", null,
-            new DatosCarnet("José Martínez", "ARS Nueva", "AF-1"), CancellationToken.None);
+            new DatosCarnet("José Martínez", "ARS Demo Salud", "AF-1"), CancellationToken.None);
 
         var r = await _tools.ExecuteAsync(SesionCon("8095550101"), "confirmar_datos_carnet", "{}", CancellationToken.None);
 
@@ -202,7 +202,7 @@ public class ConfirmacionCarnetTests
     public async Task La_secretaria_corrige_y_confirma_aunque_el_nombre_no_coincida()
     {
         var carnet = await _dpm.GuardarCarnetPendienteAsync("s", "8095550101", null,
-            new DatosCarnet("Carlitos Pérez", "ARS Otra", "AF-99?"), CancellationToken.None);
+            new DatosCarnet("Carlitos Pérez", "ARS Prueba", "AF-99?"), CancellationToken.None);
 
         var r = await new ServicioCarnet(_dpm).ConfirmarAsync(carnet, new DatosCarnet(null, null, "AF-990"),
             ServicioCarnet.PorSecretaria, null, exigirMismoNombre: false, CancellationToken.None);
@@ -216,7 +216,7 @@ public class ConfirmacionCarnetTests
     public async Task Un_carnet_resuelto_no_se_puede_volver_a_resolver()
     {
         var carnet = await _dpm.GuardarCarnetPendienteAsync("s", "8095550101", null,
-            new DatosCarnet("María Rodríguez", "ARS Nueva", "AF-1"), CancellationToken.None);
+            new DatosCarnet("María Rodríguez", "ARS Demo Salud", "AF-1"), CancellationToken.None);
         var servicio = new ServicioCarnet(_dpm);
         await servicio.DescartarAsync(carnet, ServicioCarnet.PorSecretaria, CancellationToken.None);
 

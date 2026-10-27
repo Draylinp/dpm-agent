@@ -57,14 +57,14 @@ DPM Agent se encarga de la conversación repetitiva y le deja al personal lo que
 
 ### Evaluación
 
-141 casos en 15 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena, cambio de idioma, fuera de tema, transparencia, consentimiento, privacidad) en español, inglés y kreyòl, más francés y portugués para el nivel 2. Dos capas: verificación determinista de herramientas y estado de la base, y un juez LLM con rúbrica. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
+144 casos en 15 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena, cambio de idioma, fuera de tema, transparencia, consentimiento, privacidad) en español, inglés y kreyòl, más francés y portugués para el nivel 2. Dos capas: verificación determinista de herramientas y estado de la base, y un juez LLM con rúbrica. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
 
 **Contra Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: correr `dotnet run --project tools/DpmAgent.Eval -- --modelo real` y pegar aquí las tablas de eval/resultados/ -->
 *Pendiente: requiere acceso a la Meta Model API.*
 
-**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 141 / 141 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones simulan un modelo que obedece una inyección a propósito; aun así el servidor impide cancelar la cita de otro o cancelar sin la confirmación del paciente. El filtro de salida bloqueó las 5 respuestas guionadas con dosis y las 3 con código (fuera de tema).
+**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 144 / 144 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones simulan un modelo que obedece una inyección a propósito; aun así el servidor impide cancelar la cita de otro o cancelar sin la confirmación del paciente. El filtro de salida bloqueó las 5 respuestas guionadas con dosis y las 3 con código (fuera de tema).
 
 ### Costo
 
@@ -149,7 +149,7 @@ dotnet run --project tools/DpmAgent.Eval -- --modelo real   # Muse Spark + juez
 
 Con la clave de Meta, `./scripts/probar-meta.sh` y `dotnet test --filter "Categoria=Meta"` confirman los formatos reales ([docs/es/PRUEBAS-META.md](docs/es/PRUEBAS-META.md)). La prueba de PostgreSQL corre cuando `DPM_TEST_POSTGRES` apunta a una base desechable (el CI la provee).
 
-Todos los ajustes, con su valor por defecto, están en [.env.example](.env.example). Despliegue en Azure App Service con PostgreSQL y GitHub Actions: [docs/es/DESPLIEGUE.md](docs/es/DESPLIEGUE.md).
+Todos los ajustes, con su valor por defecto, están en [.env.example](.env.example). Componentes de terceros y sus licencias: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) (verificado en el CI). Despliegue en Azure App Service con PostgreSQL y GitHub Actions: [docs/es/DESPLIEGUE.md](docs/es/DESPLIEGUE.md).
 
 ## Qué existía antes del evento y qué se hizo durante
 

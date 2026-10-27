@@ -8,7 +8,7 @@
       {
         "foto": {
           "nombre": "María Rodríguez",
-          "ars": "ARS Nueva",
+          "ars": "ARS Demo Salud",
           "afiliado": "AF-1001"
         }
       },
@@ -27,7 +27,7 @@
         "texto": "Claro, envíela por aquí."
       },
       {
-        "texto": "Leí: María Rodríguez, ARS Nueva, afiliado AF-1001. ¿Están correctos esos datos?"
+        "texto": "Leí: María Rodríguez, ARS Demo Salud, afiliado AF-1001. ¿Están correctos esos datos?"
       },
       {
         "herramientas": [
@@ -47,7 +47,7 @@
       ],
       "seguro": {
         "paciente": "PAC-001",
-        "ars": "ARS Nueva",
+        "ars": "ARS Demo Salud",
         "afiliado": "AF-1001"
       },
       "carnetsPendientes": 0,
@@ -65,7 +65,7 @@
       {
         "foto": {
           "nombre": "Pedrito Rodríguez Gómez",
-          "ars": "ARS Infantil",
+          "ars": "ARS Ejemplo Niños",
           "afiliado": "AF-2002"
         }
       },
@@ -84,7 +84,7 @@
         "texto": "Claro, envíela por aquí."
       },
       {
-        "texto": "Leí: Pedrito Rodríguez Gómez, ARS Infantil, afiliado AF-2002. ¿Están correctos?"
+        "texto": "Leí: Pedrito Rodríguez Gómez, ARS Ejemplo Niños, afiliado AF-2002. ¿Están correctos?"
       },
       {
         "herramientas": [
@@ -110,6 +110,62 @@
     }
   },
   {
+    "id": "carnet-es-3",
+    "categoria": "carnet",
+    "idioma": "es",
+    "descripcion": "The fictional sample card drawn by scripts/generar_carnet.mjs (the one offered in the demo).",
+    "turnos": [
+      "Le mando la foto del carnet de prueba",
+      {
+        "foto": {
+          "nombre": "María Rodríguez (ficticia)",
+          "ars": "ARS Demo Salud",
+          "afiliado": "DEMO-000123"
+        }
+      },
+      "Sí, correcto"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Claro, envíela por aquí."
+      },
+      {
+        "texto": "Leí: María Rodríguez (ficticia), ARS Demo Salud, afiliado DEMO-000123. ¿Están correctos?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "confirmar_datos_carnet",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Gracias, ya guardé los datos de su seguro."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "confirmar_datos_carnet"
+      ],
+      "seguro": {
+        "paciente": "PAC-001",
+        "ars": "ARS Demo Salud",
+        "afiliado": "DEMO-000123"
+      },
+      "carnetsPendientes": 0,
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
     "id": "carnet-en-1",
     "categoria": "carnet",
     "idioma": "en",
@@ -118,7 +174,7 @@
       {
         "foto": {
           "nombre": "María Rodríguez",
-          "ars": "ARS Nueva",
+          "ars": "ARS Demo Salud",
           "afiliado": "AF-1001"
         }
       },
@@ -137,7 +193,7 @@
         "texto": "Of course, please send it here."
       },
       {
-        "texto": "I read: María Rodríguez, ARS Nueva, member number AF-1001. Is that information correct?"
+        "texto": "I read: María Rodríguez, ARS Demo Salud, member number AF-1001. Is that information correct?"
       },
       {
         "herramientas": [
@@ -157,7 +213,7 @@
       ],
       "seguro": {
         "paciente": "PAC-001",
-        "ars": "ARS Nueva",
+        "ars": "ARS Demo Salud",
         "afiliado": "AF-1001"
       },
       "carnetsPendientes": 0,
@@ -175,7 +231,7 @@
       {
         "foto": {
           "nombre": "Pedrito Rodríguez Gómez",
-          "ars": "ARS Infantil",
+          "ars": "ARS Ejemplo Niños",
           "afiliado": "AF-2002"
         }
       },
@@ -194,7 +250,7 @@
         "texto": "Of course, please send it here."
       },
       {
-        "texto": "I read: Pedrito Rodríguez Gómez, ARS Infantil, member number AF-2002. Is that correct?"
+        "texto": "I read: Pedrito Rodríguez Gómez, ARS Ejemplo Niños, member number AF-2002. Is that correct?"
       },
       {
         "herramientas": [
@@ -220,6 +276,62 @@
     }
   },
   {
+    "id": "carnet-en-3",
+    "categoria": "carnet",
+    "idioma": "en",
+    "descripcion": "The fictional sample card drawn by scripts/generar_carnet.mjs (the one offered in the demo).",
+    "turnos": [
+      "I'm sending the photo of the sample card",
+      {
+        "foto": {
+          "nombre": "María Rodríguez (ficticia)",
+          "ars": "ARS Demo Salud",
+          "afiliado": "DEMO-000123"
+        }
+      },
+      "Yes, that's right"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Sure, send it here."
+      },
+      {
+        "texto": "I read: María Rodríguez (ficticia), ARS Demo Salud, member DEMO-000123. Is that correct?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "confirmar_datos_carnet",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Thank you, I saved your insurance details."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "confirmar_datos_carnet"
+      ],
+      "seguro": {
+        "paciente": "PAC-001",
+        "ars": "ARS Demo Salud",
+        "afiliado": "DEMO-000123"
+      },
+      "carnetsPendientes": 0,
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
     "id": "carnet-ht-1",
     "categoria": "carnet",
     "idioma": "ht",
@@ -228,7 +340,7 @@
       {
         "foto": {
           "nombre": "María Rodríguez",
-          "ars": "ARS Nueva",
+          "ars": "ARS Demo Salud",
           "afiliado": "AF-1001"
         }
       },
@@ -247,7 +359,7 @@
         "texto": "Dakò, voye l la a."
       },
       {
-        "texto": "Mwen li: María Rodríguez, ARS Nueva, nimewo afilye AF-1001. Èske enfòmasyon sa yo kòrèk?"
+        "texto": "Mwen li: María Rodríguez, ARS Demo Salud, nimewo afilye AF-1001. Èske enfòmasyon sa yo kòrèk?"
       },
       {
         "herramientas": [
@@ -267,7 +379,7 @@
       ],
       "seguro": {
         "paciente": "PAC-001",
-        "ars": "ARS Nueva",
+        "ars": "ARS Demo Salud",
         "afiliado": "AF-1001"
       },
       "carnetsPendientes": 0,
@@ -285,7 +397,7 @@
       {
         "foto": {
           "nombre": "Pedrito Rodríguez Gómez",
-          "ars": "ARS Infantil",
+          "ars": "ARS Ejemplo Niños",
           "afiliado": "AF-2002"
         }
       },
@@ -304,7 +416,7 @@
         "texto": "Dakò, voye l la a."
       },
       {
-        "texto": "Mwen li: Pedrito Rodríguez Gómez, ARS Infantil, nimewo afilye AF-2002. Èske se sa?"
+        "texto": "Mwen li: Pedrito Rodríguez Gómez, ARS Ejemplo Niños, nimewo afilye AF-2002. Èske se sa?"
       },
       {
         "herramientas": [
@@ -326,6 +438,62 @@
       },
       "carnetsPendientes": 1,
       "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "carnet-ht-3",
+    "categoria": "carnet",
+    "idioma": "ht",
+    "descripcion": "The fictional sample card drawn by scripts/generar_carnet.mjs (the one offered in the demo).",
+    "turnos": [
+      "M ap voye foto kat egzanp lan",
+      {
+        "foto": {
+          "nombre": "María Rodríguez (ficticia)",
+          "ars": "ARS Demo Salud",
+          "afiliado": "DEMO-000123"
+        }
+      },
+      "Wi, se sa"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Dakò, voye l la a."
+      },
+      {
+        "texto": "Mwen li: María Rodríguez (ficticia), ARS Demo Salud, nimewo DEMO-000123. Èske se sa?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "confirmar_datos_carnet",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Mèsi, mwen anrejistre enfòmasyon asirans ou."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "confirmar_datos_carnet"
+      ],
+      "seguro": {
+        "paciente": "PAC-001",
+        "ars": "ARS Demo Salud",
+        "afiliado": "DEMO-000123"
+      },
+      "carnetsPendientes": 0,
       "idiomaRespuesta": "ht"
     }
   }

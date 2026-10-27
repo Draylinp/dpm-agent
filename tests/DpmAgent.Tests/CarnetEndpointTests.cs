@@ -14,7 +14,7 @@ namespace DpmAgent.Tests;
 public class CarnetEndpointTests
 {
     private static readonly LecturaCarnet CarnetDeMaria =
-        new(true, new DatosCarnet("María Rodríguez", "ARS Nueva", "AF-777"));
+        new(true, new DatosCarnet("María Rodríguez", "ARS Demo Salud", "AF-777"));
 
     private sealed record Contexto(HttpClient Cliente, ScriptedChatModel Modelo, FakeLectorCarnet Lector, GatewayDeApp Dpm, AppDePrueba App);
 
@@ -58,7 +58,7 @@ public class CarnetEndpointTests
     public async Task La_foto_queda_pendiente_y_el_agente_pide_confirmacion_con_los_datos()
     {
         var modelo = new ScriptedChatModel()
-            .ThenText("Leí: María Rodríguez, ARS Nueva, afiliado AF-777. ¿Está correcto?");
+            .ThenText("Leí: María Rodríguez, ARS Demo Salud, afiliado AF-777. ¿Está correcto?");
         var (cliente, _, _, dpm, _) = Crear(CarnetDeMaria, modelo);
 
         var res = await cliente.PostAsync("/api/pacientes/carnet", Form(ImagenesDePrueba.Jpeg()));
@@ -94,7 +94,7 @@ public class CarnetEndpointTests
         Assert.Equal(HttpStatusCode.OK, r2.StatusCode);
         var maria = await dpm.BuscarPacienteAsync("PAC-001", CancellationToken.None);
         Assert.Equal("AF-777", maria!.NumeroAfiliado);
-        Assert.Equal("ARS Nueva", maria.Ars);
+        Assert.Equal("ARS Demo Salud", maria.Ars);
         Assert.Empty(await dpm.ListarCarnetsPendientesAsync(CancellationToken.None));
     }
 

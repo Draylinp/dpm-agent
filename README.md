@@ -57,14 +57,14 @@ DPM Agent takes over the repetitive conversation and leaves the staff what truly
 
 ### Evaluation
 
-141 cases in 15 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
+144 cases in 15 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
 **Against Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: run `dotnet run --project tools/DpmAgent.Eval -- --modelo real` and paste the tables from eval/resultados/ here -->
 *Pending: requires access to the Meta Model API.*
 
-**Server guarantees (scripted model, runs in CI on every push):** 141 / 141 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
+**Server guarantees (scripted model, runs in CI on every push):** 144 / 144 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
 
 ### Cost
 
@@ -151,7 +151,7 @@ dotnet run --project tools/DpmAgent.Eval -- --modelo real   # Muse Spark + judge
 
 With a Meta key, `./scripts/probar-meta.sh` and `dotnet test --filter "Categoria=Meta"` check the real formats ([docs/META-API-TESTING.md](docs/META-API-TESTING.md)). The PostgreSQL test runs when `DPM_TEST_POSTGRES` holds a throwaway database (CI provides one).
 
-Every setting, with its default, is listed in [.env.example](.env.example). Cloud deployment to Azure App Service with PostgreSQL and GitHub Actions: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+Every setting, with its default, is listed in [.env.example](.env.example). Third-party components and their licenses: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) (checked in CI). Cloud deployment to Azure App Service with PostgreSQL and GitHub Actions: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## What existed before the event and what was built during it
 

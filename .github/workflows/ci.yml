@@ -32,6 +32,10 @@ jobs:
       - run: dotnet restore
       - run: dotnet build --no-restore -c Release
       - run: dotnet test --no-build -c Release --verbosity normal
+      - name: Licencias de terceros (THIRD_PARTY_NOTICES.md al día y compatibles con MIT)
+        run: python3 scripts/licencias.py --verificar
+      - name: Solo datos ficticios (sin nombres reales de ARS, clínicas u hospitales)
+        run: python3 scripts/verificar_ficticios.py
       - name: Banco de evaluación (modelo falso, capa determinista)
         run: dotnet run --project tools/DpmAgent.Eval -c Release --no-build -- --no-escribir
       - name: Docker Compose válido (con y sin el perfil glimmer)
