@@ -24,7 +24,7 @@ Fill in at least these three values in `.env`:
 |---|---|
 | `META_API_KEY` | Meta Model API key |
 | `POSTGRES_PASSWORD` | Database password: long and random (`openssl rand -base64 24`) |
-| `Panel__ClaveInicial` | Password of the initial `secretaria` user (admin), at least 10 characters |
+| `Panel__ClaveInicial` | Password of the initial `secretaria` user (admin), at least 12 characters and not a common one; the dashboard asks to change it at the first sign-in |
 
 `.env` is in `.gitignore`: never commit it. Every other line in `.env.example` has a working default and a comment. Any setting from `appsettings.json` can be added as `Section__Key=value`.
 

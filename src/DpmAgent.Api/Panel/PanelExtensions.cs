@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using DpmAgent.Api.Data;
+using System.Globalization;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace DpmAgent.Api.Panel;
@@ -8,6 +10,9 @@ public static class PanelExtensions
 {
     public const string Politica = "Panel";
     public const string PoliticaAdmin = "PanelAdmin";
+
+    /// <summary>Sesión iniciada aunque falte cambiar la clave o activar el segundo factor (solo para hacerlo).</summary>
+    public const string PoliticaSesion = "PanelSesion";
 
     public static IServiceCollection AddPanel(this IServiceCollection services, IConfiguration config, IWebHostEnvironment env)
     {
@@ -23,8 +28,24 @@ public static class PanelExtensions
                 o.Cookie.SecurePolicy = env.IsDevelopment() || env.IsEnvironment("Testing")
                     ? CookieSecurePolicy.SameAsRequest
                     : CookieSecurePolicy.Always;
-                o.ExpireTimeSpan = TimeSpan.FromMinutes(opciones.MinutosSesion);
+                // Inactividad: la cookie vence a los N minutos y cada petición la renueva.
+                o.ExpireTimeSpan = TimeSpan.FromMinutes(opciones.MinutosInactividad);
                 o.SlidingExpiration = true;
+                // Expiración absoluta y sesiones invalidadas: al cambiar la clave o el segundo factor cambia el sello.
+                o.Events.OnValidatePrincipal = async c =>
+                {
+                    var reloj = c.HttpContext.RequestServices.GetRequiredService<TimeProvider>();
+                    // Ámbito propio: la base de esta consulta no debe fijar el consultorio de la petición (eso viene después).
+                    await using var ambito = c.HttpContext.RequestServices.CreateAsyncScope();
+                    var vigente = long.TryParse(c.Principal?.FindFirstValue(ServicioUsuarios.ClaimInicio), NumberStyles.None, CultureInfo.InvariantCulture, out var inicio)
+                                  && reloj.GetUtcNow() - DateTimeOffset.FromUnixTimeSeconds(inicio) <= TimeSpan.FromHours(opciones.HorasMaximasSesion)
+                                  && await ambito.ServiceProvider.GetRequiredService<ServicioUsuarios>().DeSesionAsync(c.Principal!, c.HttpContext.RequestAborted) is not null;
+                    if (!vigente)
+                    {
+                        c.RejectPrincipal();
+                        await c.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    }
+                };
                 // Es una API: sin redirecciones a páginas de login.
                 o.Events.OnRedirectToLogin = c =>
                 {
@@ -39,8 +60,12 @@ public static class PanelExtensions
             });
 
         services.AddAuthorizationBuilder()
-            .AddPolicy(Politica, p => p.RequireAuthenticatedUser().RequireClaim(ServicioUsuarios.ClaimConsultorio))
-            .AddPolicy(PoliticaAdmin, p => p.RequireAuthenticatedUser().RequireClaim(ServicioUsuarios.ClaimConsultorio).RequireRole("admin"));
+            .AddPolicy(PoliticaSesion, p => p.RequireAuthenticatedUser().RequireClaim(ServicioUsuarios.ClaimConsultorio))
+            // Con la clave inicial sin cambiar o sin el segundo factor exigido, no se ven datos del consultorio.
+            .AddPolicy(Politica, p => p.RequireAuthenticatedUser().RequireClaim(ServicioUsuarios.ClaimConsultorio)
+                .RequireAssertion(c => !c.User.HasClaim(x => x.Type == ServicioUsuarios.ClaimRestriccion)))
+            .AddPolicy(PoliticaAdmin, p => p.RequireAuthenticatedUser().RequireClaim(ServicioUsuarios.ClaimConsultorio).RequireRole("admin")
+                .RequireAssertion(c => !c.User.HasClaim(x => x.Type == ServicioUsuarios.ClaimRestriccion)));
 
         services.AddScoped<ServicioUsuarios>();
         services.AddScoped<ServicioPanel>();

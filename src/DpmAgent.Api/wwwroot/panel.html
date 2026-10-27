@@ -24,6 +24,10 @@
       <input id="usuario" autocomplete="username" required>
       <label for="clave" data-i18n="panel.clave"></label>
       <input id="clave" type="password" autocomplete="current-password" required>
+      <div id="grupoCodigo" hidden>
+        <label for="codigo" data-i18n="cuenta.codigo"></label>
+        <input id="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+      </div>
       <button data-i18n="panel.entrar"></button>
       <p id="errorLogin" class="error" role="alert"></p>
     </form>
@@ -50,6 +54,8 @@
       <button data-tab="pacientes" data-i18n="tab.pacientes"></button>
       <button data-tab="costos" data-i18n="tab.costos"></button>
       <button data-tab="bitacora" data-i18n="tab.bitacora"></button>
+      <button data-tab="cuenta" data-i18n="tab.cuenta"></button>
+      <button data-tab="accesos" data-i18n="tab.accesos" hidden></button>
     </nav>
     <div class="card">
       <p id="error" class="error" role="alert"></p>

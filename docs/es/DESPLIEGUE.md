@@ -59,7 +59,7 @@ Para que App Service lea Key Vault: activa la identidad administrada de la app (
 | `Retencion__DiasConversaciones` | 30 por defecto; la bitácora, 365 (`Retencion__DiasBitacora`) |
 | `DataProtection__Ruta` | Solo en contenedores: carpeta persistente para las claves que cifran la cookie del panel (App Service ya las persiste solo) |
 
-Al arrancar, la app aplica las migraciones y crea el usuario `secretaria` con `Panel__ClaveInicial`. Después de entrar la primera vez, crea los usuarios reales desde el panel y cambia o retira esa variable.
+Al arrancar, la app aplica las migraciones y crea el usuario `secretaria` con `Panel__ClaveInicial`. El primer inicio de sesión obliga a poner una clave nueva (la inicial solo sirve una vez); después crea los usuarios reales desde el panel y retira esa variable.
 
 ## 3. GitHub Actions con OIDC
 

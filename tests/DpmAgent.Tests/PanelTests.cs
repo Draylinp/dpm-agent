@@ -148,6 +148,8 @@ public class PanelTests
             db.Consultorios.Add(new E.Consultorio { Nombre = "Otro consultorio (ficticio)", CreadoUtc = DateTime.UtcNow });
             await db.SaveChangesAsync();
             await sp.GetRequiredService<ServicioUsuarios>().CrearAsync(2, "secretaria2", "Otra (ficticia)", "otra-clave-larga", "secretaria", CancellationToken.None);
+            // Como si ya hubiera cambiado su clave inicial.
+            await db.UsuariosPanel.Where(u => u.Usuario == "secretaria2").ExecuteUpdateAsync(x => x.SetProperty(u => u.DebeCambiarClave, false));
             return "";
         });
         escOtro = await app.EnAmbito(async sp =>
@@ -196,7 +198,7 @@ public class PanelTests
     {
         using var sqlite = new SqliteDePrueba(new FixedClock(Lunes));
         var db = sqlite.Contexto();
-        var servicio = new ServicioUsuarios(db, Options.Create(new PanelOptions()), new FixedClock(Lunes));
+        var servicio = new ServicioUsuarios(db, Options.Create(new PanelOptions()), new FixedClock(Lunes), new Microsoft.AspNetCore.DataProtection.EphemeralDataProtectionProvider());
 
         await servicio.AsegurarUsuarioInicialAsync(esDesarrollo: false, NullLogger.Instance, CancellationToken.None);
         Assert.Empty(await db.UsuariosPanel.ToListAsync());

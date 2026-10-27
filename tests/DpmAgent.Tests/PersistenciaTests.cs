@@ -205,7 +205,7 @@ public class PersistenciaTests
             db,
             Options.Create(new DemoOptions { Habilitado = true }),
             reloj,
-            new ServicioUsuarios(db, Options.Create(new PanelOptions()), reloj),
+            new ServicioUsuarios(db, Options.Create(new PanelOptions()), reloj, new Microsoft.AspNetCore.DataProtection.EphemeralDataProtectionProvider()),
             new ServicioListaEspera(db, dpm, new DespertadorAgenda(), reloj),
             dpm);
 

@@ -17,6 +17,38 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.AccesoDatos", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PacienteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId", "FechaUtc");
+
+                    b.ToTable("AccesosDatos", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.AutorizacionArs", b =>
                 {
                     b.Property<int>("Id")
@@ -374,6 +406,9 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.Property<string>("TelefonoWhatsApp")
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("TotpObligatorioAdmin")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("WhatsAppPhoneNumberId")
                         .HasMaxLength(40)
@@ -1180,11 +1215,17 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.Property<DateTime?>("BloqueadoHastaUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("ClaveFija")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("ConsultorioId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("DebeCambiarClave")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("HashClave")
                         .IsRequired()
@@ -1204,6 +1245,22 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SelloSeguridad")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TotpPendiente")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TotpSecreto")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("TotpUltimoPaso")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("UltimoAccesoUtc")
                         .HasColumnType("TEXT");
 
@@ -1220,6 +1277,15 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .IsUnique();
 
                     b.ToTable("UsuariosPanel", (string)null);
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.AccesoDatos", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.AutorizacionArs", b =>

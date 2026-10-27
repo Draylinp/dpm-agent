@@ -43,6 +43,9 @@ public sealed class Consultorio
     /// <summary>Centros de emergencia cercanos (texto administrativo: nombre, dirección, teléfono; uno por línea).</summary>
     public string? CentrosEmergencia { get; set; }
 
+    /// <summary>Los administradores deben usar un segundo factor (TOTP) para entrar al panel.</summary>
+    public bool TotpObligatorioAdmin { get; set; }
+
     public DateTime CreadoUtc { get; set; }
 }
 
@@ -72,6 +75,42 @@ public sealed class UsuarioPanel
     public DateTime CreadoUtc { get; set; }
 
     public DateTime? UltimoAccesoUtc { get; set; }
+
+    /// <summary>Cambia con la clave (o el segundo factor): las sesiones abiertas con otro sello dejan de valer.</summary>
+    public string SelloSeguridad { get; set; } = Guid.NewGuid().ToString("N");
+
+    /// <summary>La clave la puso otra persona (inicial o creada por un admin) o ya no cumple la política: hay que cambiarla.</summary>
+    public bool DebeCambiarClave { get; set; }
+
+    /// <summary>Usuario de la demo pública: su clave está publicada y nadie la puede cambiar.</summary>
+    public bool ClaveFija { get; set; }
+
+    /// <summary>Secreto TOTP (aplicación autenticadora), protegido con la Data Protection API.</summary>
+    public string? TotpSecreto { get; set; }
+
+    /// <summary>Secreto generado pero todavía no confirmado con un código.</summary>
+    public string? TotpPendiente { get; set; }
+
+    /// <summary>Último intervalo de 30 s usado: un mismo código no sirve dos veces.</summary>
+    public long? TotpUltimoPaso { get; set; }
+}
+
+/// <summary>Quién vio, exportó o borró los datos de un paciente. Solo ids y acción, sin datos personales.</summary>
+public sealed class AccesoDatos
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    /// <summary>Usuario del panel (personal del consultorio, no un paciente).</summary>
+    public required string Usuario { get; set; }
+
+    /// <summary>ver_ficha, exportar o borrar.</summary>
+    public required string Accion { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public DateTime FechaUtc { get; set; }
 }
 
 public sealed class Medico

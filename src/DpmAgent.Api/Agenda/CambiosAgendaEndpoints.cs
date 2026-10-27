@@ -46,12 +46,13 @@ public static class CambiosAgendaEndpoints
         });
 
         // Incluye a los desactivados y a los no localizables, para que la secretaria los vea y los reactive.
-        panel.MapGet("/familias", async (string? telefono, DpmDbContext db, ServicioConsentimiento consentimientos, CancellationToken ct) =>
+        panel.MapGet("/familias", async (string? telefono, ClaimsPrincipal user, DpmDbContext db, ServicioConsentimiento consentimientos, TimeProvider clock, CancellationToken ct) =>
         {
             if (Telefono.Normalizar(telefono) is not { } normalizado)
                 return Results.BadRequest(new { error = "Indique un teléfono válido." });
             var familia = await db.Pacientes.AsNoTracking().Where(p => p.Telefono == normalizado).OrderBy(p => p.Id).ToListAsync(ct);
             var ausencias = await ServicioReprogramacion.AusenciasAsync(db, familia.Select(p => p.Id), ct);
+            await RegistroAccesos.RegistrarAsync(db, user, RegistroAccesos.VerFicha, familia.Select(p => p.Id), clock, ct);
             var lista = new List<object>();
             foreach (var p in familia)
             {

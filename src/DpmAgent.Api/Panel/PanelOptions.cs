@@ -16,7 +16,11 @@ public sealed class PanelOptions
     /// </summary>
     public string? ClaveInicial { get; set; }
 
-    public int MinutosSesion { get; set; } = 480;
+    /// <summary>La sesión del panel se cierra tras estos minutos sin actividad.</summary>
+    public int MinutosInactividad { get; set; } = 30;
+
+    /// <summary>Duración máxima de una sesión aunque haya actividad; después hay que volver a entrar.</summary>
+    public int HorasMaximasSesion { get; set; } = 8;
 
     public int IntentosAntesDeBloquear { get; set; } = 5;
 

@@ -8,7 +8,16 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace DpmAgent.Api.Panel;
 
-public sealed record LoginRequest(string Usuario, string Clave);
+/// <param name="Codigo">Código de la aplicación autenticadora, si el usuario tiene segundo factor.</param>
+public sealed record LoginRequest(string Usuario, string Clave, string? Codigo = null);
+
+public sealed record CambioClaveRequest(string Actual, string Nueva);
+
+public sealed record CodigoRequest(string Codigo);
+
+public sealed record ClaveRequest(string Clave);
+
+public sealed record SeguridadRequest(bool TotpObligatorioAdmin);
 
 public sealed record NuevoUsuarioRequest(string Usuario, string Nombre, string Clave, string Rol);
 
@@ -20,19 +29,21 @@ public static class PanelEndpoints
 {
     public static IEndpointRouteBuilder MapPanel(this IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/auth/login", async (LoginRequest req, HttpContext http, ServicioUsuarios usuarios, Bitacora bitacora, CancellationToken ct) =>
+        app.MapPost("/api/auth/login", async (LoginRequest req, HttpContext http, ServicioUsuarios usuarios, Bitacora bitacora, TimeProvider clock, CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(req.Usuario) || string.IsNullOrEmpty(req.Clave) || req.Clave.Length > 200)
                 return Results.Json(new { error = "Usuario o clave incorrectos." }, statusCode: StatusCodes.Status401Unauthorized);
 
-            var u = await usuarios.ValidarAsync(req.Usuario, req.Clave, ct);
-            if (u is null)
+            var r = await usuarios.ValidarAsync(req.Usuario, req.Clave, req.Codigo, ct);
+            if (r.PideCodigo)
+                return Results.Ok(new { segundoFactor = true });
+            if (r.Usuario is not { } u)
                 return Results.Json(new { error = "Usuario o clave incorrectos." }, statusCode: StatusCodes.Status401Unauthorized);
 
             await http.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                ServicioUsuarios.APrincipal(u, CookieAuthenticationDefaults.AuthenticationScheme));
+                ServicioUsuarios.APrincipal(u, CookieAuthenticationDefaults.AuthenticationScheme, clock.GetUtcNow()));
             await bitacora.RegistrarEnConsultorioAsync(u.ConsultorioId, $"secretaria:{u.Usuario}", "inicio_sesion", ct);
-            return Results.Ok(new { u.Usuario, u.Nombre, u.Rol });
+            return Results.Ok(new { u.Usuario, u.Nombre, u.Rol, restriccion = u.Restriccion });
         }).RequireRateLimiting(ProduccionExtensions.PoliticaLogin);
 
         app.MapPost("/api/auth/logout", async (HttpContext http) =>
@@ -41,12 +52,59 @@ public static class PanelEndpoints
             return Results.Ok();
         });
 
-        app.MapGet("/api/auth/yo", (ClaimsPrincipal user) => Results.Ok(new
+        app.MapGet("/api/auth/yo", async (ClaimsPrincipal user, ServicioUsuarios usuarios, CancellationToken ct) =>
         {
-            usuario = user.Identity!.Name,
-            nombre = user.FindFirstValue("nombre"),
-            rol = user.FindFirstValue(ClaimTypes.Role),
-        })).RequireAuthorization(PanelExtensions.Politica);
+            var u = await usuarios.DeSesionAsync(user, ct);
+            return Results.Ok(new
+            {
+                usuario = user.Identity!.Name,
+                nombre = user.FindFirstValue("nombre"),
+                rol = user.FindFirstValue(ClaimTypes.Role),
+                restriccion = user.FindFirstValue(ServicioUsuarios.ClaimRestriccion),
+                totpActivo = u?.TotpSecreto is not null,
+                claveFija = u?.ClaveFija == true,
+            });
+        }).RequireAuthorization(PanelExtensions.PoliticaSesion);
+
+        // Cambiar la propia clave: cierra las demás sesiones de este usuario y renueva la actual.
+        app.MapPost("/api/auth/clave", async (CambioClaveRequest req, HttpContext http, ServicioUsuarios usuarios, Bitacora bitacora, CancellationToken ct) =>
+            await ConUsuarioAsync(http, usuarios, async u =>
+            {
+                var nuevo = await usuarios.CambiarClaveAsync(u, req.Actual ?? "", req.Nueva ?? "", ct);
+                await bitacora.RegistrarEnConsultorioAsync(u.ConsultorioId, $"secretaria:{u.Usuario}", "clave_cambiada", ct);
+                return nuevo;
+            }, ct)).RequireAuthorization(PanelExtensions.PoliticaSesion).RequireRateLimiting(ProduccionExtensions.PoliticaLogin);
+
+        app.MapPost("/api/auth/totp/iniciar", async (HttpContext http, ServicioUsuarios usuarios, Dpm.IDpmGateway dpm, CancellationToken ct) =>
+        {
+            if (await usuarios.DeSesionAsync(http.User, ct) is not { } u)
+                return Results.Unauthorized();
+            try
+            {
+                var (clave, uri) = await usuarios.IniciarTotpAsync(u, $"DPM Agent ({(await dpm.ObtenerConsultorioAsync(ct)).NombreVisible})", ct);
+                return Results.Ok(new { clave, uri });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
+            }
+        }).RequireAuthorization(PanelExtensions.PoliticaSesion);
+
+        app.MapPost("/api/auth/totp/activar", async (CodigoRequest req, HttpContext http, ServicioUsuarios usuarios, Bitacora bitacora, CancellationToken ct) =>
+            await ConUsuarioAsync(http, usuarios, async u =>
+            {
+                var nuevo = await usuarios.ActivarTotpAsync(u, req.Codigo ?? "", ct);
+                await bitacora.RegistrarEnConsultorioAsync(u.ConsultorioId, $"secretaria:{u.Usuario}", "segundo_factor_activado", ct);
+                return nuevo;
+            }, ct)).RequireAuthorization(PanelExtensions.PoliticaSesion).RequireRateLimiting(ProduccionExtensions.PoliticaLogin);
+
+        app.MapPost("/api/auth/totp/desactivar", async (ClaveRequest req, HttpContext http, ServicioUsuarios usuarios, Bitacora bitacora, CancellationToken ct) =>
+            await ConUsuarioAsync(http, usuarios, async u =>
+            {
+                var nuevo = await usuarios.DesactivarTotpAsync(u, req.Clave ?? "", ct);
+                await bitacora.RegistrarEnConsultorioAsync(u.ConsultorioId, $"secretaria:{u.Usuario}", "segundo_factor_desactivado", ct);
+                return nuevo;
+            }, ct)).RequireAuthorization(PanelExtensions.Politica).RequireRateLimiting(ProduccionExtensions.PoliticaLogin);
 
         var panel = app.MapGroup("/api/panel").RequireAuthorization(PanelExtensions.Politica);
 
@@ -125,6 +183,44 @@ public static class PanelEndpoints
             }
         }).RequireAuthorization(PanelExtensions.PoliticaAdmin);
 
+        panel.MapGet("/seguridad", async (Data.DpmDbContext db, CancellationToken ct) =>
+            Results.Ok(new { totpObligatorioAdmin = await db.Consultorios.Where(c => c.Id == db.ConsultorioId).Select(c => c.TotpObligatorioAdmin).FirstAsync(ct) }))
+            .RequireAuthorization(PanelExtensions.PoliticaAdmin);
+
+        panel.MapPut("/seguridad", async (SeguridadRequest req, ClaimsPrincipal user, Data.DpmDbContext db, Bitacora bitacora, CancellationToken ct) =>
+        {
+            var c = await db.Consultorios.FirstAsync(x => x.Id == db.ConsultorioId, ct);
+            c.TotpObligatorioAdmin = req.TotpObligatorioAdmin;
+            await db.SaveChangesAsync(ct);
+            await bitacora.RegistrarAsync(user.Actor(), "seguridad_configurada", "consultorio", null, null, $"totp_admin={req.TotpObligatorioAdmin}", ct);
+            return Results.Ok(new { totpObligatorioAdmin = c.TotpObligatorioAdmin });
+        }).RequireAuthorization(PanelExtensions.PoliticaAdmin);
+
+        // Bitácora de acceso a datos de pacientes: solo el administrador la ve.
+        panel.MapGet("/accesos", async (Data.DpmDbContext db, CancellationToken ct) =>
+            Results.Ok(await db.AccesosDatos.AsNoTracking().OrderByDescending(a => a.Id).Take(500)
+                .Select(a => new { a.Usuario, a.Accion, pacienteId = a.PacienteId, fecha = a.FechaUtc }).ToListAsync(ct)))
+            .RequireAuthorization(PanelExtensions.PoliticaAdmin);
+
         return app;
+    }
+
+    /// <summary>Acción sobre el propio usuario de la sesión; renueva la cookie (nuevo sello) conservando el inicio.</summary>
+    private static async Task<IResult> ConUsuarioAsync(HttpContext http, ServicioUsuarios usuarios, Func<Data.Entidades.UsuarioPanel, Task<UsuarioActual>> accion, CancellationToken ct)
+    {
+        if (await usuarios.DeSesionAsync(http.User, ct) is not { } u)
+            return Results.Unauthorized();
+        try
+        {
+            var nuevo = await accion(u);
+            var inicio = long.Parse(http.User.FindFirstValue(ServicioUsuarios.ClaimInicio)!, CultureInfo.InvariantCulture);
+            await http.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                ServicioUsuarios.APrincipal(nuevo, CookieAuthenticationDefaults.AuthenticationScheme, DateTimeOffset.FromUnixTimeSeconds(inicio)));
+            return Results.Ok(new { restriccion = nuevo.Restriccion });
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Results.BadRequest(new { error = ex.Message });
+        }
     }
 }

@@ -53,17 +53,33 @@ for (const esquema of ['light', 'dark']) {
 
 // Panel con sesión iniciada (si se da la clave de la secretaria): cada pestaña.
 if (process.env.PANEL_CLAVE) {
+  let claveVigente = process.env.PANEL_CLAVE;
   for (const esquema of ['light', 'dark']) {
     const contexto = await navegador.newContext({ colorScheme: esquema, locale: 'es-DO' });
     const pagina = await contexto.newPage();
     await pagina.goto(base + '/panel.html');
     await pagina.fill('#usuario', 'secretaria');
-    await pagina.fill('#clave', process.env.PANEL_CLAVE);
+    await pagina.fill('#clave', claveVigente);
     await pagina.click('#formLogin button');
     await pagina.waitForSelector('#app:not([hidden])');
+    // Primer inicio de sesión: el panel exige cambiar la clave inicial (y esa pantalla también se audita).
+    if (await pagina.locator('#claveNueva').count() > 0) {
+      await pagina.evaluate(axeFuente);
+      const rc = await pagina.evaluate(async () => await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } }));
+      for (const v of rc.violations) fallos.push(`/panel.html cambio de clave [${esquema}] ${v.id}: ${v.help}`);
+      const nueva = claveVigente + '-Nueva!2026';
+      await pagina.fill('#claveActual', claveVigente);
+      await pagina.fill('#claveNueva', nueva);
+      await pagina.fill('#claveRepetir', nueva);
+      await pagina.locator('#vista button').first().click();
+      await pagina.waitForSelector('dialog.dialogo[open]');
+      await pagina.locator('dialog.dialogo button').first().click();
+      await pagina.waitForSelector('#tabs:not([hidden])');
+      claveVigente = nueva;
+    }
     // El panel no usa alert/prompt/confirm del navegador: sus diálogos son propios y accesibles.
     pagina.on('dialog', async (d) => { fallos.push(`/panel.html [${esquema}] diálogo nativo del navegador: ${d.type()}`); await d.dismiss(); });
-    for (const tab of ['citas', 'escalamientos', 'carnets', 'autorizaciones', 'urgencias', 'seguimientos', 'llamadas', 'medicos', 'familias', 'pacientes', 'costos', 'bitacora']) {
+    for (const tab of ['citas', 'escalamientos', 'carnets', 'autorizaciones', 'urgencias', 'seguimientos', 'llamadas', 'medicos', 'familias', 'pacientes', 'costos', 'bitacora', 'cuenta', 'accesos']) {
       await pagina.click(`#tabs button[data-tab="${tab}"]`);
       await pagina.waitForTimeout(500);
       await pagina.evaluate(axeFuente);

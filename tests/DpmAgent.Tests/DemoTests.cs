@@ -237,5 +237,11 @@ public class DemoTests
 
         Assert.Equal("demo", info!["usuarioPanel"]!.GetValue<string>());
         Assert.True(login.IsSuccessStatusCode);
+
+        // Su clave está publicada en la página: no se le pide cambiarla y nadie puede cambiarla.
+        Assert.Null((await login.Content.ReadFromJsonAsync<JsonObject>())!["restriccion"]);
+        Assert.Equal(HttpStatusCode.OK, (await app.Cliente.GetAsync("/api/panel/citas")).StatusCode);
+        var cambio = await app.Cliente.PostAsJsonAsync("/api/auth/clave", new { actual = "demo-clave-larga-123", nueva = "Una-clave-distinta-2026" });
+        Assert.Equal(HttpStatusCode.BadRequest, cambio.StatusCode);
     }
 }

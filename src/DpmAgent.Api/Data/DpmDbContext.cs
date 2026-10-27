@@ -24,6 +24,8 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<UsuarioPanel> UsuariosPanel => Set<UsuarioPanel>();
 
+    public DbSet<AccesoDatos> AccesosDatos => Set<AccesoDatos>();
+
     public DbSet<Medico> Medicos => Set<Medico>();
 
     public DbSet<Paciente> Pacientes => Set<Paciente>();
@@ -92,6 +94,9 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.Nombre).HasMaxLength(120);
             e.Property(x => x.HashClave).HasMaxLength(200);
             e.Property(x => x.Rol).HasMaxLength(20);
+            e.Property(x => x.SelloSeguridad).HasMaxLength(40);
+            e.Property(x => x.TotpSecreto).HasMaxLength(500);
+            e.Property(x => x.TotpPendiente).HasMaxLength(500);
             e.HasIndex(x => x.Usuario).IsUnique();
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
         });
@@ -103,6 +108,16 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.Telefono).HasMaxLength(20);
             e.Property(x => x.CodigoVerificacionHash).HasMaxLength(100);
             e.HasIndex(x => x.Telefono);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<AccesoDatos>(e =>
+        {
+            e.ToTable("AccesosDatos");
+            e.Property(x => x.Usuario).HasMaxLength(60);
+            e.Property(x => x.Accion).HasMaxLength(20);
+            e.HasIndex(x => new { x.ConsultorioId, x.FechaUtc });
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });

@@ -60,11 +60,33 @@ public sealed class AppDePrueba : IDisposable
         return await accion(scope.ServiceProvider);
     }
 
-    /// <summary>Inicia sesión como la secretaria inicial; la cookie queda en <see cref="Cliente"/>.</summary>
+    /// <summary>Clave con la que queda la secretaria inicial después del cambio obligatorio del primer inicio de sesión.</summary>
+    public const string ClaveSecretariaCambiada = "otra-clave-de-prueba-456";
+
+    private string _claveActual = ClaveSecretaria;
+
+    /// <summary>
+    /// Inicia sesión como la secretaria inicial; la cookie queda en <see cref="Cliente"/>. La primera vez cambia la clave
+    /// inicial, como exige el panel.
+    /// </summary>
     public async Task IniciarSesionAsync()
     {
-        var res = await Cliente.PostAsJsonAsync("/api/auth/login", new { usuario = "secretaria", clave = ClaveSecretaria });
+        var res = await Cliente.PostAsJsonAsync("/api/auth/login", new { usuario = "secretaria", clave = _claveActual });
         res.EnsureSuccessStatusCode();
+        var cuerpo = await res.Content.ReadFromJsonAsync<System.Text.Json.Nodes.JsonObject>();
+        if (cuerpo?["restriccion"]?.ToString() == "cambiar_clave")
+        {
+            (await Cliente.PostAsJsonAsync("/api/auth/clave", new { actual = _claveActual, nueva = ClaveSecretariaCambiada })).EnsureSuccessStatusCode();
+            _claveActual = ClaveSecretariaCambiada;
+        }
+    }
+
+    /// <summary>Otro navegador (sus propias cookies), con el origen del sitio.</summary>
+    public HttpClient NuevoCliente()
+    {
+        var c = _factory.CreateClient();
+        c.DefaultRequestHeaders.Add("Origin", c.BaseAddress!.GetLeftPart(UriPartial.Authority));
+        return c;
     }
 
     public Task<T> ConGateway<T>(Func<IDpmGateway, Task<T>> accion) =>

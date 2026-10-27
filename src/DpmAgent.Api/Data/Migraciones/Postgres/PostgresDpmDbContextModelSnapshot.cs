@@ -22,6 +22,40 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.AccesoDatos", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PacienteId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsultorioId", "FechaUtc");
+
+                    b.ToTable("AccesosDatos", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.AutorizacionArs", b =>
                 {
                     b.Property<int>("Id")
@@ -391,6 +425,9 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<string>("TelefonoWhatsApp")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("TotpObligatorioAdmin")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("WhatsAppPhoneNumberId")
                         .HasMaxLength(40)
@@ -1229,11 +1266,17 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime?>("BloqueadoHastaUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("ClaveFija")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("ConsultorioId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("DebeCambiarClave")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("HashClave")
                         .IsRequired()
@@ -1253,6 +1296,22 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<string>("SelloSeguridad")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("TotpPendiente")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TotpSecreto")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<long?>("TotpUltimoPaso")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime?>("UltimoAccesoUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -1269,6 +1328,15 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .IsUnique();
 
                     b.ToTable("UsuariosPanel", (string)null);
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.AccesoDatos", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.AutorizacionArs", b =>

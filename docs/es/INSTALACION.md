@@ -24,7 +24,7 @@ Complete al menos estos tres valores en `.env`:
 |---|---|
 | `META_API_KEY` | Clave de la Meta Model API |
 | `POSTGRES_PASSWORD` | Clave de la base de datos: larga y aleatoria (`openssl rand -base64 24`) |
-| `Panel__ClaveInicial` | Clave del usuario inicial `secretaria` (admin), de 10 caracteres o más |
+| `Panel__ClaveInicial` | Clave del usuario inicial `secretaria` (admin), de 12 caracteres o más y no común; el panel pide cambiarla en el primer inicio de sesión |
 
 `.env` está en `.gitignore`: nunca lo suba al repositorio. Las demás líneas de `.env.example` traen un valor que funciona y un comentario. Cualquier ajuste de `appsettings.json` se agrega como `Seccion__Clave=valor`.
 

@@ -109,7 +109,7 @@ public sealed class ServicioDemo
         await _db.SaveChangesAsync(ct);
 
         if (!string.IsNullOrWhiteSpace(_opciones.ClavePanel) && !await _db.UsuariosPanel.AnyAsync(u => u.Usuario == UsuarioPanel, ct))
-            await _usuarios.CrearAsync(consultorio.Id, UsuarioPanel, "Demo (ficticia)", _opciones.ClavePanel, "secretaria", ct);
+            await _usuarios.CrearAsync(consultorio.Id, UsuarioPanel, "Demo (ficticia)", _opciones.ClavePanel, "secretaria", ct, claveFija: true);
     }
 
     /// <summary>Borra todo lo del consultorio de demo (menos los usuarios del panel) y vuelve a sembrarlo.</summary>
@@ -131,6 +131,7 @@ public sealed class ServicioDemo
             await _db.CarnetsPendientes.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.Consentimientos.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.Seguimientos.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
+            await _db.AccesosDatos.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.SolicitudesSobrecupo.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.CuposUrgencia.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.BloqueosAgenda.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);

@@ -59,7 +59,7 @@ For App Service to read Key Vault, enable the app's managed identity (`az webapp
 | `Retencion__DiasConversaciones` | 30 by default; the audit log keeps 365 (`Retencion__DiasBitacora`) |
 | `DataProtection__Ruta` | Containers only: persistent folder for the keys that encrypt the dashboard cookie (App Service persists them on its own) |
 
-On startup the app applies migrations and creates the `secretaria` user with `Panel__ClaveInicial`. After the first sign-in, create the real users from the dashboard and change or remove that variable.
+On startup the app applies migrations and creates the `secretaria` user with `Panel__ClaveInicial`. The first sign-in forces a new password (the initial one only works once); then create the real users from the dashboard and remove that variable.
 
 ## 3. GitHub Actions with OIDC
 

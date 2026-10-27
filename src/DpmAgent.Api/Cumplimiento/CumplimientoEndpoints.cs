@@ -57,15 +57,16 @@ public static class CumplimientoEndpoints
             return Results.Ok(new { hecha = true });
         });
 
-        panel.MapGet("/pacientes", async (string? telefono, DpmDbContext db, ServicioConsentimiento servicio, CancellationToken ct) =>
+        panel.MapGet("/pacientes", async (string? telefono, ClaimsPrincipal user, DpmDbContext db, ServicioConsentimiento servicio, TimeProvider clock, CancellationToken ct) =>
         {
             var normalizado = Telefono.Normalizar(telefono);
             if (normalizado is null)
                 return Results.BadRequest(new { error = "Indique un teléfono válido." });
             var p = await db.Pacientes.AsNoTracking().FirstOrDefaultAsync(x => x.Telefono == normalizado, ct);
-            return p is null
-                ? Results.NotFound()
-                : Results.Ok(new { id = IdsDpm.Paciente(p.Id), nombre = p.Nombre, consentimientos = await servicio.EstadoAsync(p.Id, ct) });
+            if (p is null)
+                return Results.NotFound();
+            await Panel.RegistroAccesos.RegistrarAsync(db, user, Panel.RegistroAccesos.VerFicha, [p.Id], clock, ct);
+            return Results.Ok(new { id = IdsDpm.Paciente(p.Id), nombre = p.Nombre, consentimientos = await servicio.EstadoAsync(p.Id, ct) });
         });
 
         panel.MapGet("/pacientes/{id}/consentimientos", async (string id, ServicioConsentimiento servicio, CancellationToken ct) =>
@@ -93,10 +94,11 @@ public static class CumplimientoEndpoints
         });
 
         // Derechos del paciente: copia de sus datos y borrado, a petición suya.
-        panel.MapGet("/pacientes/{id}/exportar", async (string id, ClaimsPrincipal user, ServicioPrivacidad privacidad, CancellationToken ct) =>
+        panel.MapGet("/pacientes/{id}/exportar", async (string id, ClaimsPrincipal user, ServicioPrivacidad privacidad, DpmDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
             if (IdsDpm.Leer(id, "PAC") is not { } pid || await privacidad.ExportarAsync(pid, user.Actor(), ct) is not { } datos)
                 return Results.NotFound();
+            await Panel.RegistroAccesos.RegistrarAsync(db, user, Panel.RegistroAccesos.Exportar, [pid], clock, ct);
             return Results.Text(datos.ToJsonString(new System.Text.Json.JsonSerializerOptions
             {
                 WriteIndented = true,
@@ -105,12 +107,13 @@ public static class CumplimientoEndpoints
         });
 
         panel.MapPost("/pacientes/{id}/borrar", async (
-            string id, BorrarDatosRequest req, ClaimsPrincipal user, ServicioPrivacidad privacidad, CancellationToken ct) =>
+            string id, BorrarDatosRequest req, ClaimsPrincipal user, ServicioPrivacidad privacidad, DpmDbContext db, TimeProvider clock, CancellationToken ct) =>
         {
             if (req.Confirmacion != "BORRAR")
                 return Results.BadRequest(new { error = "Para borrar escriba BORRAR: no se puede deshacer." });
             if (IdsDpm.Leer(id, "PAC") is not { } pid || await privacidad.BorrarAsync(pid, user.Actor(), ct) is not { } r)
                 return Results.NotFound();
+            await Panel.RegistroAccesos.RegistrarAsync(db, user, Panel.RegistroAccesos.Borrar, [pid], clock, ct);
             return Results.Ok(r);
         });
 

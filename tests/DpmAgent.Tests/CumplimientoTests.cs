@@ -255,6 +255,7 @@ public class CumplimientoTests
         var registro = await ConDb(app, db => db.Consentimientos.SingleAsync());
         Assert.Equal(("presencial", "secretaria:secretaria"), (registro.Canal, registro.RegistradoPor));
 
+        await app.IniciarSesionAsync(); // el reloj avanzó horas: la sesión venció por inactividad
         var invalida = await app.Cliente.PostAsJsonAsync("/api/panel/pacientes/PAC-001/consentimientos",
             new { acepta = true, categorias = new[] { "marketing" } });
         Assert.Equal(HttpStatusCode.BadRequest, invalida.StatusCode);

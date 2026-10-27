@@ -29,26 +29,136 @@
 
   function mostrarLogin() { $('app').hidden = true; $('login').hidden = false; }
 
+  let yo = null;
   async function mostrarApp() {
-    const yo = await api('/api/auth/yo');
+    yo = await api('/api/auth/yo');
     $('quien').textContent = `${yo.nombre} (${yo.usuario})`;
     $('login').hidden = true;
     $('app').hidden = false;
+    document.querySelector('#tabs button[data-tab="accesos"]').hidden = yo.rol !== 'admin';
+    // Clave inicial sin cambiar o segundo factor exigido sin activar: solo se puede resolver eso.
+    $('tabs').hidden = !!yo.restriccion;
+    if (yo.restriccion) {
+      $('error').textContent = '';
+      $('vista').replaceChildren(await restriccion(yo.restriccion));
+      return;
+    }
     await cargar();
   }
 
   $('formLogin').addEventListener('submit', async (e) => {
     e.preventDefault();
     $('errorLogin').textContent = '';
+    const conCodigo = !$('grupoCodigo').hidden;
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario: $('usuario').value.trim(), clave: $('clave').value }),
+      body: JSON.stringify({ usuario: $('usuario').value.trim(), clave: $('clave').value, codigo: conCodigo ? $('codigo').value.trim() : null }),
     });
+    if (res.ok) {
+      const datos = await res.json();
+      if (datos.segundoFactor) {
+        $('grupoCodigo').hidden = false;
+        $('codigo').focus();
+        return;
+      }
+    }
     $('clave').value = '';
+    $('codigo').value = '';
+    $('grupoCodigo').hidden = true;
     if (!res.ok) { $('errorLogin').textContent = t('panel.login_error'); return; }
     await mostrarApp();
   });
+
+  const campoCuenta = (id, etiqueta, control) => el('div', {}, el('label', { for: id }, t(etiqueta)), control);
+
+  // Formulario para cambiar la propia clave; al terminar vuelve a cargar el panel.
+  function formularioClave() {
+    const actual = el('input', { id: 'claveActual', type: 'password', autocomplete: 'current-password' });
+    const nueva = el('input', { id: 'claveNueva', type: 'password', autocomplete: 'new-password', minlength: '12' });
+    const repetir = el('input', { id: 'claveRepetir', type: 'password', autocomplete: 'new-password' });
+    const estado = el('p', { role: 'status' });
+    return el('div', {},
+      el('p', { class: 'muted' }, t('cuenta.requisitos')),
+      el('div', { class: 'grid' }, campoCuenta('claveActual', 'cuenta.actual', actual), campoCuenta('claveNueva', 'cuenta.nueva', nueva), campoCuenta('claveRepetir', 'cuenta.repetir', repetir)),
+      el('button', { onclick: async () => {
+        $('error').textContent = '';
+        if (nueva.value !== repetir.value) { $('error').textContent = t('cuenta.no_coinciden'); return; }
+        try {
+          await api('/api/auth/clave', { method: 'POST', body: JSON.stringify({ actual: actual.value, nueva: nueva.value }) });
+          await Dialogo.aviso(t('cuenta.clave_cambiada'));
+          await mostrarApp();
+        } catch (err) { $('error').textContent = err.message; }
+      } }, t('cuenta.cambiar')),
+      estado);
+  }
+
+  // Alta del segundo factor: clave para la aplicación autenticadora y confirmación con un código.
+  async function formularioTotp() {
+    const datos = await api('/api/auth/totp/iniciar', { method: 'POST' });
+    const codigo = el('input', { id: 'codigoTotp', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '6' });
+    return el('div', {},
+      el('p', {}, t('cuenta.totp_pasos')),
+      el('p', {}, el('strong', {}, t('cuenta.totp_clave') + ' '), el('code', {}, datos.clave)),
+      el('p', {}, el('a', { href: datos.uri }, t('cuenta.totp_enlace'))),
+      el('div', { class: 'grid' }, campoCuenta('codigoTotp', 'cuenta.codigo', codigo)),
+      el('button', { onclick: async () => {
+        $('error').textContent = '';
+        try {
+          await api('/api/auth/totp/activar', { method: 'POST', body: JSON.stringify({ codigo: codigo.value.trim() }) });
+          await Dialogo.aviso(t('cuenta.totp_activo'));
+          await mostrarApp();
+        } catch (err) { $('error').textContent = err.message; }
+      } }, t('cuenta.totp_activar')));
+  }
+
+  async function restriccion(tipo) {
+    return el('div', {},
+      el('h2', {}, t(tipo === 'cambiar_clave' ? 'cuenta.debe_cambiar' : 'cuenta.debe_totp')),
+      tipo === 'cambiar_clave' ? formularioClave() : await formularioTotp());
+  }
+
+  // Mi cuenta: cambiar la clave y, para administradores, el segundo factor.
+  async function cuenta() {
+    const partes = [el('h3', {}, t('cuenta.clave'))];
+    partes.push(yo.claveFija ? el('p', { class: 'muted' }, t('cuenta.clave_fija')) : formularioClave());
+    if (yo.rol === 'admin') {
+      partes.push(el('h3', {}, t('cuenta.totp')));
+      if (yo.totpActivo) {
+        const clave = el('input', { id: 'claveTotpOff', type: 'password', autocomplete: 'current-password' });
+        partes.push(el('p', {}, t('cuenta.totp_activo')),
+          el('div', { class: 'grid' }, campoCuenta('claveTotpOff', 'cuenta.actual', clave)),
+          el('button', { class: 'peligro', onclick: () => accion(async () => {
+            await api('/api/auth/totp/desactivar', { method: 'POST', body: JSON.stringify({ clave: clave.value }) });
+            yo = await api('/api/auth/yo');
+          }) }, t('cuenta.totp_desactivar')));
+      } else {
+        let contenedor;
+        partes.push(el('p', { class: 'muted' }, t('cuenta.totp_nota')),
+          contenedor = el('div', {}, el('button', { class: 'sec', onclick: async () => {
+            try { contenedor.replaceChildren(await formularioTotp()); } catch (err) { $('error').textContent = err.message; }
+          } }, t('cuenta.totp_configurar'))));
+      }
+    }
+    return el('div', {}, ...partes);
+  }
+
+  // Solo administradores: segundo factor obligatorio y quién vio, exportó o borró datos de pacientes.
+  async function accesos() {
+    const config = await api('/api/panel/seguridad');
+    const lista = await api('/api/panel/accesos');
+    const obligatorio = el('input', { id: 'totpObligatorio', type: 'checkbox', ...(config.totpObligatorioAdmin ? { checked: 'checked' } : {}) });
+    return el('div', {},
+      el('h3', {}, t('cuenta.totp')),
+      el('div', { class: 'fila-acciones' }, obligatorio, el('label', { for: 'totpObligatorio' }, t('acc.totp_obligatorio'))),
+      el('button', { class: 'sec', onclick: () => accion(() => api('/api/panel/seguridad', { method: 'PUT', body: JSON.stringify({ totpObligatorioAdmin: obligatorio.checked }) })) }, t('urg.guardar')),
+      el('h3', {}, t('acc.titulo')),
+      el('p', { class: 'muted' }, t('acc.nota')),
+      lista.length ? el('div', { class: 'tabla' }, el('table', {},
+        el('thead', {}, el('tr', {}, ['bit.fecha', 'bit.quien', 'bit.accion', 'citas.paciente'].map(k => el('th', {}, t(k))))),
+        el('tbody', {}, lista.map(a => el('tr', {}, el('td', {}, fecha(a.fecha)), el('td', {}, a.usuario), el('td', {}, t('acc.' + a.accion)), el('td', {}, 'PAC-' + String(a.pacienteId).padStart(3, '0')))))))
+        : el('p', { class: 'vacio' }, t('acc.vacio')));
+  }
 
   $('salir').addEventListener('click', async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -70,7 +180,7 @@
     $('error').textContent = '';
     const vista = $('vista');
     try {
-      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, urgencias, seguimientos, llamadas, medicos, familias, pacientes, costos, bitacora })[tab]();
+      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, urgencias, seguimientos, llamadas, medicos, familias, pacientes, cuenta, accesos, costos, bitacora })[tab]();
       vista.replaceChildren(contenido);
     } catch (err) {
       $('error').textContent = err.message;
