@@ -61,6 +61,23 @@ For App Service to read Key Vault, enable the app's managed identity (`az webapp
 
 On startup the app applies migrations and creates the `secretaria` user with `Panel__ClaveInicial`. The first sign-in forces a new password (the initial one only works once); then create the real users from the dashboard and remove that variable.
 
+### Secrets: Key Vault references and rotation
+
+Every secret goes in Key Vault and App Settings only hold a **reference** (`@Microsoft.KeyVault(SecretUri=...)`), never the value. Use a SecretUri **without a version** so App Service follows the latest version: it refreshes references periodically (about every 24 hours) and on every restart or settings change.
+
+**Rotating the Meta API key** (`META_API_KEY`):
+1. Create a new key in the Meta developer console (keep the old one active).
+2. `az keyvault secret set --vault-name <vault> --name meta-api-key --value '<new key>'` (a new version of the same secret).
+3. `az webapp restart -g $GROUP -n $APP` so the app reads it now; check `/health/ready` and send a test message in the demo.
+4. Revoke the old key in the Meta console. If a key may have leaked, do steps 1 to 4 immediately and review the cost view for unusual use.
+
+**Rotating the WhatsApp app secret** (`WhatsApp__AppSecret`, used to verify the webhook signature):
+1. In the Meta app dashboard (App settings → Basic) choose *Reset* for the App Secret: from that moment Meta signs webhooks with the new one.
+2. Right away, `az keyvault secret set --vault-name <vault> --name whatsapp-app-secret --value '<new secret>'` and `az webapp restart`. Webhooks that arrive in between fail the signature check and are rejected (401); Meta retries them, so nothing is lost as long as the restart happens within minutes.
+3. Rotate the access token (`WhatsApp__AccessToken`) the same way when using a long-lived system-user token; `WhatsApp__VerifyToken` can be any new random value, then update it in the webhook settings.
+
+The Data Protection keys are not a secret you rotate by hand: ASP.NET Core rotates them every 90 days and keeps the old ones to read existing data. Never delete that folder (or, on App Service, `/home/ASP.NET/DataProtection-Keys`): it would make the encrypted patient fields unreadable.
+
 ## 3. GitHub Actions with OIDC
 
 1. Create an app registration in Entra ID and a **federated credential** for the repository (`repo:Draylinp/dpm-agent:environment:produccion`).

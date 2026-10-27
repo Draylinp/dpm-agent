@@ -5,6 +5,10 @@ on:
     branches: ['**']
   pull_request:
 
+# Permisos mínimos: el CI solo lee el código.
+permissions:
+  contents: read
+
 jobs:
   build-test:
     runs-on: ubuntu-latest
@@ -25,8 +29,15 @@ jobs:
       # Base desechable del propio job; no es un secreto.
       DPM_TEST_POSTGRES: Host=localhost;Database=dpm_ci;Username=postgres;Password=ci_solo_pruebas
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0 # todo el historial, para el escaneo de secretos
+      - name: Secretos en todo el historial (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" \
+            zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            git /repo --config /repo/.gitleaks.toml --redact --no-banner --exit-code 1
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
         with:
           dotnet-version: 8.0.x
       - run: dotnet restore
@@ -60,7 +71,7 @@ jobs:
           docker compose logs db | tail -20
           docker compose down -v
           test -n "$ok"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
       - name: Accesibilidad (axe-core WCAG 2.1 AA, teclado y tamaño de letra)
@@ -81,3 +92,8 @@ jobs:
           PANEL_CLAVE=clave-solo-ci-123 BASE_URL=http://127.0.0.1:5199 node tests/accesibilidad/auditar.mjs
       - name: Imagen de Docker
         run: docker build -t dpm-agent:ci .
+      - name: Vulnerabilidades de la imagen (Trivy; falla con críticas o altas que tengan arreglo)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa \
+            image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 --no-progress dpm-agent:ci

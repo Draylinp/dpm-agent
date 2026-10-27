@@ -61,6 +61,23 @@ Para que App Service lea Key Vault: activa la identidad administrada de la app (
 
 Al arrancar, la app aplica las migraciones y crea el usuario `secretaria` con `Panel__ClaveInicial`. El primer inicio de sesión obliga a poner una clave nueva (la inicial solo sirve una vez); después crea los usuarios reales desde el panel y retira esa variable.
 
+### Secretos: referencias a Key Vault y rotación
+
+Todos los secretos van en Key Vault y los App Settings solo guardan una **referencia** (`@Microsoft.KeyVault(SecretUri=...)`), nunca el valor. Use un SecretUri **sin versión** para que App Service tome la última: refresca las referencias periódicamente (cada 24 horas aproximadamente) y en cada reinicio o cambio de configuración.
+
+**Rotar la clave de Meta** (`META_API_KEY`):
+1. Cree una clave nueva en la consola de desarrolladores de Meta (deje la anterior activa).
+2. `az keyvault secret set --vault-name <vault> --name meta-api-key --value '<clave nueva>'` (una versión nueva del mismo secreto).
+3. `az webapp restart -g $GROUP -n $APP` para que la app la lea ya; revise `/health/ready` y envíe un mensaje de prueba en la demo.
+4. Revoque la clave anterior en la consola de Meta. Si una clave pudo filtrarse, haga los pasos 1 a 4 de inmediato y revise la vista de costos por usos extraños.
+
+**Rotar el app secret de WhatsApp** (`WhatsApp__AppSecret`, con el que se verifica la firma del webhook):
+1. En el panel de la app de Meta (Configuración de la app → Básica) use *Restablecer* en la clave secreta: desde ese momento Meta firma los webhooks con la nueva.
+2. Enseguida, `az keyvault secret set --vault-name <vault> --name whatsapp-app-secret --value '<secreto nuevo>'` y `az webapp restart`. Los webhooks que lleguen entre medio fallan la firma y se rechazan (401); Meta los reintenta, así que no se pierde nada si el reinicio ocurre en pocos minutos.
+3. Rote igual el token de acceso (`WhatsApp__AccessToken`) si usa un token de usuario del sistema de larga duración; `WhatsApp__VerifyToken` puede ser cualquier valor aleatorio nuevo, y luego se actualiza en la configuración del webhook.
+
+Las llaves de Data Protection no son un secreto que se rote a mano: ASP.NET Core las rota cada 90 días y conserva las anteriores para leer los datos existentes. Nunca borre esa carpeta (o, en App Service, `/home/ASP.NET/DataProtection-Keys`): los campos cifrados de los pacientes quedarían ilegibles.
+
 ## 3. GitHub Actions con OIDC
 
 1. Crea un registro de aplicación en Entra ID y una **credencial federada** para el repositorio (`repo:Draylinp/dpm-agent:environment:produccion`).

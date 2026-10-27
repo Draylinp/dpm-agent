@@ -72,3 +72,11 @@ flowchart LR
 | WhatsApp Cloud API | El teléfono del paciente, el texto del mensaje, el nombre y los parámetros de la plantilla | Para entregar el mensaje | Nada que no esté en el mensaje |
 
 Las claves de API van solo en variables de entorno o referencias a Key Vault (ver [DESPLIEGUE.md](DESPLIEGUE.md)); los logs nunca llevan teléfonos ni texto de pacientes (probado).
+
+## Secretos y cadena de suministro
+
+- **Secretos** solo en variables de entorno o referencias a Key Vault, nunca en el repositorio; la rotación de la clave de Meta y del app secret de WhatsApp está en [DESPLIEGUE.md](DESPLIEGUE.md#secretos-referencias-a-key-vault-y-rotación). El CI revisa **todo el historial de git** con gitleaks en cada push y falla ante cualquier hallazgo (`.gitleaks.toml` solo admite las claves ficticias de las pruebas automáticas).
+- **Dependencias**: Dependabot (`.github/dependabot.yml`) para NuGet, GitHub Actions, el Dockerfile, las imágenes de Docker Compose y las herramientas de la prueba de accesibilidad; licencias verificadas en el CI (`scripts/licencias.py`).
+- **Análisis estático**: CodeQL para C# y JavaScript en cada push y cada semana (`.github/workflows/codeql.yml`, consultas `security-extended`).
+- **Imagen de contenedor**: el CI construye la imagen Docker y la revisa con Trivy; falla ante vulnerabilidades críticas o altas que tengan arreglo. La imagen corre con un usuario sin privilegios.
+- **Workflows**: cada acción está fijada a un SHA de commit (con la versión en un comentario, que Dependabot actualiza), los escáneres corren desde imágenes fijadas por digest y cada workflow declara permisos mínimos (`contents: read`; CodeQL agrega `security-events: write` y el despliegue a Azure `id-token: write` para OIDC, sin contraseñas guardadas).

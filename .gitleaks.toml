@@ -1,0 +1,12 @@
+# Escaneo de secretos (gitleaks) en el CI sobre todo el historial. Reglas por defecto más una excepción acotada:
+# las claves ficticias que usan las pruebas automáticas (no dan acceso a nada; ver tests/DpmAgent.Tests).
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Claves ficticias de las pruebas automáticas"
+regexTarget = "secret"
+regexes = [
+  '''^(otra-)?clave-de-prueba-\d+$''',
+  '''^secretaria-2026-clave$''',
+]
