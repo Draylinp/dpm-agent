@@ -61,6 +61,9 @@ public sealed class Preparacion
 
     /// <summary>Idioma guardado de cada paciente (PAC-001 → en), para los mensajes automáticos.</summary>
     public Dictionary<string, string> IdiomasPacientes { get; init; } = [];
+
+    /// <summary>Borra los permisos de avisos de la semilla (paciente que nunca dio su consentimiento).</summary>
+    public bool SinConsentimientos { get; init; }
 }
 
 public sealed record CitaPreparada(string Paciente, string Medico, string Fecha, string Hora);
@@ -117,6 +120,15 @@ public sealed class Esperado
 
     /// <summary>Debe existir un paciente con este teléfono.</summary>
     public string? PacienteConTelefono { get; init; }
+
+    /// <summary>Permisos de avisos vigentes del paciente del caso, por categoría (recordatorios, seguimientos, lista_espera).</summary>
+    public Dictionary<string, bool>? Avisos { get; init; }
+
+    /// <summary>Avisos que no salieron por falta de permiso y quedaron para que la secretaria llame.</summary>
+    public int? AvisosParaLlamar { get; init; }
+
+    /// <summary>Avisos automáticos (ofertas, recordatorios) que sí se encolaron para enviar.</summary>
+    public int? AvisosEnviados { get; init; }
 
     /// <summary>Respuestas que el filtro de salida debe bloquear.</summary>
     public int? Bloqueos { get; init; }

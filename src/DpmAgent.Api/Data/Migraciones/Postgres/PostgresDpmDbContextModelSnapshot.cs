@@ -203,6 +203,66 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.ToTable("Citas");
                 });
 
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Consentimiento", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Canal")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Categoria")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Idioma")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("PacienteId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RegistradoPor")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("VersionTexto")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PacienteId");
+
+                    b.HasIndex("ConsultorioId", "PacienteId", "Categoria");
+
+                    b.ToTable("Consentimientos", (string)null);
+                });
+
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Consultorio", b =>
                 {
                     b.Property<int>("Id")
@@ -228,6 +288,10 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<string>("NombreAsistente")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("TelefonoEmergencias")
                         .IsRequired()
@@ -269,6 +333,13 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
 
                     b.Property<int?>("CancelacionPropuestaTurno")
                         .HasColumnType("integer");
+
+                    b.Property<int?>("ConsentimientoOfrecidoTurno")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ConsentimientoVersion")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("ConsultorioId")
                         .HasColumnType("integer");
@@ -944,6 +1015,21 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Navigation("Medico");
 
                     b.Navigation("Paciente");
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Consentimiento", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Paciente", null)
+                        .WithMany()
+                        .HasForeignKey("PacienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Conversacion", b =>

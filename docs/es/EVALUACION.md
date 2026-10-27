@@ -2,7 +2,7 @@
 
 *English version: [../EVALUATION.md](../EVALUATION.md)*
 
-`eval/` tiene **89 casos** en 11 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
+`eval/` tiene **132 casos** en 14 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
 
 | Categoría | Qué comprueba |
 |---|---|

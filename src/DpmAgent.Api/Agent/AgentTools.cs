@@ -4,6 +4,9 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Carnet;
+using DpmAgent.Api.Cumplimiento;
+using DpmAgent.Api.Canales;
+using DpmAgent.Api.Idiomas;
 using DpmAgent.Api.Dpm;
 
 namespace DpmAgent.Api.Agent;
@@ -33,11 +36,14 @@ public sealed class AgentTools
     private readonly ServicioCarnet _carnets;
     private readonly ServicioListaEspera? _agenda;
     private readonly Bitacora? _bitacora;
+    private readonly ServicioConsentimiento? _consentimientos;
 
+    /// <param name="consentimientos">Opt-in para mensajes proactivos. Sin él, esas herramientas no están disponibles.</param>
     /// <param name="agenda">Lista de espera y respuestas a mensajes automáticos. Sin ella esas herramientas no están disponibles.</param>
     /// <param name="bitacora">Si se da, cada acción que cambia datos queda registrada.</param>
-    public AgentTools(IDpmGateway dpm, ServicioListaEspera? agenda = null, Bitacora? bitacora = null)
+    public AgentTools(IDpmGateway dpm, ServicioListaEspera? agenda = null, Bitacora? bitacora = null, ServicioConsentimiento? consentimientos = null)
     {
+        _consentimientos = consentimientos;
         _dpm = dpm;
         _carnets = new ServicioCarnet(dpm);
         _agenda = agenda;
@@ -79,6 +85,9 @@ public sealed class AgentTools
                 "responder_oferta" => await ResponderOferta(sesion, args, ct),
                 "confirmar_asistencia" => await ConfirmarAsistencia(sesion, Req(args, "cita_id"), ct),
                 "escalar_a_personal" => await Escalar(sesion, args, ct),
+                "ofrecer_consentimiento" => await OfrecerConsentimiento(sesion, ct),
+                "registrar_consentimiento" => await RegistrarConsentimiento(sesion, args, ct),
+                "darse_de_baja" => await DarseDeBaja(sesion, args, ct),
                 _ => Error($"Herramienta desconocida: {name}"),
             };
         }
@@ -113,7 +122,7 @@ public sealed class AgentTools
             return Ok(new { encontrado = false });
 
         sesion.PacienteId = p.Id;
-        return Ok(new { encontrado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars } });
+        return Ok(new { encontrado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars }, avisos = await EstadoAvisos(p.Id, ct) });
     }
 
     private async Task<string> RegistrarPaciente(Sesion sesion, JsonObject args, CancellationToken ct)
@@ -244,6 +253,39 @@ public sealed class AgentTools
         return Ok(new { escalado = true, id = e.Id, urgente });
     }
 
+    /// <summary>El filtro bloqueó una respuesta de propósito general: solo queda en la bitácora (no es asunto del personal).</summary>
+    public Task RegistrarFueraDeAlcanceAsync(Sesion sesion, string motivo, CancellationToken ct) =>
+        _bitacora?.RegistrarAsync("filtro", "fuera_de_alcance", "conversacion", null, sesion.Id, motivo, ct) ?? Task.CompletedTask;
+
+    /// <summary>El paciente pidió hablar con una persona: se escala siempre, sin pasar por el modelo.</summary>
+    public async Task PedirPersonaAsync(Sesion sesion, CancellationToken ct)
+    {
+        await IdentificarPorTelefonoAsync(sesion, ct);
+        await Escalar(sesion, new JsonObject
+        {
+            ["resumen_es"] = "El paciente pidió hablar con una persona.",
+            ["resumen_en"] = "The patient asked to talk to a person.",
+            ["urgente"] = false,
+        }, ct);
+    }
+
+    /// <summary>El paciente respondió STOP (o equivalente): se revocan todos sus permisos de avisos.</summary>
+    public async Task BajaPorMensajeAsync(Sesion sesion, CancellationToken ct)
+    {
+        await IdentificarPorTelefonoAsync(sesion, ct);
+        if (_consentimientos is not null && IdsDpm.Leer(sesion.PacienteId, "PAC") is { } id)
+            await _consentimientos.RevocarTodoAsync(id, CanalDeSesion(sesion), sesion.Idioma, Bitacora.Agente, sesion.Id, ct);
+    }
+
+    private async Task IdentificarPorTelefonoAsync(Sesion sesion, CancellationToken ct)
+    {
+        if (sesion.PacienteId is not null || sesion.TelefonoCanal is null)
+            return;
+        var p = await _dpm.BuscarPacienteAsync(sesion.TelefonoCanal, ct);
+        if (p is not null && Telefono.Iguales(p.Telefono, sesion.TelefonoCanal))
+            sesion.PacienteId = p.Id;
+    }
+
     /// <summary>
     /// El filtro de salida bloqueó una respuesta: se escala al personal (con el mensaje del paciente)
     /// y queda en la bitácora con el texto bloqueado y el motivo.
@@ -283,9 +325,15 @@ public sealed class AgentTools
             ct);
 
         await Registrar(sesion, "lista_espera", "lista_espera", e.Id, $"{e.PacienteId} para {e.MedicoId}", ct);
+        var avisoPorMensaje = _consentimientos is not null && IdsDpm.Leer(e.PacienteId, "PAC") is { } pid &&
+                              await _consentimientos.VigenteAsync(pid, CategoriasConsentimiento.ListaEspera, ct);
         return Ok(new
         {
             en_lista = true,
+            aviso_por_mensaje = avisoPorMensaje,
+            nota = avisoPorMensaje
+                ? null
+                : "Sin permiso para avisos de lista de espera: si se libera un turno, la secretaria le llamará. Si quiere recibirlos por mensaje, usa ofrecer_consentimiento.",
             id = e.Id,
             medico_id = e.MedicoId,
             desde = e.Desde.ToString("yyyy-MM-dd"),
@@ -327,6 +375,91 @@ public sealed class AgentTools
         await Registrar(sesion, "asistencia_confirmada", "cita", cita.Id, null, ct);
         return Ok(new { asistencia_confirmada = true, cita = Resumen(cita) });
     }
+
+    private const string SinConsentimientos = "Los permisos de avisos no están disponibles en este momento. Usa escalar_a_personal.";
+
+    private async Task<object?> EstadoAvisos(string pacienteId, CancellationToken ct)
+    {
+        if (_consentimientos is null || IdsDpm.Leer(pacienteId, "PAC") is not { } id)
+            return null;
+
+        var estado = await _consentimientos.EstadoAsync(id, ct);
+        return new
+        {
+            permisos = estado.ToDictionary(e => e.Categoria, e => e.Otorgado),
+            // Solo se ofrece a quien nunca respondió: a quien se dio de baja no se le insiste.
+            ofrecer_consentimiento = estado.All(e => e.FechaUtc is null),
+        };
+    }
+
+    /// <summary>
+    /// Muestra el texto de consentimiento fijo (lo agrega el servidor al final de la respuesta, en el idioma del
+    /// paciente). La respuesta solo se puede registrar en un turno posterior, como la cancelación.
+    /// </summary>
+    private async Task<string> OfrecerConsentimiento(Sesion sesion, CancellationToken ct)
+    {
+        if (_consentimientos is null)
+            return Error(SinConsentimientos);
+        PacienteDeSesion(sesion);
+
+        var consultorio = await _dpm.ObtenerConsultorioAsync(ct);
+        sesion.ConsentimientoOfrecidoTurno = sesion.Turno;
+        sesion.ConsentimientoVersion = ServicioConsentimiento.VersionTexto;
+        sesion.AnexoRespuesta = _consentimientos.Texto(sesion.Idioma, consultorio.NombreVisible);
+        return Ok(new
+        {
+            mostrado = true,
+            instruccion = "El sistema agrega el texto de permiso al final de tu respuesta. No lo repitas. Cuando el paciente responda, usa registrar_consentimiento.",
+        });
+    }
+
+    private async Task<string> RegistrarConsentimiento(Sesion sesion, JsonObject args, CancellationToken ct)
+    {
+        if (_consentimientos is null)
+            return Error(SinConsentimientos);
+        var pacienteId = IdsDpm.Leer(PacienteDeSesion(sesion), "PAC")!.Value;
+
+        if (sesion.ConsentimientoOfrecidoTurno is not { } turno || turno >= sesion.Turno || sesion.ConsentimientoVersion is null)
+            return Error("Primero hay que mostrarle el texto de permiso con ofrecer_consentimiento y esperar su respuesta.");
+
+        var acepta = args["acepta"]?.GetValueKind() switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => throw new ArgumentException("Falta el parámetro 'acepta' (true o false)."),
+        };
+        var categorias = args["categorias"] is JsonArray arr && arr.Count > 0 ? arr.Select(c => c?.ToString() ?? "").ToList() : null;
+
+        await _consentimientos.RegistrarAsync(pacienteId, categorias, acepta, CanalDeSesion(sesion), sesion.Idioma, Bitacora.Agente, sesion.Id, ct,
+            sesion.ConsentimientoVersion);
+        sesion.ConsentimientoOfrecidoTurno = null;
+        sesion.ConsentimientoVersion = null;
+
+        var consultorio = await _dpm.ObtenerConsultorioAsync(ct);
+        sesion.AnexoRespuesta = Textos.Obtener(acepta ? "consentimiento.otorgado" : "consentimiento.rechazado", sesion.Idioma, consultorio.NombreVisible);
+        return Ok(new { registrado = true, otorgado = acepta, instruccion = "El sistema agrega la confirmación al final de tu respuesta." });
+    }
+
+    /// <summary>Revocar es seguro: se hace al momento, sin segundo paso.</summary>
+    private async Task<string> DarseDeBaja(Sesion sesion, JsonObject args, CancellationToken ct)
+    {
+        if (_consentimientos is null)
+            return Error(SinConsentimientos);
+        var pacienteId = IdsDpm.Leer(PacienteDeSesion(sesion), "PAC")!.Value;
+
+        var categorias = args["categorias"] is JsonArray arr && arr.Count > 0 ? arr.Select(c => c?.ToString() ?? "").ToList() : null;
+        if (categorias is null)
+            await _consentimientos.RevocarTodoAsync(pacienteId, CanalDeSesion(sesion), sesion.Idioma, Bitacora.Agente, sesion.Id, ct);
+        else
+            await _consentimientos.RegistrarAsync(pacienteId, categorias, false, CanalDeSesion(sesion), sesion.Idioma, Bitacora.Agente, sesion.Id, ct);
+
+        var consultorio = await _dpm.ObtenerConsultorioAsync(ct);
+        sesion.AnexoRespuesta = Textos.Obtener("consentimiento.baja", sesion.Idioma, consultorio.NombreVisible);
+        return Ok(new { baja = true, instruccion = "El sistema agrega la confirmación al final de tu respuesta." });
+    }
+
+    internal static string CanalDeSesion(Sesion sesion) =>
+        CanalesConocidos.DeSesion(sesion.Id) == CanalesConocidos.WhatsApp ? CanalesConsentimiento.WhatsApp : CanalesConsentimiento.Web;
 
     private Task Registrar(Sesion sesion, string accion, string entidad, string? entidadId, string? detalle, CancellationToken ct) =>
         _bitacora?.RegistrarAsync(Bitacora.Agente, accion, entidad, entidadId, sesion.Id, detalle, ct) ?? Task.CompletedTask;
@@ -462,6 +595,33 @@ public sealed class AgentTools
                     ["urgente"] = new JsonObject { ["type"] = "boolean", ["description"] = "true si el paciente describe una posible emergencia." },
                 },
                 "resumen_es", "resumen_en", "urgente"),
+            Tool("ofrecer_consentimiento",
+                "Muestra al paciente el texto oficial para pedirle permiso de enviarle avisos (recordatorios, seguimiento de trámites, lista de espera). Usarla una vez si buscar_paciente indica ofrecer_consentimiento = true, o si el paciente pide recibir avisos.",
+                new JsonObject()),
+            Tool("registrar_consentimiento",
+                "Registra la respuesta del paciente al texto de permiso que se le mostró en un mensaje anterior.",
+                new JsonObject
+                {
+                    ["acepta"] = new JsonObject { ["type"] = "boolean", ["description"] = "true si acepta recibir avisos, false si no." },
+                    ["categorias"] = new JsonObject
+                    {
+                        ["type"] = "array",
+                        ["items"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray(CategoriasConsentimiento.Todas.Select(c => (JsonNode)c).ToArray()) },
+                        ["description"] = "Solo si acepta algunas categorías y no todas.",
+                    },
+                },
+                "acepta"),
+            Tool("darse_de_baja",
+                "El paciente ya no quiere recibir avisos (todos o algunos). Se aplica de inmediato.",
+                new JsonObject
+                {
+                    ["categorias"] = new JsonObject
+                    {
+                        ["type"] = "array",
+                        ["items"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray(CategoriasConsentimiento.Todas.Select(c => (JsonNode)c).ToArray()) },
+                        ["description"] = "Vacío para darse de baja de todo.",
+                    },
+                }),
         ];
     }
 }

@@ -102,6 +102,7 @@ public sealed class ServicioDemo
             await _db.ListaEspera.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.AutorizacionesArs.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.CarnetsPendientes.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
+            await _db.Consentimientos.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.Escalamientos.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.Bitacora.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.Citas.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);

@@ -11,8 +11,12 @@ namespace DpmAgent.Api.Seguridad;
 /// <param name="Bloquear">true si la respuesta no se debe enviar al paciente.</param>
 /// <param name="Motivo">Por qué (en español, para la bitácora).</param>
 /// <param name="Fuente">Qué capa decidió: reglas, llama-guard o modelo.</param>
-public sealed record VeredictoFiltro(bool Bloquear, string Motivo, string Fuente)
+/// <param name="Categoria">clinico (consejo médico: se escala) o fuera_de_alcance (respuesta de propósito general: no se escala).</param>
+public sealed record VeredictoFiltro(bool Bloquear, string Motivo, string Fuente, string Categoria = VeredictoFiltro.Clinico)
 {
+    public const string Clinico = "clinico";
+    public const string FueraDeAlcance = "fuera_de_alcance";
+
     public static readonly VeredictoFiltro Permitir = new(false, "", "");
 }
 
@@ -66,6 +70,10 @@ public sealed partial class FiltroReglas : IFiltroSalida
                 return Task.FromResult(new VeredictoFiltro(true, motivo, "reglas"));
         }
 
+        // Una recepción nunca necesita código: es la señal más clara de una respuesta de propósito general.
+        if (BloqueDeCodigo().IsMatch(respuesta))
+            return Task.FromResult(new VeredictoFiltro(true, "La respuesta contiene código (fuera del alcance del consultorio).", "reglas", VeredictoFiltro.FueraDeAlcance));
+
         return Task.FromResult(VeredictoFiltro.Permitir);
     }
 
@@ -76,6 +84,9 @@ public sealed partial class FiltroReglas : IFiltroSalida
         (Unidades(), "La respuesta indica una cantidad de pastillas o tabletas."),
         (Indicacion(), "La respuesta indica tomar o dar un medicamento."),
     ];
+
+    [GeneratedRegex(@"```|^\s*(def|function|class|import|public static|SELECT|#include)\b[^\n]*[({:;]", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
+    private static partial Regex BloqueDeCodigo();
 
     [GeneratedRegex(@"\b\d+([.,]\d+)?\s*(mg|mcg|µg|ml|cc|gotas|drops|gout|ui|iu)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex Dosis();

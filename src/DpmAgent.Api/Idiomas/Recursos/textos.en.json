@@ -18,7 +18,14 @@
   "entrada.archivo_grande": "The file is too large. Please send a smaller one.",
   "canal.solo_texto_voz_carnet": "For now I can only read text messages, voice notes and photos of your health insurance card.",
   "canal.disculpa": "Sorry, we had a problem processing your message. We have already notified the clinic staff.",
-  "agenda.oferta": "Hi, {0}. A slot opened up with {1} on {2} at {3}. Would you like it? Reply YES to book it or NO to let it go. This offer expires at {4}.",
-  "agenda.oferta_vencida": "The slot on {0} at {1} is no longer available because the time to accept it ran out. You are still on the waiting list and we will let you know if another one opens up.",
-  "agenda.recordatorio": "Hi, {0}. This is a reminder of your appointment with {1} on {2} at {3} (appointment {4}). Reply CONFIRM to confirm or CANCEL if you can't make it."
+  "agenda.oferta": "Hi, {1}. This is {0}: a slot opened up with {2} on {3} at {4}. Would you like it? Reply YES to book it or NO to let it go. This offer expires at {5}. To stop receiving notices, reply STOP.",
+  "agenda.oferta_vencida": "Notice from {0}: the slot on {1} at {2} is no longer available because the time to accept it ran out. You are still on the waiting list and we will let you know if another one opens up. To stop receiving notices, reply STOP.",
+  "agenda.recordatorio": "Hi, {1}. {0} reminds you of your appointment with {2} on {3} at {4} (appointment {5}). Reply CONFIRM to confirm or CANCEL if you can't make it. To stop receiving notices, reply STOP.",
+  "agente.presentacion": "Hi, this is {0}, the automated assistant of {1}. I can help you with appointments and clinic paperwork. If you would rather talk to a person, write \"talk to a person\".",
+  "agente.persona": "Of course. I have let the staff at {0} know, and a person will contact you as soon as possible.",
+  "agente.fuera_de_alcance": "I can only help with clinic matters: appointments, schedules, changes, cancellations and health insurance paperwork. Can I help you with one of these?",
+  "consentimiento.texto": "To send you notices on WhatsApp, {0} needs your permission. If you agree, you will only get messages about your appointments: reminders 24 hours before, follow-up on your paperwork, and notices of freed slots if you are on the waiting list. Never advertising. You can opt out at any time by writing STOP. Privacy notice: {1}. Do you agree? Reply YES or NO.",
+  "consentimiento.otorgado": "Thank you. Your permission to receive notices from {0} has been recorded. To stop receiving them, write STOP.",
+  "consentimiento.rechazado": "Understood, we will not send you notices by message. If needed, the staff will call you.",
+  "consentimiento.baja": "Done, we will not send you any more notices from {0}. If you change your mind, write to us and we will ask for your permission again."
 }

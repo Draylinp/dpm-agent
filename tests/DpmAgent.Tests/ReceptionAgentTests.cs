@@ -40,7 +40,7 @@ public class ReceptionAgentTests
         Assert.Equal(["buscar_paciente", "consultar_disponibilidad", "crear_cita"], reply.Pasos.Select(p => p.Herramienta));
         Assert.Contains("\"creada\":true", reply.Pasos[2].Resultado);
         Assert.Single(await dpm.CitasDePacienteAsync("PAC-001", CancellationToken.None));
-        Assert.Equal("Su cita quedó para el martes 27 a las 8:00 a. m.", reply.Respuesta);
+        Assert.EndsWith("Su cita quedó para el martes 27 a las 8:00 a. m.", reply.Respuesta);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class ReceptionAgentTests
 
         // system + user + assistant + user
         Assert.Equal(4, modelo.Llamadas[1].Count);
-        Assert.Equal("¿Para qué día?", modelo.Llamadas[1][2]["content"]!.ToString());
+        Assert.EndsWith("¿Para qué día?", modelo.Llamadas[1][2]["content"]!.ToString());
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class ReceptionAgentTests
         var reply = await agent.RunAsync(null, "cita", CancellationToken.None);
 
         Assert.Contains("\"error\"", reply.Pasos[0].Resultado);
-        Assert.Equal("Ese médico no existe.", reply.Respuesta);
+        Assert.EndsWith("Ese médico no existe.", reply.Respuesta);
     }
 
     [Fact]

@@ -52,6 +52,8 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<RegistroUsoModelo> UsosModelo => Set<RegistroUsoModelo>();
 
+    public DbSet<Consentimiento> Consentimientos => Set<Consentimiento>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
         // SQLite devuelve DateTime sin Kind y PostgreSQL exige UTC: todo entra y sale como UTC.
@@ -67,6 +69,7 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.WhatsAppPhoneNumberId).HasMaxLength(40);
             e.Property(x => x.TelefonoEmergencias).HasMaxLength(20).HasDefaultValue("911");
             e.Property(x => x.IdiomaPredeterminado).HasMaxLength(10).HasDefaultValue("es");
+            e.Property(x => x.NombreAsistente).HasMaxLength(60);
             e.HasIndex(x => x.WhatsAppPhoneNumberId).IsUnique();
         });
 
@@ -252,6 +255,7 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.SesionId).HasMaxLength(100);
             e.Property(x => x.TelefonoCanal).HasMaxLength(20);
             e.Property(x => x.CancelacionPropuesta).HasMaxLength(30);
+            e.Property(x => x.ConsentimientoVersion).HasMaxLength(20);
             e.Property(x => x.Idioma).HasMaxLength(10);
             e.HasIndex(x => new { x.ConsultorioId, x.SesionId }).IsUnique();
             e.HasIndex(x => x.ActualizadaUtc);
@@ -264,6 +268,22 @@ public abstract class DpmDbContext : DbContext
         b.Entity<Mensaje>(e =>
         {
             e.Property(x => x.Rol).HasMaxLength(20);
+        });
+
+        b.Entity<Consentimiento>(e =>
+        {
+            e.ToTable("Consentimientos");
+            e.Property(x => x.Telefono).HasMaxLength(20);
+            e.Property(x => x.Categoria).HasMaxLength(20);
+            e.Property(x => x.Estado).HasMaxLength(10);
+            e.Property(x => x.Canal).HasMaxLength(20);
+            e.Property(x => x.VersionTexto).HasMaxLength(20);
+            e.Property(x => x.Idioma).HasMaxLength(10);
+            e.Property(x => x.RegistradoPor).HasMaxLength(60);
+            e.HasIndex(x => new { x.ConsultorioId, x.PacienteId, x.Categoria });
+            e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
 
         b.Entity<RegistroUsoModelo>(e =>

@@ -2,6 +2,7 @@ using System.Collections.Frozen;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using DpmAgent.Api.Dpm;
 
 namespace DpmAgent.Api.Idiomas;
@@ -56,6 +57,21 @@ public static class Textos
         Idiomas.Espanol => CultureInfo.GetCultureInfo("es-DO"),
         _ => CultureInfo.GetCultureInfo("en-US"),
     };
+
+    private static readonly Lazy<Regex[]> PatronesFijos = new(() => PorIdioma.Values
+        .SelectMany(d => d.Values)
+        .Select(t => new Regex("^" + Regex.Replace(Regex.Escape(t), @"\\\{\d+\}", ".+?") + "$", RegexOptions.Singleline))
+        .ToArray());
+
+    /// <summary>
+    /// Quita de una respuesta los párrafos que son textos fijos del sistema (presentación, permisos de avisos...)
+    /// y deja lo que escribió el modelo. Sirve para juzgar el idioma de la respuesta del modelo.
+    /// </summary>
+    public static string SinTextosFijos(string respuesta)
+    {
+        var parrafos = respuesta.Split("\n\n").Where(p => !PatronesFijos.Value.Any(r => r.IsMatch(p.Trim()))).ToList();
+        return parrafos.Count == 0 ? respuesta : string.Join("\n\n", parrafos);
+    }
 
     private static FrozenDictionary<string, FrozenDictionary<string, string>> Cargar()
     {

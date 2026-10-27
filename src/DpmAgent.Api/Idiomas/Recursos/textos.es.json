@@ -18,7 +18,14 @@
   "entrada.archivo_grande": "El archivo es demasiado grande. Envíe uno más pequeño.",
   "canal.solo_texto_voz_carnet": "Por ahora solo puedo leer mensajes de texto, notas de voz y fotos del carnet de la ARS.",
   "canal.disculpa": "Disculpe, tuvimos un problema para procesar su mensaje. Ya avisamos al personal del consultorio.",
-  "agenda.oferta": "Hola, {0}. Se liberó un turno con {1} el {2} a las {3}. ¿Lo quiere? Responda SÍ para reservarlo o NO para dejarlo pasar. La oferta vence a las {4}.",
-  "agenda.oferta_vencida": "El turno del {0} a las {1} ya no está disponible porque venció el tiempo para aceptarlo. Sigue en la lista de espera y le avisaremos si se libera otro.",
-  "agenda.recordatorio": "Hola, {0}. Le recordamos su cita con {1} el {2} a las {3} (cita {4}). Responda CONFIRMO para confirmar su asistencia o CANCELAR si no puede ir."
+  "agenda.oferta": "Hola, {1}. {0} le avisa: se liberó un turno con {2} el {3} a las {4}. ¿Lo quiere? Responda SÍ para reservarlo o NO para dejarlo pasar. La oferta vence a las {5}. Para no recibir más avisos, responda STOP.",
+  "agenda.oferta_vencida": "Aviso de {0}: el turno del {1} a las {2} ya no está disponible porque venció el tiempo para aceptarlo. Sigue en la lista de espera y le avisaremos si se libera otro. Para no recibir más avisos, responda STOP.",
+  "agenda.recordatorio": "Hola, {1}. {0} le recuerda su cita con {2} el {3} a las {4} (cita {5}). Responda CONFIRMO para confirmar su asistencia o CANCELAR si no puede ir. Para no recibir más avisos, responda STOP.",
+  "agente.presentacion": "Hola, le atiende {0}, el asistente automático de {1}. Le ayudo con citas y trámites del consultorio. Si prefiere hablar con una persona, escriba \"hablar con una persona\".",
+  "agente.persona": "Con gusto. Ya avisé al personal de {0} y una persona le contactará lo antes posible.",
+  "agente.fuera_de_alcance": "Solo puedo ayudarle con asuntos del consultorio: citas, horarios, cambios, cancelaciones y trámites de la ARS. ¿Le ayudo con alguno de estos?",
+  "consentimiento.texto": "Para enviarle avisos por WhatsApp, {0} necesita su permiso. Si acepta, recibirá solo mensajes sobre sus citas: recordatorios 24 horas antes, seguimiento de sus trámites y avisos de turnos liberados si está en la lista de espera. Nunca publicidad. Puede darse de baja cuando quiera escribiendo STOP. Aviso de privacidad: {1}. ¿Acepta? Responda SÍ o NO.",
+  "consentimiento.otorgado": "Gracias. Quedó registrado su permiso para recibir avisos de {0}. Para dejar de recibirlos, escriba STOP.",
+  "consentimiento.rechazado": "Entendido, no le enviaremos avisos por mensaje. Si hace falta, el personal le llamará.",
+  "consentimiento.baja": "Listo, no le enviaremos más avisos de {0}. Si cambia de opinión, escríbanos y le pediremos su permiso de nuevo."
 }

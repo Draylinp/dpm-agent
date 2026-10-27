@@ -56,5 +56,33 @@ public static class DatosDemo
             });
 
         await db.SaveChangesAsync(ct);
+
+        // María y José dieron su permiso para avisos en la recepción (ficticio): así la demo muestra
+        // el recordatorio y la oferta de la lista de espera. Otros pacientes nuevos empiezan sin permiso.
+        var ids = await db.Pacientes.IgnoreQueryFilters()
+            .Where(p => p.ConsultorioId == consultorioId && (p.Telefono == TelefonoMaria || p.Telefono == TelefonoJose))
+            .Select(p => new { p.Id, p.Telefono })
+            .ToListAsync(ct);
+        foreach (var p in ids)
+        {
+            foreach (var categoria in Cumplimiento.CategoriasConsentimiento.Todas)
+            {
+                db.Consentimientos.Add(new Consentimiento
+                {
+                    ConsultorioId = consultorioId,
+                    PacienteId = p.Id,
+                    Telefono = p.Telefono,
+                    Categoria = categoria,
+                    Estado = "otorgado",
+                    Canal = Cumplimiento.CanalesConsentimiento.Presencial,
+                    VersionTexto = Cumplimiento.ServicioConsentimiento.VersionTexto,
+                    Idioma = "es",
+                    RegistradoPor = "semilla",
+                    FechaUtc = ahora,
+                });
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
     }
 }

@@ -18,7 +18,14 @@
   "entrada.archivo_grande": "Fichye a twò gwo. Tanpri voye yon pi piti.",
   "canal.solo_texto_voz_carnet": "Pou kounye a, mwen ka li sèlman mesaj ekri, nòt vokal ak foto kat asirans ou.",
   "canal.disculpa": "Eskize nou, nou te gen yon pwoblèm pou nou trete mesaj ou a. Nou deja avèti pèsonèl klinik la.",
-  "agenda.oferta": "Bonjou {0}. Gen yon randevou ki libere ak {1} {2} a {3}. Èske ou vle l? Reponn WI pou pran l oswa NON pou kite l. Òf la ap fini a {4}.",
-  "agenda.oferta_vencida": "Randevou {0} a {1} pa disponib ankò paske tan pou aksepte l la fini. Ou toujou sou lis datant lan e n ap fè ou konnen si gen yon lòt ki libere.",
-  "agenda.recordatorio": "Bonjou {0}. Nou raple ou randevou ou ak {1} {2} a {3} (randevou {4}). Reponn KONFIME pou konfime oswa ANILE si ou pa ka vini."
+  "agenda.oferta": "Bonjou {1}. {0} fè w konnen: gen yon randevou ki libere ak {2} jou {3} a {4}. Èske ou vle l? Reponn WI pou pran l oswa NON pou kite l. Òf la ap fini a {5}. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.oferta_vencida": "Avi {0}: randevou {1} a {2} pa disponib ankò paske tan pou aksepte l la fini. Ou toujou sou lis datant lan e n ap fè ou konnen si gen yon lòt ki libere. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.recordatorio": "Bonjou {1}. {0} raple w randevou ou ak {2} jou {3} a {4} (randevou {5}). Reponn KONFIME pou konfime oswa ANILE si ou pa ka vini. Pou pa resevwa plis avi, reponn STOP.",
+  "agente.presentacion": "Bonjou, se {0} k ap reponn ou, asistan otomatik {1}. Mwen ka ede w ak randevou ak demach nan klinik la. Si ou prefere pale ak yon moun, ekri \"pale ak yon moun\".",
+  "agente.persona": "Avèk plezi. Mwen deja avèti pèsonèl {0}, e yon moun ap kontakte w pi vit posib.",
+  "agente.fuera_de_alcance": "Mwen ka ede w sèlman ak afè klinik la: randevou, orè, chanjman, anilasyon ak papye asirans (ARS). Èske m ka ede w ak youn nan bagay sa yo?",
+  "consentimiento.texto": "Pou {0} ka voye w avi sou WhatsApp, nou bezwen pèmisyon w. Si ou aksepte, w ap resevwa sèlman mesaj sou randevou w: rapèl 24 èdtan anvan, swivi demach ou yo, ak avi lè yon plas libere si ou sou lis datant lan. Pa janm piblisite. Ou ka sispann resevwa yo nenpòt ki lè si w ekri STOP. Avi sou vi prive: {1}. Èske ou aksepte? Reponn WI oswa NON.",
+  "consentimiento.otorgado": "Mèsi. Nou anrejistre pèmisyon w pou resevwa avi {0}. Pou sispann resevwa yo, ekri STOP.",
+  "consentimiento.rechazado": "Dakò, nou p ap voye w avi pa mesaj. Si sa nesesè, pèsonèl la ap rele w.",
+  "consentimiento.baja": "Fini, nou p ap voye w okenn lòt avi {0}. Si ou chanje lide, ekri nou e n ap mande w pèmisyon ankò."
 }

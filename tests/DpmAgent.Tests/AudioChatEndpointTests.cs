@@ -51,7 +51,7 @@ public class AudioChatEndpointTests
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         var json = (await res.Content.ReadFromJsonAsync<JsonObject>())!;
         Assert.Equal("Quiero una cita con la doctora", json["transcripcion"]!.ToString());
-        Assert.Equal("Claro, María. ¿Para qué día quiere la cita?", json["respuesta"]!.ToString());
+        Assert.EndsWith("Claro, María. ¿Para qué día quiere la cita?", json["respuesta"]!.ToString());
         Assert.Contains("PAC-001", json["pasos"]![0]!["resultado"]!.ToString());
 
         var mensajeUsuario = modelo.Llamadas[0][^1];

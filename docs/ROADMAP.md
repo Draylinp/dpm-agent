@@ -24,6 +24,7 @@ Entrega: **miércoles 4 de noviembre, 9:00 PM ET** (misma hora en República Dom
 | Lun 26 oct | F15: `docker-compose.yml` (app + PostgreSQL con volúmenes y healthcheck, perfil opcional `glimmer` con vLLM en GPU local), `.env.example` completo y guía de instalación en inglés y español | ✅ |
 | Lun 26 oct | F16: README final para los jueces (inglés y español): frase y captura real de la demo, problema con marcadores `<!-- CIFRA PILOTO -->`, tabla de uso de Meta, resultados de evaluación y costo, seguridad, arquitectura en Mermaid, demo, Docker y pruebas | ✅ |
 | Pendiente | F16: llenar las cifras del piloto, reemplazar la captura por un GIF de una conversación real y el costo con Muse Spark | ⬜ |
+| Mar 27 oct | F22: cumplimiento de WhatsApp Business. Alcance acotado al consultorio (negativa amable, filtro de código), presentación como asistente automático con nombre configurable, "hablar con una persona" y STOP atendidos por el servidor, consentimiento por categoría con versión del texto (WhatsApp, web o presencial), sin aviso proactivo sin permiso (pasa a "Llamadas pendientes"), plantillas de utilidad es/en/ht con nombre del consultorio y baja; 43 casos nuevos en el banco (132) | ✅ |
 | Pendiente | F11: correr el banco contra Muse Spark y pegar la tabla en el README | ⬜ |
 | Lun 26 oct | Pruebas de integración opcionales contra la Meta Model API, script con curl y guía de ajustes | ✅ |
 | Mar 27 oct | Workshop Meta P1. Primera llamada real (`docs/es/PRUEBAS-META.md`) y ajuste del prompt con conversaciones de prueba | ⬜ |

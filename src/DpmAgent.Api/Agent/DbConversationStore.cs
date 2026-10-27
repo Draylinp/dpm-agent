@@ -48,6 +48,8 @@ public sealed class DbConversationStore : IConversationStore
             Turno = conv.Turno,
             CancelacionPropuesta = conv.CancelacionPropuesta,
             CancelacionPropuestaTurno = conv.CancelacionPropuestaTurno,
+            ConsentimientoOfrecidoTurno = conv.ConsentimientoOfrecidoTurno,
+            ConsentimientoVersion = conv.ConsentimientoVersion,
             Mensajes = mensajes,
             MensajesGuardados = mensajes.Count,
         };
@@ -70,6 +72,8 @@ public sealed class DbConversationStore : IConversationStore
         conv.Turno = sesion.Turno;
         conv.CancelacionPropuesta = sesion.CancelacionPropuesta;
         conv.CancelacionPropuestaTurno = sesion.CancelacionPropuestaTurno;
+        conv.ConsentimientoOfrecidoTurno = sesion.ConsentimientoOfrecidoTurno;
+        conv.ConsentimientoVersion = sesion.ConsentimientoVersion;
         conv.ActualizadaUtc = ahora;
 
         foreach (var m in sesion.Mensajes.Skip(sesion.MensajesGuardados))

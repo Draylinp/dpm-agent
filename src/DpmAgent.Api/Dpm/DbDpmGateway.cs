@@ -177,7 +177,7 @@ public sealed class DbDpmGateway : IDpmGateway
         var c = await _db.Consultorios.AsNoTracking().FirstOrDefaultAsync(x => x.Id == _db.ConsultorioId, ct);
         return c is null
             ? new InfoConsultorio("", "911", "es")
-            : new InfoConsultorio(c.Nombre, c.TelefonoEmergencias, c.IdiomaPredeterminado);
+            : new InfoConsultorio(c.Nombre, c.TelefonoEmergencias, c.IdiomaPredeterminado, c.NombreAsistente);
     }
 
     private static string Recortar(string s, int max) => s.Length <= max ? s : s[..max];

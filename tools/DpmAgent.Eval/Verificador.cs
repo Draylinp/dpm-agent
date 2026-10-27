@@ -64,8 +64,11 @@ public static class Verificador
         if (e.IdiomaRespuesta is { } idiomaRespuesta)
         {
             // La última respuesta (el paciente pudo cambiar de idioma); si es ambigua, todas juntas.
-            var detectado = DetectorIdioma.Detectar(respuestas.LastOrDefault())?.Codigo
-                             ?? DetectorIdioma.Detectar(string.Join(" ", respuestas))?.Codigo;
+            // Se juzga lo que escribió el modelo: los textos fijos del sistema (presentación, permisos) salen
+            // en inglés para los idiomas de nivel 2, por diseño.
+            var delModelo = respuestas.Select(Textos.SinTextosFijos).ToList();
+            var detectado = DetectorIdioma.Detectar(delModelo.LastOrDefault())?.Codigo
+                             ?? DetectorIdioma.Detectar(string.Join(" ", delModelo))?.Codigo;
             if (detectado is not null && detectado != idiomaRespuesta)
                 fallos.Add($"Las respuestas están en {detectado}; se esperaba {idiomaRespuesta}.");
         }
@@ -127,6 +130,34 @@ public static class Verificador
             var p = await db.Pacientes.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, ct);
             if (p is null || p.Ars != seguro.Ars || p.NumeroAfiliado != seguro.Afiliado)
                 fallos.Add($"El seguro de {seguro.Paciente} es {p?.Ars ?? "-"} / {p?.NumeroAfiliado ?? "-"}; se esperaba {seguro.Ars ?? "-"} / {seguro.Afiliado ?? "-"}.");
+        }
+
+        if (e.Avisos is { } avisos)
+        {
+            var estado = paciente is null
+                ? []
+                : await scope.ServiceProvider.GetRequiredService<Api.Cumplimiento.ServicioConsentimiento>().EstadoAsync(paciente.Id, ct);
+            foreach (var (categoria, esperado) in avisos)
+            {
+                var vigente = estado.FirstOrDefault(x => x.Categoria == categoria)?.Otorgado ?? false;
+                if (vigente != esperado)
+                    fallos.Add($"El permiso de {categoria} quedó en {vigente}; se esperaba {esperado}.");
+            }
+        }
+
+        var tiposAviso = new[] { "oferta", "aviso", "recordatorio", "seguimiento" };
+        if (e.AvisosParaLlamar is { } paraLlamar)
+        {
+            var n = await db.MensajesSalientes.CountAsync(m => m.Estado == Api.Agenda.Notificador.EstadoLlamar, ct);
+            if (n != paraLlamar)
+                fallos.Add($"Hay {n} avisos para llamar; se esperaban {paraLlamar}.");
+        }
+
+        if (e.AvisosEnviados is { } enviados)
+        {
+            var n = await db.MensajesSalientes.CountAsync(m => tiposAviso.Contains(m.Tipo) && m.Estado != Api.Agenda.Notificador.EstadoLlamar, ct);
+            if (n != enviados)
+                fallos.Add($"Se encolaron {n} avisos automáticos; se esperaban {enviados}.");
         }
 
         if (e.CarnetsPendientes is { } pendientes)

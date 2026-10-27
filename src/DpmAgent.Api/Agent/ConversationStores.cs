@@ -39,6 +39,17 @@ public sealed class Sesion
 
     public int? CancelacionPropuestaTurno { get; set; }
 
+    /// <summary>
+    /// Turno en que se mostró el texto de consentimiento y su versión. Como cancelar, la respuesta solo
+    /// se registra en un turno posterior: tiene que venir de un mensaje real del paciente.
+    /// </summary>
+    public int? ConsentimientoOfrecidoTurno { get; set; }
+
+    public string? ConsentimientoVersion { get; set; }
+
+    /// <summary>Texto fijo que el servidor agrega al final de la respuesta de este turno (no lo escribe el modelo).</summary>
+    internal string? AnexoRespuesta { get; set; }
+
     public List<JsonObject> Mensajes { get; set; } = [];
 
     /// <summary>Cuántos de <see cref="Mensajes"/> ya estaban guardados al cargar la sesión.</summary>
@@ -73,6 +84,8 @@ public sealed class Sesion
         Turno = Turno,
         CancelacionPropuesta = CancelacionPropuesta,
         CancelacionPropuestaTurno = CancelacionPropuestaTurno,
+        ConsentimientoOfrecidoTurno = ConsentimientoOfrecidoTurno,
+        ConsentimientoVersion = ConsentimientoVersion,
         Mensajes = new List<JsonObject>(Mensajes),
         MensajesGuardados = Mensajes.Count,
     };

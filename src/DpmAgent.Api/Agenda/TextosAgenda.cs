@@ -14,24 +14,25 @@ public sealed record MensajeAgenda(string Texto, string Plantilla, IReadOnlyList
 /// </summary>
 public static class TextosAgenda
 {
-    public static MensajeAgenda Oferta(string idioma, string nombrePaciente, string medico, DateTimeOffset fechaHora, DateTimeOffset vence)
+    // Todas llevan el nombre del consultorio ({0} en la plantilla) y cómo darse de baja (STOP): plantillas de utilidad.
+    public static MensajeAgenda Oferta(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, DateTimeOffset vence)
     {
         var i = Idiomas.Idiomas.ParaTextos(idioma);
-        string[] p = [PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), Textos.Hora(vence, i)];
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), Textos.Hora(vence, i)];
         return new(Textos.Obtener("agenda.oferta", i, p), "oferta", p, i);
     }
 
-    public static MensajeAgenda OfertaVencida(string idioma, DateTimeOffset fechaHora)
+    public static MensajeAgenda OfertaVencida(string idioma, string consultorio, DateTimeOffset fechaHora)
     {
         var i = Idiomas.Idiomas.ParaTextos(idioma);
-        string[] p = [Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i)];
+        string[] p = [consultorio, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i)];
         return new(Textos.Obtener("agenda.oferta_vencida", i, p), "oferta_vencida", p, i);
     }
 
-    public static MensajeAgenda Recordatorio(string idioma, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId)
+    public static MensajeAgenda Recordatorio(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId)
     {
         var i = Idiomas.Idiomas.ParaTextos(idioma);
-        string[] p = [PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId];
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId];
         return new(Textos.Obtener("agenda.recordatorio", i, p), "recordatorio", p, i);
     }
 

@@ -187,7 +187,7 @@ public class FiltroEnElAgenteTests
         var r = await agente.RunAsync("wa-8095550101", pregunta, "8095550101", CancellationToken.None);
         await agente.RunAsync(r.SesionId, "ok", null, CancellationToken.None);
 
-        Assert.Equal(Textos.Obtener("agente.respuesta_bloqueada", idiomaSeguro, "911"), r.Respuesta);
+        Assert.EndsWith(Textos.Obtener("agente.respuesta_bloqueada", idiomaSeguro, "911"), r.Respuesta);
         Assert.Contains(r.Pasos, p => p.Herramienta == "filtro_salida" && p.Resultado.Contains("\"bloqueada\":true"));
 
         var e = Assert.Single(await dpm.ListarEscalamientosAsync(CancellationToken.None));

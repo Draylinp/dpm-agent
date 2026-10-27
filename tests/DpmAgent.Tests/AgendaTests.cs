@@ -128,7 +128,7 @@ public sealed class AgendaTests : IDisposable
 
         // José no tenía conversación: se le escribe por WhatsApp y la oferta queda en su historial.
         var historial = await new DbConversationStore(_db.Contexto(), _reloj).ObtenerAsync(jose.Id, CancellationToken.None);
-        Assert.Contains("Se liberó un turno", historial.Mensajes[^1]["content"]!.ToString());
+        Assert.Contains("se liberó un turno", historial.Mensajes[^1]["content"]!.ToString());
         await Peticion().Despachador.DespacharPendientesAsync(CancellationToken.None);
         var enviado = Assert.Single(_whatsApp.Enviados);
         Assert.Equal("8295550102", enviado.Destino);

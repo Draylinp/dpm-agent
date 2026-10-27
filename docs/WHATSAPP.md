@@ -39,22 +39,25 @@ WhatsApp only allows free-form text if the patient wrote in the last 24 hours. S
 
 Language code for each translation: `WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht` (defaults `es`, `en`, `ht`). Check in *WhatsApp Manager* which codes your account accepts; if a language is not available, point it to the English one.
 
-Suggested bodies (the same texts the system uses, in `src/DpmAgent.Api/Idiomas/Recursos/`):
+Ready to submit for approval. All three are **Utility** templates (never Marketing): they are about an appointment the patient already has or asked for, name the clinic (`{{1}}`) inside the text, and end with how to opt out (STOP). No body starts or ends with a variable, which Meta rejects. The texts come from `src/DpmAgent.Api/Idiomas/Recursos/` (the same ones the system sends inside the 24-hour window); tests check every translation for the clinic name, the opt-out line and that format.
 
-**recordatorio**
-- es: Hola, {{1}}. Le recordamos su cita con {{2}} el {{3}} a las {{4}} (cita {{5}}). Responda CONFIRMO para confirmar su asistencia o CANCELAR si no puede ir.
-- en: Hi, {{1}}. This is a reminder of your appointment with {{2}} on {{3}} at {{4}} (appointment {{5}}). Reply CONFIRM to confirm or CANCEL if you can't make it.
-- ht: Bonjou {{1}}. Nou raple ou randevou ou ak {{2}} {{3}} a {{4}} (randevou {{5}}). Reponn KONFIME pou konfime oswa ANILE si ou pa ka vini.
+**recordatorio** — category *Utility*, variables: clinic, patient first name, doctor, day, time, appointment id. Sample values for review: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `martes 27 de octubre`, `9:00 a. m.`, `CITA-12`
 
-**oferta**
-- es: Hola, {{1}}. Se liberó un turno con {{2}} el {{3}} a las {{4}}. ¿Lo quiere? Responda SÍ para reservarlo o NO para dejarlo pasar. La oferta vence a las {{5}}.
-- en: Hi, {{1}}. A slot opened up with {{2}} on {{3}} at {{4}}. Would you like it? Reply YES to book it or NO to let it go. This offer expires at {{5}}.
-- ht: Bonjou {{1}}. Gen yon randevou ki libere ak {{2}} {{3}} a {{4}}. Èske ou vle l? Reponn WI pou pran l oswa NON pou kite l. Òf la ap fini a {{5}}.
+- es: Hola, {{2}}. {{1}} le recuerda su cita con {{3}} el {{4}} a las {{5}} (cita {{6}}). Responda CONFIRMO para confirmar su asistencia o CANCELAR si no puede ir. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} reminds you of your appointment with {{3}} on {{4}} at {{5}} (appointment {{6}}). Reply CONFIRM to confirm or CANCEL if you can't make it. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} raple w randevou ou ak {{3}} jou {{4}} a {{5}} (randevou {{6}}). Reponn KONFIME pou konfime oswa ANILE si ou pa ka vini. Pou pa resevwa plis avi, reponn STOP.
 
-**oferta_vencida**
-- es: El turno del {{1}} a las {{2}} ya no está disponible porque venció el tiempo para aceptarlo. Sigue en la lista de espera y le avisaremos si se libera otro.
-- en: The slot on {{1}} at {{2}} is no longer available because the time to accept it ran out. You are still on the waiting list and we will let you know if another one opens up.
-- ht: Randevou {{1}} a {{2}} pa disponib ankò paske tan pou aksepte l la fini. Ou toujou sou lis datant lan e n ap fè ou konnen si gen yon lòt ki libere.
+**oferta** — category *Utility*, variables: clinic, patient first name, doctor, day, time, offer expiry time. Sample values for review: `Consultorio Ejemplo`, `José`, `Dra. Ana Valdez`, `martes 27 de octubre`, `9:00 a. m.`, `8:00 a. m.`
+
+- es: Hola, {{2}}. {{1}} le avisa: se liberó un turno con {{3}} el {{4}} a las {{5}}. ¿Lo quiere? Responda SÍ para reservarlo o NO para dejarlo pasar. La oferta vence a las {{6}}. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. This is {{1}}: a slot opened up with {{3}} on {{4}} at {{5}}. Would you like it? Reply YES to book it or NO to let it go. This offer expires at {{6}}. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} fè w konnen: gen yon randevou ki libere ak {{3}} jou {{4}} a {{5}}. Èske ou vle l? Reponn WI pou pran l oswa NON pou kite l. Òf la ap fini a {{6}}. Pou pa resevwa plis avi, reponn STOP.
+
+**oferta_vencida** — category *Utility*, variables: clinic, day, time. Sample values for review: `Consultorio Ejemplo`, `martes 27 de octubre`, `9:00 a. m.`
+
+- es: Aviso de {{1}}: el turno del {{2}} a las {{3}} ya no está disponible porque venció el tiempo para aceptarlo. Sigue en la lista de espera y le avisaremos si se libera otro. Para no recibir más avisos, responda STOP.
+- en: Notice from {{1}}: the slot on {{2}} at {{3}} is no longer available because the time to accept it ran out. You are still on the waiting list and we will let you know if another one opens up. To stop receiving notices, reply STOP.
+- ht: Avi {{1}}: randevou {{2}} a {{3}} pa disponib ankò paske tan pou aksepte l la fini. Ou toujou sou lis datant lan e n ap fè ou konnen si gen yon lòt ki libere. Pou pa resevwa plis avi, reponn STOP.
 
 If a key has no template, the message is sent as text (useful for testing inside the 24-hour window).
 
@@ -71,6 +74,19 @@ If a key has no template, the message is sent as text (useful for testing inside
 5. The reply is queued in `MensajesSalientes` and the dispatcher sends it. If processing fails 3 times, the patient gets an apology and an escalation is created.
 
 Each patient's WhatsApp session is `wa-` + their 10-digit number and is bound to that number.
+
+## 5. WhatsApp Business policy compliance
+
+The WhatsApp Business terms in effect since January 15, 2026 do not allow distributing general-purpose AI assistants, but they do allow a business to use AI to serve its own customers. Business-initiated messages need approved templates and prior opt-in that names the business. This is how DPM Agent meets each point:
+
+| Requirement | How it is met | Where |
+|---|---|---|
+| Not a general-purpose assistant | The prompt limits the agent to this clinic's administrative tasks and tells it to refuse anything else politely in the patient's language. There is no general tool. Replies with code are blocked by the output filter and replaced with the fixed out-of-scope message. The evaluation bank has a `fuera_de_tema` category (6 cases per guaranteed language). | `Agent/ReceptionAgent.cs`, `Seguridad/FiltroSalida.cs`, `eval/casos/12-fuera_de_tema.json` |
+| Transparency | The first reply of every conversation is prefixed by the server with "this is {name}, the automated assistant of {clinic}" (name set by the admin, `Clara` by default). "Talk to a person" / "hablar con una persona" / "pale ak yon moun" (also fr/pt) always creates an escalation, without going through the model. | `Cumplimiento/PedidosDirectos.cs`, `eval/casos/13-transparencia.json` |
+| Opt-in that names the business | `Consentimiento` records: patient, phone, category (`recordatorios`, `seguimientos`, `lista_espera`), state, date, channel (`whatsapp`, `web`, `presencial`) and the version of the text shown. The text names the clinic, says which messages the patient will get and how to opt out, and links the privacy notice. It is shown by the server (not written by the model), and the answer is only recorded on a later turn, from a real patient message. The receptionist can record it in person from the dashboard. | `Cumplimiento/ServicioConsentimiento.cs`, `Cumplimiento/CumplimientoEndpoints.cs` |
+| No proactive message without opt-in | Before queuing a reminder or an offer, the notifier checks the consent for that category. Without it nothing is sent: the notice appears in the dashboard under **Calls to make**. | `Agenda/Notificador.cs` |
+| Opt-out | Replying STOP (or BAJA, SISPANN, UNSUBSCRIBE…) revokes every category at once, without the model. The agent can also revoke some categories (`darse_de_baja`), and the receptionist can record a withdrawal. Opting back in needs a new consent. | `Cumplimiento/PedidosDirectos.cs`, `Agent/AgentTools.cs` |
+| Utility templates only | See section 3. No marketing or promotions are ever sent. | `Idiomas/Recursos/` |
 
 ## Local testing
 

@@ -25,6 +25,9 @@ public sealed class Consultorio
     /// <summary>Consultorio de demostración con datos ficticios: el único que el botón "Reiniciar demo" puede borrar.</summary>
     public bool EsDemo { get; set; }
 
+    /// <summary>Nombre con el que se presenta el asistente automático ("Clara" si no se define).</summary>
+    public string? NombreAsistente { get; set; }
+
     public DateTime CreadoUtc { get; set; }
 }
 
@@ -212,7 +215,7 @@ public sealed class MensajeSaliente
     /// <summary>Parámetros de la plantilla, como arreglo JSON de textos.</summary>
     public string? ParametrosJson { get; set; }
 
-    /// <summary>pendiente, enviado o fallido.</summary>
+    /// <summary>pendiente, enviado, fallido, llamar (sin consentimiento: la secretaria llama) o llamado.</summary>
     public required string Estado { get; set; }
 
     public int Intentos { get; set; }
@@ -410,6 +413,11 @@ public sealed class Conversacion
 
     public int? CancelacionPropuestaTurno { get; set; }
 
+    /// <summary>Turno en que se le mostró el texto de consentimiento y su versión (para registrar la respuesta).</summary>
+    public int? ConsentimientoOfrecidoTurno { get; set; }
+
+    public string? ConsentimientoVersion { get; set; }
+
     public DateTime CreadaUtc { get; set; }
 
     public DateTime ActualizadaUtc { get; set; }
@@ -455,4 +463,39 @@ public sealed class RegistroUsoModelo
     public int TokensSalida { get; set; }
 
     public int Milisegundos { get; set; }
+}
+
+/// <summary>
+/// Consentimiento (opt-in) para recibir mensajes por iniciativa del consultorio. Cada cambio es un registro
+/// nuevo: el vigente es el más reciente por paciente y categoría. Guarda la versión del texto que se mostró.
+/// </summary>
+public sealed class Consentimiento
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    /// <summary>Teléfono de contacto al que se refiere (10 dígitos).</summary>
+    public required string Telefono { get; set; }
+
+    /// <summary>recordatorios, seguimientos o lista_espera.</summary>
+    public required string Categoria { get; set; }
+
+    /// <summary>otorgado o revocado.</summary>
+    public required string Estado { get; set; }
+
+    /// <summary>whatsapp, web o presencial.</summary>
+    public required string Canal { get; set; }
+
+    /// <summary>Versión del texto de consentimiento mostrado (ver Cumplimiento/TextoConsentimiento).</summary>
+    public required string VersionTexto { get; set; }
+
+    public string? Idioma { get; set; }
+
+    /// <summary>agente, sistema o el usuario del panel que lo registró.</summary>
+    public required string RegistradoPor { get; set; }
+
+    public DateTime FechaUtc { get; set; }
 }

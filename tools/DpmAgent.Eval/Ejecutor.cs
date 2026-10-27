@@ -3,6 +3,7 @@ using System.Globalization;
 using DpmAgent.Api.Agenda;
 using DpmAgent.Api.Agent;
 using DpmAgent.Api.Carnet;
+using DpmAgent.Api.Cumplimiento;
 using DpmAgent.Api.Data;
 using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Model;
@@ -128,6 +129,7 @@ public sealed class Ejecutor
         s.AddSingleton<ILectorCarnet>(entrada);
         s.AddScoped<ProcesadorNotaVoz>();
         s.AddScoped<ProcesadorCarnet>();
+        s.AddCumplimiento(config);
         s.AddScoped<AgentTools>();
         s.AddScoped<ReceptionAgent>();
         s.AddFiltroSalida(config);
@@ -161,6 +163,9 @@ public sealed class Ejecutor
             consultorio.TelefonoEmergencias = emergencias;
             await db.SaveChangesAsync(ct);
         }
+
+        if (prep.SinConsentimientos)
+            await db.Consentimientos.ExecuteDeleteAsync(ct);
 
         foreach (var (pacienteId, idioma) in prep.IdiomasPacientes)
         {

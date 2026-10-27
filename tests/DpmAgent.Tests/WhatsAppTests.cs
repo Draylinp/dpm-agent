@@ -249,7 +249,10 @@ public class WhatsAppFlujoTests
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         Assert.Equal("Quiero una cita", modelo.Llamadas[0][^1]["content"]!.ToString());
         Assert.Contains("PAC-001", modelo.Llamadas[1][^1]["content"]!.ToString());
-        Assert.Equal([("PNID", "18095550101", "Hola, María. ¿Para qué día quiere la cita?")], api.Textos);
+        var (remitente, destino, texto) = Assert.Single(api.Textos);
+        Assert.Equal(("PNID", "18095550101"), (remitente, destino));
+        Assert.StartsWith("Hola, le atiende Clara, el asistente automático de Consultorio Ejemplo (ficticio).", texto);
+        Assert.EndsWith("Hola, María. ¿Para qué día quiere la cita?", texto);
         Assert.Equal("procesado", Assert.Single(await Entrantes(app)).Estado);
     }
 
@@ -293,7 +296,7 @@ public class WhatsAppFlujoTests
         await Procesar(app);
 
         Assert.Equal("[Nota de voz] Quiero cita con la pediatra", modelo.Llamadas[0][^1]["content"]!.ToString());
-        Assert.Equal("Claro, ¿para qué día?", Assert.Single(api.Textos).Texto);
+        Assert.EndsWith("Claro, ¿para qué día?", Assert.Single(api.Textos).Texto);
     }
 
     [Fact]
@@ -390,7 +393,7 @@ public class WhatsAppFlujoTests
         var enviado = Assert.Single(api.Plantillas);
         Assert.Equal("recordatorio_cita", enviado.Plantilla);
         Assert.Equal("18095550101", enviado.Destino);
-        Assert.Equal("María", enviado.Parametros[0]);
+        Assert.Equal(["Consultorio Ejemplo (ficticio)", "María"], enviado.Parametros.Take(2));
     }
 }
 

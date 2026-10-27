@@ -38,7 +38,16 @@ public sealed record NuevoEscalamiento(
     string? Idioma = null);
 
 /// <summary>Lo que el agente necesita saber del consultorio.</summary>
-public sealed record InfoConsultorio(string Nombre, string TelefonoEmergencias, string IdiomaPredeterminado);
+/// <param name="NombreAsistente">Nombre con el que se presenta el asistente; null usa <see cref="NombreAsistentePredeterminado"/>.</param>
+public sealed record InfoConsultorio(string Nombre, string TelefonoEmergencias, string IdiomaPredeterminado, string? NombreAsistente = null)
+{
+    public const string NombreAsistentePredeterminado = "Clara";
+
+    public string Asistente => string.IsNullOrWhiteSpace(NombreAsistente) ? NombreAsistentePredeterminado : NombreAsistente;
+
+    /// <summary>Nombre del consultorio para los mensajes a pacientes.</summary>
+    public string NombreVisible => string.IsNullOrWhiteSpace(Nombre) ? "DPM" : Nombre;
+}
 
 /// <summary>
 /// Datos leídos de la foto de un carnet de ARS. Quedan en estado "pendiente" hasta que

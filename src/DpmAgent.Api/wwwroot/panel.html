@@ -79,6 +79,8 @@
       <button data-tab="escalamientos" data-i18n="tab.escalamientos"></button>
       <button data-tab="carnets" data-i18n="tab.carnets"></button>
       <button data-tab="autorizaciones" data-i18n="tab.autorizaciones"></button>
+      <button data-tab="llamadas" data-i18n="tab.llamadas"></button>
+      <button data-tab="pacientes" data-i18n="tab.pacientes"></button>
       <button data-tab="costos" data-i18n="tab.costos"></button>
       <button data-tab="bitacora" data-i18n="tab.bitacora"></button>
     </nav>
@@ -158,7 +160,7 @@
     $('error').textContent = '';
     const vista = $('vista');
     try {
-      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, costos, bitacora })[tab]();
+      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, llamadas, pacientes, costos, bitacora })[tab]();
       vista.replaceChildren(contenido);
     } catch (err) {
       $('error').textContent = err.message;
@@ -269,6 +271,48 @@
       el('h3', {}, t('costos.por_modelo')),
       el('table', {}, el('tbody', {}, c.porModelo.map(m =>
         el('tr', {}, el('td', {}, m.modelo), el('td', {}, String(m.llamadas)), el('td', {}, `${m.tokensEntrada} / ${m.tokensSalida}`), el('td', {}, dinero(m.costo)))))));
+  }
+
+  // Avisos que no se enviaron porque el paciente no dio permiso: hay que llamarle.
+  async function llamadas() {
+    const lista = await api('/api/panel/llamadas');
+    if (!lista.length) return el('p', { class: 'vacio' }, t('llam.vacio'));
+    return el('div', {},
+      el('p', { class: 'muted' }, t('llam.nota')),
+      lista.map(l => el('div', { class: 'item' },
+        el('div', { class: 'fila-acciones' },
+          el('strong', {}, l.paciente), el('span', { class: 'muted' }, l.telefono),
+          el('span', { class: 'chip' }, t('llam.tipo.' + l.tipo)), el('span', { class: 'muted' }, fecha(l.creado))),
+        el('p', {}, l.texto),
+        el('button', { onclick: () => accion(() => api(`/api/panel/llamadas/${l.id}/hecha`, { method: 'POST' })) }, t('llam.hecha')))));
+  }
+
+  // Buscar un paciente por teléfono y registrar en persona su permiso para avisos.
+  let telefonoPaciente = '';
+  async function pacientes() {
+    const entrada = el('input', { type: 'tel', value: telefonoPaciente, 'aria-label': t('pac.telefono'), placeholder: '809-555-0101' });
+    const buscar = el('button', { onclick: () => { telefonoPaciente = entrada.value.trim(); cargar(); } }, t('pac.buscar'));
+    const cabecera = el('div', { class: 'fila-acciones' }, el('label', {}, t('pac.telefono') + ' '), entrada, buscar);
+    if (!telefonoPaciente) return el('div', {}, cabecera, el('p', { class: 'muted' }, t('pac.ayuda')));
+
+    let p;
+    try { p = await api(`/api/panel/pacientes?telefono=${encodeURIComponent(telefonoPaciente)}`); }
+    catch (err) { return el('div', {}, cabecera, el('p', { class: 'vacio' }, t('pac.no_encontrado'))); }
+
+    const texto = await api(`/api/panel/consentimiento/texto?idioma=${I18N.idioma}`);
+    const registrar = (acepta) => accion(() => api(`/api/panel/pacientes/${p.id}/consentimientos`,
+      { method: 'POST', body: JSON.stringify({ acepta, idioma: I18N.idioma }) }));
+    return el('div', {}, cabecera,
+      el('h3', {}, `${p.nombre} (${p.id})`),
+      el('table', {}, el('tbody', {}, p.consentimientos.map(c => el('tr', {},
+        el('th', {}, t('pac.cat.' + c.categoria)),
+        el('td', {}, c.otorgado ? t('pac.otorgado') : t('pac.sin_permiso')),
+        el('td', { class: 'muted' }, c.fechaUtc ? `${fecha(c.fechaUtc)} · ${c.canal} · v${c.versionTexto}` : ''))))),
+      el('h3', {}, t('pac.texto')),
+      el('blockquote', {}, texto.texto),
+      el('div', { class: 'fila-acciones' },
+        el('button', { onclick: () => registrar(true) }, t('pac.registrar')),
+        el('button', { class: 'peligro', onclick: () => registrar(false) }, t('pac.retirar'))));
   }
 
   async function bitacora() {

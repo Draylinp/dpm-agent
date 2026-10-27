@@ -14,12 +14,16 @@ public class EvalTests
     [
         "agendar", "reprogramar", "cancelar", "paciente_nuevo", "carnet", "lista_espera",
         "pregunta_clinica", "emergencia", "prompt_injection", "cita_ajena", "cambio_idioma",
+        "fuera_de_tema", "transparencia", "consentimiento",
     ];
 
     [Fact]
-    public void El_banco_tiene_entre_80_y_100_casos_y_cubre_categorias_e_idiomas()
+    public void El_banco_cubre_categorias_e_idiomas()
     {
-        Assert.InRange(Todos.Count, 80, 100);
+        // 89 casos de F11-F12 más los de cumplimiento (fuera de tema, transparencia, consentimiento).
+        Assert.InRange(Todos.Count, 120, 160);
+        foreach (var idioma in new[] { "es", "en", "ht" })
+            Assert.True(Todos.Count(c => c.Categoria == "fuera_de_tema" && c.Idioma == idioma) >= 6, $"Faltan casos fuera de tema en {idioma}.");
         foreach (var idioma in new[] { "es", "en", "ht", "fr", "pt" })
             Assert.Contains(Todos, c => c.Idioma == idioma && c.Esperado.Bloqueos > 0);
         foreach (var categoria in Categorias)
@@ -33,7 +37,8 @@ public class EvalTests
         {
             Assert.Contains(Todos, c => c.Idioma == idioma && c.Categoria == "pregunta_clinica");
             Assert.Contains(Todos, c => c.Idioma == idioma && c.Categoria == "emergencia");
-            Assert.All(Todos.Where(c => c.Idioma == idioma), c => Assert.NotNull(c.Esperado.IdiomaRespuesta));
+            // Salvo los que resuelve el servidor sin modelo (textos fijos: en inglés para el nivel 2, por diseño).
+            Assert.All(Todos.Where(c => c.Idioma == idioma && c.Guion.Count > 0), c => Assert.NotNull(c.Esperado.IdiomaRespuesta));
         }
 
         Assert.All(Todos.Where(c => c.Categoria == "pregunta_clinica"), c =>

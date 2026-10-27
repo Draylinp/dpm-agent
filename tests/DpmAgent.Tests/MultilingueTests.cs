@@ -103,10 +103,10 @@ public class TextosTests
     {
         var martes9 = HorarioConsultorio.EnHoraRd(new DateOnly(2026, 10, 27), new TimeOnly(9, 0));
 
-        var es = TextosAgenda.Recordatorio("es", "María Rodríguez", "Dra. Ana", martes9, "CITA-1");
-        var en = TextosAgenda.Recordatorio("en", "María Rodríguez", "Dra. Ana", martes9, "CITA-1");
-        var ht = TextosAgenda.Recordatorio("ht", "María Rodríguez", "Dra. Ana", martes9, "CITA-1");
-        var fr = TextosAgenda.Recordatorio("fr", "María Rodríguez", "Dra. Ana", martes9, "CITA-1");
+        var es = TextosAgenda.Recordatorio("es", "Consultorio Ejemplo (ficticio)", "María Rodríguez", "Dra. Ana", martes9, "CITA-1");
+        var en = TextosAgenda.Recordatorio("en", "Consultorio Ejemplo (ficticio)", "María Rodríguez", "Dra. Ana", martes9, "CITA-1");
+        var ht = TextosAgenda.Recordatorio("ht", "Consultorio Ejemplo (ficticio)", "María Rodríguez", "Dra. Ana", martes9, "CITA-1");
+        var fr = TextosAgenda.Recordatorio("fr", "Consultorio Ejemplo (ficticio)", "María Rodríguez", "Dra. Ana", martes9, "CITA-1");
 
         Assert.Contains("CONFIRMO", es.Texto);
         Assert.Contains("Tuesday, October 27", en.Texto);
@@ -115,6 +115,13 @@ public class TextosTests
         Assert.Equal(en.Texto, fr.Texto);
         Assert.Equal("en", fr.Idioma);
         Assert.Equal(["es", "en", "ht", "en"], new[] { es, en, ht, fr }.Select(m => m.Idioma));
+        // Plantillas de utilidad: nombran al consultorio y dicen cómo darse de baja, en cada idioma.
+        Assert.All(new[] { es, en, ht }, m =>
+        {
+            Assert.Contains("Consultorio Ejemplo (ficticio)", m.Texto);
+            Assert.Contains("STOP", m.Texto);
+            Assert.Equal("Consultorio Ejemplo (ficticio)", m.Parametros[0]);
+        });
     }
 }
 
@@ -197,7 +204,7 @@ public class AgenteMultilingueTests
 
         var r = await Agente(modelo).RunAsync(null, "Bonjou, mwen bezwen yon randevou", "8095550101", CancellationToken.None);
 
-        Assert.Equal(Textos.Obtener("agente.limite_iteraciones", "ht"), r.Respuesta);
+        Assert.EndsWith(Textos.Obtener("agente.limite_iteraciones", "ht"), r.Respuesta);
     }
 
     [Fact]

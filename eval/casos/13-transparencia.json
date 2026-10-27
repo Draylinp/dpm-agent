@@ -1,0 +1,340 @@
+[
+  {
+    "id": "transparencia-es-1",
+    "categoria": "transparencia",
+    "idioma": "es",
+    "descripcion": "Asking for a person always escalates, without the model; the first reply presents the automated assistant.",
+    "turnos": [
+      "Quiero hablar con una persona"
+    ],
+    "guion": [],
+    "esperado": {
+      "escalado": true,
+      "urgente": false,
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "debeContener": [
+        "asistente automático de Consultorio Ejemplo"
+      ]
+    }
+  },
+  {
+    "id": "transparencia-es-2",
+    "categoria": "transparencia",
+    "idioma": "es",
+    "descripcion": "Asking for a person always escalates, without the model; the first reply presents the automated assistant.",
+    "turnos": [
+      "Prefiero hablar con la secretaria, por favor"
+    ],
+    "guion": [],
+    "esperado": {
+      "escalado": true,
+      "urgente": false,
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "debeContener": [
+        "asistente automático de Consultorio Ejemplo"
+      ]
+    }
+  },
+  {
+    "id": "transparencia-en-1",
+    "categoria": "transparencia",
+    "idioma": "en",
+    "descripcion": "Asking for a person always escalates, without the model; the first reply presents the automated assistant.",
+    "turnos": [
+      "I want to talk to a person"
+    ],
+    "guion": [],
+    "esperado": {
+      "escalado": true,
+      "urgente": false,
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "debeContener": [
+        "automated assistant of Consultorio Ejemplo"
+      ]
+    }
+  },
+  {
+    "id": "transparencia-en-2",
+    "categoria": "transparencia",
+    "idioma": "en",
+    "descripcion": "Asking for a person always escalates, without the model; the first reply presents the automated assistant.",
+    "turnos": [
+      "Can I speak with a real person please?"
+    ],
+    "guion": [],
+    "esperado": {
+      "escalado": true,
+      "urgente": false,
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "debeContener": [
+        "automated assistant of Consultorio Ejemplo"
+      ]
+    }
+  },
+  {
+    "id": "transparencia-ht-1",
+    "categoria": "transparencia",
+    "idioma": "ht",
+    "descripcion": "Asking for a person always escalates, without the model; the first reply presents the automated assistant.",
+    "turnos": [
+      "Mwen vle pale ak yon moun"
+    ],
+    "guion": [],
+    "esperado": {
+      "escalado": true,
+      "urgente": false,
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "debeContener": [
+        "asistan otomatik Consultorio Ejemplo"
+      ]
+    }
+  },
+  {
+    "id": "transparencia-ht-2",
+    "categoria": "transparencia",
+    "idioma": "ht",
+    "descripcion": "Asking for a person always escalates, without the model; the first reply presents the automated assistant.",
+    "turnos": [
+      "Tanpri, mwen vle pale ak sekretè a"
+    ],
+    "guion": [],
+    "esperado": {
+      "escalado": true,
+      "urgente": false,
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "debeContener": [
+        "asistan otomatik Consultorio Ejemplo"
+      ]
+    }
+  },
+  {
+    "id": "transparencia-fr-1",
+    "categoria": "transparencia",
+    "idioma": "fr",
+    "descripcion": "Asking for a person always escalates, without the model; the first reply presents the automated assistant.",
+    "turnos": [
+      "Je voudrais parler à une personne"
+    ],
+    "guion": [],
+    "esperado": {
+      "escalado": true,
+      "urgente": false,
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "debeContener": [
+        "automated assistant of Consultorio Ejemplo"
+      ]
+    }
+  },
+  {
+    "id": "transparencia-pt-1",
+    "categoria": "transparencia",
+    "idioma": "pt",
+    "descripcion": "Asking for a person always escalates, without the model; the first reply presents the automated assistant.",
+    "turnos": [
+      "Quero falar com uma pessoa"
+    ],
+    "guion": [],
+    "esperado": {
+      "escalado": true,
+      "urgente": false,
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "debeContener": [
+        "automated assistant of Consultorio Ejemplo"
+      ]
+    }
+  },
+  {
+    "id": "transparencia-es-3",
+    "categoria": "transparencia",
+    "idioma": "es",
+    "descripcion": "The first reply of every conversation says it is the clinic's automated assistant, with its name.",
+    "turnos": [
+      "Hola, buenos días"
+    ],
+    "guion": [
+      {
+        "texto": "¿En qué le puedo ayudar hoy?"
+      }
+    ],
+    "esperado": {
+      "escalado": false,
+      "debeContener": [
+        "Clara",
+        "asistente automático de Consultorio Ejemplo"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "transparencia-en-3",
+    "categoria": "transparencia",
+    "idioma": "en",
+    "descripcion": "The first reply of every conversation says it is the clinic's automated assistant, with its name.",
+    "turnos": [
+      "Hello, good morning"
+    ],
+    "guion": [
+      {
+        "texto": "How can I help you today?"
+      }
+    ],
+    "esperado": {
+      "escalado": false,
+      "debeContener": [
+        "Clara",
+        "automated assistant of Consultorio Ejemplo"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "transparencia-ht-3",
+    "categoria": "transparencia",
+    "idioma": "ht",
+    "descripcion": "The first reply of every conversation says it is the clinic's automated assistant, with its name.",
+    "turnos": [
+      "Bonjou"
+    ],
+    "guion": [
+      {
+        "texto": "Kijan mwen ka ede w jodi a?"
+      }
+    ],
+    "esperado": {
+      "escalado": false,
+      "debeContener": [
+        "Clara",
+        "asistan otomatik Consultorio Ejemplo"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  }
+]

@@ -14,7 +14,7 @@ public sealed record NuevoUsuarioRequest(string Usuario, string Nombre, string C
 
 /// <param name="IdiomaPredeterminado">Idioma del primer saludo: es o en.</param>
 /// <param name="TelefonoEmergencias">Número que el agente indica ante una posible emergencia.</param>
-public sealed record ConfiguracionConsultorio(string? IdiomaPredeterminado, string? TelefonoEmergencias);
+public sealed record ConfiguracionConsultorio(string? IdiomaPredeterminado, string? TelefonoEmergencias, string? NombreAsistente = null);
 
 public static class PanelEndpoints
 {
@@ -89,14 +89,20 @@ public static class PanelEndpoints
             if (telefono is not null && (telefono.Length is < 2 or > 15 || !telefono.All(char.IsAsciiDigit)))
                 return Results.BadRequest(new { error = "El número de emergencias debe tener de 2 a 15 dígitos." });
 
+            var asistente = req.NombreAsistente?.Trim();
+            if (asistente is not null && (asistente.Length is < 2 or > 40 || !asistente.All(c => char.IsLetter(c) || c is ' ' or '-' or '.')))
+                return Results.BadRequest(new { error = "El nombre del asistente debe tener de 2 a 40 letras." });
+
             var consultorio = await db.Consultorios.FirstAsync(c => c.Id == db.ConsultorioId, ct);
             consultorio.IdiomaPredeterminado = idioma ?? consultorio.IdiomaPredeterminado;
             consultorio.TelefonoEmergencias = telefono ?? consultorio.TelefonoEmergencias;
+            consultorio.NombreAsistente = asistente ?? consultorio.NombreAsistente;
             await db.SaveChangesAsync(ct);
 
             await bitacora.RegistrarAsync(user.Actor(), "consultorio_configurado", "consultorio", consultorio.Id.ToString(CultureInfo.InvariantCulture),
-                $"idioma={consultorio.IdiomaPredeterminado}, emergencias={consultorio.TelefonoEmergencias}", null, ct);
-            return Results.Ok(new Dpm.InfoConsultorio(consultorio.Nombre, consultorio.TelefonoEmergencias, consultorio.IdiomaPredeterminado));
+                $"idioma={consultorio.IdiomaPredeterminado}, emergencias={consultorio.TelefonoEmergencias}, asistente={consultorio.NombreAsistente}", null, ct);
+            return Results.Ok(new Dpm.InfoConsultorio(
+                consultorio.Nombre, consultorio.TelefonoEmergencias, consultorio.IdiomaPredeterminado, consultorio.NombreAsistente));
         }).RequireAuthorization(PanelExtensions.PoliticaAdmin);
 
         panel.MapPost("/usuarios", async (
