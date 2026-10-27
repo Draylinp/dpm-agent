@@ -62,6 +62,8 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<SolicitudSobrecupo> SolicitudesSobrecupo => Set<SolicitudSobrecupo>();
 
+    public DbSet<CupoUrgencia> CuposUrgencia => Set<CupoUrgencia>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
         // SQLite devuelve DateTime sin Kind y PostgreSQL exige UTC: todo entra y sale como UTC.
@@ -78,6 +80,7 @@ public abstract class DpmDbContext : DbContext
             e.Property(x => x.TelefonoEmergencias).HasMaxLength(20).HasDefaultValue("911");
             e.Property(x => x.IdiomaPredeterminado).HasMaxLength(10).HasDefaultValue("es");
             e.Property(x => x.NombreAsistente).HasMaxLength(60);
+            e.Property(x => x.CentrosEmergencia).HasMaxLength(1000);
             e.HasIndex(x => x.WhatsAppPhoneNumberId).IsUnique();
         });
 
@@ -305,6 +308,15 @@ public abstract class DpmDbContext : DbContext
             e.HasIndex(x => new { x.ConsultorioId, x.Estado });
             e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne<Medico>().WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<CupoUrgencia>(e =>
+        {
+            e.ToTable("CuposUrgencia");
+            e.HasIndex(x => new { x.ConsultorioId, x.MedicoId, x.DiaSemana, x.Hora }).IsUnique();
+            e.HasOne<Medico>().WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
             e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });

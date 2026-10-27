@@ -38,14 +38,16 @@ public sealed class AgentTools
     private readonly Bitacora? _bitacora;
     private readonly ServicioConsentimiento? _consentimientos;
     private readonly ServicioSeguimientos? _seguimientos;
+    private readonly ServicioUrgencias? _urgencias;
 
     /// <param name="consentimientos">Opt-in para mensajes proactivos. Sin él, esas herramientas no están disponibles.</param>
     /// <param name="agenda">Lista de espera y respuestas a mensajes automáticos. Sin ella esas herramientas no están disponibles.</param>
     /// <param name="bitacora">Si se da, cada acción que cambia datos queda registrada.</param>
     public AgentTools(
         IDpmGateway dpm, ServicioListaEspera? agenda = null, Bitacora? bitacora = null, ServicioConsentimiento? consentimientos = null,
-        ServicioSeguimientos? seguimientos = null)
+        ServicioSeguimientos? seguimientos = null, ServicioUrgencias? urgencias = null)
     {
+        _urgencias = urgencias;
         _seguimientos = seguimientos;
         _consentimientos = consentimientos;
         _dpm = dpm;
@@ -96,6 +98,8 @@ public sealed class AgentTools
                 "registrar_consentimiento" => await RegistrarConsentimiento(sesion, args, ct),
                 "darse_de_baja" => await DarseDeBaja(sesion, args, ct),
                 "seguimientos_del_paciente" => await SeguimientosDelPaciente(sesion, ct),
+                "pedir_cita_urgente" => await PedirCitaUrgente(sesion, args, ct),
+                "reservar_urgente" => await ReservarUrgente(sesion, args, ct),
                 _ => Error($"Herramienta desconocida: {name}"),
             };
         }
@@ -423,6 +427,52 @@ public sealed class AgentTools
         });
     }
 
+    /// <summary>
+    /// "Que me vean hoy": no se pregunta por síntomas ni se juzga la gravedad. El recordatorio del número de emergencias
+    /// lo agrega siempre el servidor (texto fijo), y fuera de horario también los centros de emergencia configurados.
+    /// </summary>
+    private async Task<string> PedirCitaUrgente(Sesion sesion, JsonObject args, CancellationToken ct)
+    {
+        var consultorio = await _dpm.ObtenerConsultorioAsync(ct);
+        var fuera = _urgencias is not null && await _urgencias.FueraDeHorarioAsync(ct);
+        var anexo = Textos.Obtener(fuera ? "urgencia.fuera_horario" : "urgencia.recordatorio", sesion.Idioma, consultorio.TelefonoEmergencias);
+        if (fuera && await _urgencias!.CentrosAsync(ct) is { Count: > 0 } centros)
+            anexo += "\n" + Textos.Obtener("urgencia.centros", sesion.Idioma) + "\n" + string.Join("\n", centros.Select(c => "• " + c));
+        sesion.AnexoRespuesta = sesion.AnexoRespuesta is null ? anexo : sesion.AnexoRespuesta + "\n\n" + anexo;
+
+        if (_urgencias is null)
+            return Error("Las citas urgentes no están disponibles en este momento. Usa escalar_a_personal.");
+
+        var r = await _urgencias.PedirAsync(PacienteDeSesion(sesion), Opt(args, "medico_id"), sesion.Id, ct);
+        return Ok(new
+        {
+            fuera_de_horario = r.FueraDeHorario,
+            dias = r.Dias.Select(d => d.ToString("yyyy-MM-dd")),
+            opciones = r.Opciones.Select(o => new
+            {
+                medico_id = o.MedicoId,
+                medico = o.Medico,
+                fecha_hora = Iso(o.FechaHora),
+                texto = $"{TimeZoneInfo.ConvertTime(o.FechaHora, HorarioConsultorio.ZonaRd).ToString("dddd d 'de' MMMM", Es)}, {Hora(o.FechaHora)}",
+            }),
+            solicitud_sobrecupo = r.Solicitud,
+            instruccion = r.Solicitud is null
+                ? "Ofrece estas opciones. Cuando el paciente elija una, usa reservar_urgente con el fecha_hora exacto. No preguntes por síntomas."
+                : "No hay horario libre. Se creó la solicitud de sobrecupo y ya se avisó a la secretaria y al médico: ellos deciden y el paciente recibirá la respuesta por este chat. No prometas que se aprobará ni preguntes por síntomas.",
+            aviso = "El sistema agrega al final el recordatorio del número de emergencias. No lo repitas.",
+        });
+    }
+
+    private async Task<string> ReservarUrgente(Sesion sesion, JsonObject args, CancellationToken ct)
+    {
+        if (_urgencias is null)
+            return Error("Las citas urgentes no están disponibles en este momento. Usa escalar_a_personal.");
+        var fechaHora = DateTimeOffset.Parse(Req(args, "fecha_hora"), CultureInfo.InvariantCulture);
+        var cita = await _urgencias.ReservarAsync(PacienteDeSesion(sesion), Req(args, "medico_id").ToUpperInvariant(), fechaHora, ct);
+        await Registrar(sesion, "cita_creada", "cita", cita.Id, $"{cita.PacienteId} con {cita.MedicoId} (urgente)", ct);
+        return Ok(new { creada = true, cita = Resumen(cita) });
+    }
+
     private const string SinConsentimientos = "Los permisos de avisos no están disponibles en este momento. Usa escalar_a_personal.";
 
     private async Task<object?> EstadoAvisos(string pacienteId, CancellationToken ct)
@@ -646,6 +696,16 @@ public sealed class AgentTools
             Tool("seguimientos_del_paciente",
                 "Lista los seguimientos que el médico indicó al paciente identificado (controles), con la ventana de fechas permitida y su estado.",
                 new JsonObject()),
+            Tool("pedir_cita_urgente",
+                "El paciente pide que lo vean hoy o lo antes posible. Busca el primer horario de hoy o del siguiente día hábil (incluidos los cupos de urgencia); si no hay, crea una solicitud de sobrecupo que decide el personal. No recibe síntomas.",
+                new JsonObject { ["medico_id"] = Str("Solo si el paciente pidió un médico concreto.") }),
+            Tool("reservar_urgente", "Reserva una de las opciones que devolvió pedir_cita_urgente, después de que el paciente la elija.",
+                new JsonObject
+                {
+                    ["medico_id"] = Str("medico_id de la opción."),
+                    ["fecha_hora"] = Str("fecha_hora exacto de la opción."),
+                },
+                "medico_id", "fecha_hora"),
             Tool("ofrecer_consentimiento",
                 "Muestra al paciente el texto oficial para pedirle permiso de enviarle avisos (recordatorios, seguimiento de trámites, lista de espera). Usarla una vez si buscar_paciente indica ofrecer_consentimiento = true, o si el paciente pide recibir avisos.",
                 new JsonObject()),

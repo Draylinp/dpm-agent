@@ -44,5 +44,11 @@
   "medico.resumen_rechazado": "Dakò, nou p ap voye w rezime chak jou a.",
   "medico.baja": "Fini, nou p ap voye w rezime chak jou a ankò.",
   "medico.sin_citas": "Ou pa gen randevou jodi a.",
-  "agenda.resumen_medico": "Bonjou {1}. Rezime {0} pou jodi a: {2} randevou, {3} demann plas siplemantè pou deside ak {4} pasyan swivi ki pa reponn. Reponn AGENDA pou wè detay yo. Pou pa resevwa rezime sa a ankò, reponn STOP."
+  "agenda.resumen_medico": "Bonjou {1}. Rezime {0} pou jodi a: {2} randevou, {3} demann plas siplemantè pou deside ak {4} pasyan swivi ki pa reponn. Reponn AGENDA pou wè detay yo. Pou pa resevwa rezime sa a ankò, reponn STOP.",
+  "urgencia.recordatorio": "Si se yon ijans, rele {0} oswa ale nan sal ijans ki pi pre a.",
+  "urgencia.fuera_horario": "Klinik la fèmen kounye a. Si se yon ijans, rele {0}.",
+  "urgencia.centros": "Sant ijans ki toupre:",
+  "agenda.sobrecupo_medico": "Bonjou {1}. {0} fè w konnen {2} mande pou yo wè l pi vit posib jou {3} e pa gen plas nan orè a. Reponn APROBAR {4} ak lè a, oswa RECHAZAR {4}. Pou pa resevwa avi sa yo, reponn STOP.",
+  "agenda.sobrecupo_aprobado": "Bonjou {1}. {0} konfime {2} ap wè w jou {3} a {4} (randevou {5}). Si gen yon ijans anvan lè sa a, rele {6}. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.sobrecupo_rechazado": "Bonjou {1}. {0} fè w konnen li pa t posib pou louvri yon plas siplemantè jou {2}. Reponn RANDEVOU e n ap chèche pwochen lè ki disponib. Si se yon ijans, rele {3}. Pou pa resevwa plis avi, reponn STOP."
 }

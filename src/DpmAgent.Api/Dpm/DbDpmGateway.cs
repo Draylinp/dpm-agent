@@ -80,7 +80,8 @@ public sealed class DbDpmGateway : IDpmGateway
             .ToHashSet();
 
         var ahora = _clock.GetUtcNow();
-        return turnos.Where(t => t > ahora && !ocupadas.Contains(t.UtcDateTime)).ToList();
+        var reservados = await CuposUrgenciaReservadosAsync(medico, fecha, ahora, ct);
+        return turnos.Where(t => t > ahora && !ocupadas.Contains(t.UtcDateTime) && !reservados.Contains(TimeOnly.FromDateTime(t.DateTime))).ToList();
     }
 
     public async Task<Cita> CrearCitaAsync(string pacienteId, string medicoId, DateTimeOffset fechaHora, string motivo, CancellationToken ct)
@@ -280,6 +281,21 @@ public sealed class DbDpmGateway : IDpmGateway
         }
 
         return ACarnet(c);
+    }
+
+    /// <summary>
+    /// Cupos de urgencia que todavía no se liberan para citas normales: los del día de la semana, salvo que ya sea
+    /// ese mismo día y pasó la hora de liberación del consultorio.
+    /// </summary>
+    private async Task<HashSet<TimeOnly>> CuposUrgenciaReservadosAsync(int medico, DateOnly fecha, DateTimeOffset ahora, CancellationToken ct)
+    {
+        var dia = fecha.DayOfWeek;
+        var cupos = await _db.CuposUrgencia.AsNoTracking().Where(c => c.MedicoId == medico && c.DiaSemana == dia).Select(c => c.Hora).ToListAsync(ct);
+        if (cupos.Count == 0)
+            return [];
+        var hora = await _db.Consultorios.AsNoTracking().Where(c => c.Id == _db.ConsultorioId).Select(c => c.HoraLiberarCuposUrgencia).FirstAsync(ct);
+        var local = TimeZoneInfo.ConvertTime(ahora, HorarioConsultorio.ZonaRd);
+        return DateOnly.FromDateTime(local.DateTime) == fecha && local.Hour >= hora ? [] : cupos.ToHashSet();
     }
 
     /// <summary>Feriado del consultorio o día bloqueado en la agenda del médico.</summary>

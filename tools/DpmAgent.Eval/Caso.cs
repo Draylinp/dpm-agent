@@ -70,7 +70,28 @@ public sealed class Preparacion
 
     /// <summary>Teléfono verificado de cada médico (MED-02: 8495550111): esos números entran por el canal del médico.</summary>
     public Dictionary<string, string> Medicos { get; init; } = [];
+
+    /// <summary>Fecha y hora del caso (hora de RD, "2026-10-26T19:30"); por defecto el lunes 26 a las 12:00.</summary>
+    public string? Ahora { get; init; }
+
+    /// <summary>Días (yyyy-MM-dd) cuyos turnos normales se llenan con otro paciente antes de empezar.</summary>
+    public List<string> AgendaLlena { get; init; } = [];
+
+    public List<CupoPreparado> CuposUrgencia { get; init; } = [];
+
+    public int? HoraLiberarCupos { get; init; }
+
+    /// <summary>Centros de emergencia del consultorio, uno por línea.</summary>
+    public string? CentrosEmergencia { get; init; }
+
+    /// <summary>Solicitudes de sobrecupo pendientes (SOB-001, SOB-002... en orden).</summary>
+    public List<SobrecupoPreparado> Sobrecupos { get; init; } = [];
 }
+
+/// <param name="DiaSemana">1 = lunes … 5 = viernes.</param>
+public sealed record CupoPreparado(string Medico, int DiaSemana, string Hora);
+
+public sealed record SobrecupoPreparado(string Paciente, string Medico, string Fecha);
 
 public sealed record SeguimientoPreparado(string Paciente, string Medico, string FechaObjetivo, int Tolerancia, string Estado = "contactando");
 
@@ -140,6 +161,12 @@ public sealed class Esperado
 
     /// <summary>Estado esperado de cada seguimiento al final (SEG-001: agendado).</summary>
     public Dictionary<string, string>? Seguimientos { get; init; }
+
+    /// <summary>Estado esperado de cada solicitud de sobrecupo al final (SOB-001: aprobada).</summary>
+    public Dictionary<string, string>? Sobrecupos { get; init; }
+
+    /// <summary>Textos que deben aparecer en algún mensaje saliente al paciente (por ejemplo, la decisión de un sobrecupo).</summary>
+    public List<string>? AvisoContiene { get; init; }
 
     /// <summary>Largo máximo de cada respuesta del modelo (sin los textos fijos del sistema): mensajes de WhatsApp, no párrafos.</summary>
     public int? MaxCaracteres { get; init; }

@@ -81,6 +81,7 @@ app.MapCostos();
 app.MapCumplimiento();
 app.MapSeguimientos();
 app.MapMedicos();
+app.MapUrgencias();
 
 app.MapGet("/api/escalamientos", async (IDpmGateway dpm, CancellationToken ct) =>
     Results.Ok(await dpm.ListarEscalamientosAsync(ct))).RequireAuthorization(PanelExtensions.Politica);

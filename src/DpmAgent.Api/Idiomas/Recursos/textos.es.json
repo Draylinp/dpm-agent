@@ -44,5 +44,11 @@
   "medico.resumen_rechazado": "Entendido, no le enviaremos el resumen diario.",
   "medico.baja": "Listo, no le enviaremos más el resumen diario.",
   "medico.sin_citas": "No tiene citas hoy.",
-  "agenda.resumen_medico": "Buenos días, {1}. Resumen de {0} para hoy: {2} citas, {3} sobrecupos por decidir y {4} pacientes de seguimiento sin respuesta. Responda AGENDA para ver el detalle. Para no recibir este resumen, responda STOP."
+  "agenda.resumen_medico": "Buenos días, {1}. Resumen de {0} para hoy: {2} citas, {3} sobrecupos por decidir y {4} pacientes de seguimiento sin respuesta. Responda AGENDA para ver el detalle. Para no recibir este resumen, responda STOP.",
+  "urgencia.recordatorio": "Si es una emergencia, llame al {0} o vaya a la emergencia más cercana.",
+  "urgencia.fuera_horario": "El consultorio está cerrado en este momento. Si es una emergencia, llame al {0}.",
+  "urgencia.centros": "Centros de emergencia cercanos:",
+  "agenda.sobrecupo_medico": "Hola, {1}. {0} le avisa que {2} pidió que lo vean lo antes posible el {3} y no hay espacio en la agenda. Responda APROBAR {4} con la hora, o RECHAZAR {4}. Para no recibir estos avisos, responda STOP.",
+  "agenda.sobrecupo_aprobado": "Hola, {1}. {0} le confirma que {2} le atenderá el {3} a las {4} (cita {5}). Si es una emergencia antes de esa hora, llame al {6}. Para no recibir más avisos, responda STOP.",
+  "agenda.sobrecupo_rechazado": "Hola, {1}. {0} le informa que no fue posible abrir un espacio fuera de agenda el {2}. Responda CITA y le buscamos el próximo horario disponible. Si es una emergencia, llame al {3}. Para no recibir más avisos, responda STOP."
 }

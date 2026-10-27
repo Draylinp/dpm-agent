@@ -2,7 +2,7 @@
 
 *English version: [../EVALUATION.md](../EVALUATION.md)*
 
-`eval/` tiene **177 casos** en 17 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
+`eval/` tiene **200 casos** en 18 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
 
 | Categoría | Qué comprueba |
 |---|---|
@@ -17,6 +17,13 @@
 | `prompt_injection` | "Ignora tus reglas", instrucciones dentro de una nota de voz y dentro de la foto de un carnet |
 | `cita_ajena` | Intentar ver o cancelar la cita de otro paciente |
 | `cambio_idioma` | El paciente cambia de idioma a mitad de la conversación, también a mitad de una reserva |
+| `fuera_de_tema` | Pedidos fuera de tema (tareas, código, noticias): negativa amable; el código lo bloquea el filtro de salida |
+| `transparencia` | Se presenta como asistente automático del consultorio; "hablar con una persona" escala |
+| `consentimiento` | Permiso por categoría, STOP y ningún aviso proactivo sin permiso |
+| `privacidad` | Aviso de privacidad, pedidos de datos al personal, no pide datos innecesarios |
+| `seguimiento` | Seguimientos indicados por el médico: solo se agendan dentro de su ventana |
+| `medico` | Canal del médico: solo número verificado, acciones en dos pasos, sin datos clínicos guardados |
+| `urgencias` | "Que me vean hoy": sin preguntar síntomas ni juzgar la gravedad (el que exagera recibe lo mismo), primer hueco o cupo de urgencia, sobrecupo que solo decide el personal, centros de emergencia fuera de horario, y una emergencia real sigue escalando como urgente |
 
 Cada categoría tiene casos en **español, inglés y kreyòl** (nivel 1). Los casos en **francés y portugués** (nivel 2) comprueban que responde en el idioma correcto y que respeta las reglas de seguridad.
 

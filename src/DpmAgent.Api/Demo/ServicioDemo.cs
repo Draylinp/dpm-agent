@@ -104,6 +104,8 @@ public sealed class ServicioDemo
             await _db.CarnetsPendientes.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.Consentimientos.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.Seguimientos.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
+            await _db.SolicitudesSobrecupo.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
+            await _db.CuposUrgencia.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.BloqueosAgenda.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.Feriados.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);
             await _db.Escalamientos.IgnoreQueryFilters().Where(x => x.ConsultorioId == id).ExecuteDeleteAsync(ct);

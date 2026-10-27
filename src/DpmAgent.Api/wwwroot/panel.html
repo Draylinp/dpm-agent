@@ -84,6 +84,7 @@
       <button data-tab="escalamientos" data-i18n="tab.escalamientos"></button>
       <button data-tab="carnets" data-i18n="tab.carnets"></button>
       <button data-tab="autorizaciones" data-i18n="tab.autorizaciones"></button>
+      <button data-tab="urgencias" data-i18n="tab.urgencias"></button>
       <button data-tab="seguimientos" data-i18n="tab.seguimientos"></button>
       <button data-tab="llamadas" data-i18n="tab.llamadas"></button>
       <button data-tab="medicos" data-i18n="tab.medicos"></button>
@@ -170,7 +171,7 @@
     $('error').textContent = '';
     const vista = $('vista');
     try {
-      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, seguimientos, llamadas, medicos, pacientes, costos, bitacora })[tab]();
+      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, urgencias, seguimientos, llamadas, medicos, pacientes, costos, bitacora })[tab]();
       vista.replaceChildren(contenido);
     } catch (err) {
       $('error').textContent = err.message;
@@ -357,6 +358,52 @@
         alert(t('seg.bloqueo_listo').replace('{n}', r.citasParaReprogramar));
       }) }, t('seg.bloquear')),
       resultado);
+  }
+
+  // Urgencias: solicitudes de sobrecupo (solo el personal o el médico deciden), cupos de urgencia y centros de emergencia.
+  async function urgencias() {
+    const solicitudes = await api('/api/panel/urgencias/sobrecupos');
+    const cupos = await api('/api/panel/urgencias/cupos');
+    const config = await api('/api/panel/urgencias/config');
+    const medicos = await api('/api/medicos');
+    const nombreMedico = (id) => (medicos.find(m => m.id === id) || {}).nombre || id;
+    const campo = (id, etiqueta, control) => el('div', {}, el('label', { for: id }, t(etiqueta)), control);
+
+    const pendientes = solicitudes.filter(s => s.estado === 'pendiente');
+    const tarjetas = pendientes.map(s => {
+      const hora = el('input', { type: 'time', min: '07:00', max: '19:00', 'aria-label': `${t('urg.hora')} · ${s.paciente}` });
+      return el('div', { class: 'item' },
+        el('div', { class: 'fila-acciones' }, el('strong', {}, s.paciente), el('span', { class: 'muted' }, s.medico),
+          el('span', { class: 'chip' }, s.fecha), el('span', { class: 'muted' }, `${s.id} · ${fecha(s.creada)}`)),
+        el('div', { class: 'fila-acciones' }, hora,
+          el('button', { onclick: () => accion(() => api(`/api/panel/urgencias/sobrecupos/${s.id}/decidir`, { method: 'POST', body: JSON.stringify({ aprobar: true, hora: hora.value }) })) }, t('urg.aprobar')),
+          el('button', { class: 'peligro', onclick: () => accion(() => api(`/api/panel/urgencias/sobrecupos/${s.id}/decidir`, { method: 'POST', body: JSON.stringify({ aprobar: false }) })) }, t('urg.rechazar'))));
+    });
+    const decididas = solicitudes.filter(s => s.estado !== 'pendiente').slice(-10).reverse().map(s =>
+      el('li', {}, `${s.id} · ${s.paciente} · ${s.fecha} · ${t('urg.estado.' + s.estado)}${s.decididaPor ? ' · ' + s.decididaPor : ''}`));
+
+    const cMed = el('select', { id: 'cupMed' }, medicos.map(m => el('option', { value: m.id }, m.nombre)));
+    const cDia = el('select', { id: 'cupDia' }, [1, 2, 3, 4, 5].map(d => el('option', { value: String(d) }, t('urg.dia.' + d))));
+    const cHora = el('input', { id: 'cupHora', type: 'time', min: '08:00', max: '16:59', value: '08:00' });
+    const liberar = el('input', { id: 'urgLiberar', type: 'number', min: '8', max: '17', value: String(config.horaLiberarCupos) });
+    const centros = el('textarea', { id: 'urgCentros', rows: '3', maxlength: '1000' });
+    centros.value = config.centrosEmergencia || '';
+
+    return el('div', {},
+      el('p', { class: 'muted' }, t('urg.nota')),
+      el('h3', {}, t('urg.pendientes')),
+      pendientes.length ? el('div', {}, tarjetas) : el('p', { class: 'vacio' }, t('urg.vacio')),
+      decididas.length ? el('div', {}, el('h3', {}, t('urg.decididas')), el('ul', {}, decididas)) : '',
+      el('h3', {}, t('urg.cupos')),
+      el('p', { class: 'muted' }, t('urg.cupos_nota').replace('{h}', config.horaLiberarCupos)),
+      cupos.length ? el('ul', {}, cupos.map(c => el('li', {}, `${nombreMedico(c.medicoId)} · ${t('urg.dia.' + c.diaSemana)} · ${c.hora} `,
+        el('button', { class: 'sec', 'aria-label': `${t('urg.quitar')} ${nombreMedico(c.medicoId)} ${t('urg.dia.' + c.diaSemana)} ${c.hora}`,
+          onclick: () => accion(() => api(`/api/panel/urgencias/cupos/${c.id}`, { method: 'DELETE' })) }, t('urg.quitar'))))) : el('p', { class: 'vacio' }, t('urg.sin_cupos')),
+      el('div', { class: 'grid' }, campo('cupMed', 'citas.medico', cMed), campo('cupDia', 'urg.dia', cDia), campo('cupHora', 'urg.hora', cHora)),
+      el('button', { class: 'sec', onclick: () => accion(() => api('/api/panel/urgencias/cupos', { method: 'POST', body: JSON.stringify({ medicoId: cMed.value, diaSemana: Number(cDia.value), hora: cHora.value }) })) }, t('urg.agregar_cupo')),
+      el('h3', {}, t('urg.config')),
+      el('div', { class: 'grid' }, campo('urgLiberar', 'urg.liberar', liberar), campo('urgCentros', 'urg.centros', centros)),
+      el('button', { class: 'sec', onclick: () => accion(() => api('/api/panel/urgencias/config', { method: 'PUT', body: JSON.stringify({ horaLiberarCupos: Number(liberar.value), centrosEmergencia: centros.value }) })) }, t('urg.guardar')));
   }
 
   // Médicos: teléfono verificado para el canal del médico y permiso para su resumen diario.

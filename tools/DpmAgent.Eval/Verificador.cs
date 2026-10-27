@@ -174,6 +174,21 @@ public static class Verificador
                 fallos.Add($"{segId} quedó en {estado ?? "(no existe)"}; se esperaba {estadoEsperado}.");
         }
 
+        foreach (var (sobId, estadoEsperado) in e.Sobrecupos ?? [])
+        {
+            var id = IdsDpm.Leer(sobId, "SOB");
+            var estado = await db.SolicitudesSobrecupo.AsNoTracking().Where(x => x.Id == id).Select(x => x.Estado).FirstOrDefaultAsync(ct);
+            if (estado != estadoEsperado)
+                fallos.Add($"{sobId} quedó en {estado ?? "(no existe)"}; se esperaba {estadoEsperado}.");
+        }
+
+        if (e.AvisoContiene is { } avisosEsperados)
+        {
+            var textos = await db.MensajesSalientes.AsNoTracking().Where(m => m.Tipo != "respuesta").Select(m => m.Texto).ToListAsync(ct);
+            foreach (var t in avisosEsperados.Where(t => !textos.Any(x => x.Contains(t, StringComparison.OrdinalIgnoreCase))))
+                fallos.Add($"Ningún aviso contiene \"{t}\".");
+        }
+
         if (e.CarnetsPendientes is { } pendientes)
         {
             var n = await db.CarnetsPendientes.CountAsync(c => c.Estado == "pendiente", ct);

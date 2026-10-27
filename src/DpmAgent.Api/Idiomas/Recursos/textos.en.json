@@ -44,5 +44,11 @@
   "medico.resumen_rechazado": "Understood, we will not send you the daily summary.",
   "medico.baja": "Done, we will not send you the daily summary anymore.",
   "medico.sin_citas": "You have no appointments today.",
-  "agenda.resumen_medico": "Good morning, {1}. Summary from {0} for today: {2} appointments, {3} extra-slot requests to decide and {4} follow-up patients with no answer. Reply AGENDA to see the details. To stop receiving this summary, reply STOP."
+  "agenda.resumen_medico": "Good morning, {1}. Summary from {0} for today: {2} appointments, {3} extra-slot requests to decide and {4} follow-up patients with no answer. Reply AGENDA to see the details. To stop receiving this summary, reply STOP.",
+  "urgencia.recordatorio": "If this is an emergency, call {0} or go to the nearest emergency room.",
+  "urgencia.fuera_horario": "The clinic is closed right now. If this is an emergency, call {0}.",
+  "urgencia.centros": "Nearby emergency centers:",
+  "agenda.sobrecupo_medico": "Hi, {1}. {0} lets you know that {2} asked to be seen as soon as possible on {3} and the schedule is full. Reply APROBAR {4} with the time, or RECHAZAR {4}. To stop receiving these notices, reply STOP.",
+  "agenda.sobrecupo_aprobado": "Hi, {1}. {0} confirms that {2} will see you on {3} at {4} (appointment {5}). If there is an emergency before then, call {6}. To stop receiving notices, reply STOP.",
+  "agenda.sobrecupo_rechazado": "Hi, {1}. {0} lets you know that it was not possible to open an extra slot on {2}. Reply APPOINTMENT and we will find the next available time. If this is an emergency, call {3}. To stop receiving notices, reply STOP."
 }

@@ -37,6 +37,12 @@ public sealed class Consultorio
     /// <summary>Hora (0-23, hora de RD) del resumen diario a los médicos.</summary>
     public int HoraResumenMedico { get; set; } = 7;
 
+    /// <summary>Hora (0-23) a la que los cupos de urgencia que nadie usó se liberan para citas normales ese día.</summary>
+    public int HoraLiberarCuposUrgencia { get; set; } = 10;
+
+    /// <summary>Centros de emergencia cercanos (texto administrativo: nombre, dirección, teléfono; uno por línea).</summary>
+    public string? CentrosEmergencia { get; set; }
+
     public DateTime CreadoUtc { get; set; }
 }
 
@@ -654,4 +660,18 @@ public sealed class SolicitudSobrecupo
     public bool Comunicada { get; set; }
 
     public DateTime CreadaUtc { get; set; }
+}
+
+/// <summary>Turno que el consultorio reserva para urgencias (por médico y día de la semana).</summary>
+public sealed class CupoUrgencia
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public DayOfWeek DiaSemana { get; set; }
+
+    public TimeOnly Hora { get; set; }
 }

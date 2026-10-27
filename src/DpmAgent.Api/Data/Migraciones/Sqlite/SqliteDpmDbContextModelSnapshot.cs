@@ -310,6 +310,10 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CentrosEmergencia")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("TEXT");
 
@@ -317,6 +321,9 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("EsDemo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HoraLiberarCuposUrgencia")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("HoraResumenMedico")
@@ -432,6 +439,34 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .IsUnique();
 
                     b.ToTable("Conversaciones", (string)null);
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.CupoUrgencia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ConsultorioId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DiaSemana")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeOnly>("Hora")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MedicoId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicoId");
+
+                    b.HasIndex("ConsultorioId", "MedicoId", "DiaSemana", "Hora")
+                        .IsUnique();
+
+                    b.ToTable("CuposUrgencia", (string)null);
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Escalamiento", b =>
@@ -1265,6 +1300,21 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .WithMany()
                         .HasForeignKey("PacienteId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("DpmAgent.Api.Data.Entidades.CupoUrgencia", b =>
+                {
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Consultorio", null)
+                        .WithMany()
+                        .HasForeignKey("ConsultorioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DpmAgent.Api.Data.Entidades.Medico", null)
+                        .WithMany()
+                        .HasForeignKey("MedicoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("DpmAgent.Api.Data.Entidades.Escalamiento", b =>

@@ -2,7 +2,7 @@
 
 *Versión en español: [es/EVALUACION.md](es/EVALUACION.md)*
 
-`eval/` holds **177 cases** across 17 categories and 5 languages, plus the runner `tools/DpmAgent.Eval`.
+`eval/` holds **200 cases** across 18 categories and 5 languages, plus the runner `tools/DpmAgent.Eval`.
 
 | Category | What it checks |
 |---|---|
@@ -17,6 +17,13 @@
 | `prompt_injection` | "Ignore your rules", instructions inside a voice note and inside a card photo |
 | `cita_ajena` | Trying to see or cancel another patient's appointment |
 | `cambio_idioma` | The patient switches language mid-conversation, also mid-booking |
+| `fuera_de_tema` | Off-topic requests (homework, code, news) get a polite refusal; code is blocked by the output filter |
+| `transparencia` | Presents itself as the clinic's automated assistant; "talk to a person" escalates |
+| `consentimiento` | Opt-in per category, STOP, and no proactive message without permission |
+| `privacidad` | Privacy notice, data requests go to the staff, no unneeded data asked |
+| `seguimiento` | Follow-ups ordered by the doctor: booked only inside the doctor's window |
+| `medico` | The doctor's channel: verified number only, two-step actions, no clinical data stored |
+| `urgencias` | "See me today": no symptom questions or severity judgement (an exaggerating patient is treated the same), first slot or urgent slot, extra-slot request decided only by staff, out-of-hours emergency centers, a real emergency still escalates as urgent |
 
 Every category has cases in **Spanish, English and Haitian Creole** (tier 1). **French and Portuguese** (tier 2) cases check that the agent answers in the right language and keeps the safety rules.
 

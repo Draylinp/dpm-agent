@@ -116,7 +116,7 @@ public sealed class Ejecutor
         var s = new ServiceCollection();
         s.AddSingleton<IConfiguration>(config);
         s.AddLogging(l => l.SetMinimumLevel(LogLevel.Warning));
-        s.AddSingleton<TimeProvider>(new RelojFijo(Ahora));
+        s.AddSingleton<TimeProvider>(new RelojFijo(AhoraDe(caso)));
         s.AddSingleton(uso);
         s.AddSingleton<IRegistroUso>(uso);
         s.AddSingleton<CalculadoraCosto>();
@@ -149,6 +149,11 @@ public sealed class Ejecutor
 
         return s.BuildServiceProvider();
     }
+
+    /// <summary>Reloj del caso: <see cref="Preparacion.Ahora"/> en hora de RD, o el lunes 26 a las 12:00.</summary>
+    public static DateTimeOffset AhoraDe(Caso caso) => caso.Preparacion?.Ahora is { } a
+        ? new DateTimeOffset(DateTime.ParseExact(a, "yyyy-MM-dd'T'HH:mm", CultureInfo.InvariantCulture), TimeSpan.FromHours(-4))
+        : Ahora;
 
     private static async Task PrepararAsync(IServiceProvider sp, Caso caso, Dictionary<string, string> reemplazos, CancellationToken ct)
     {
@@ -191,6 +196,43 @@ public sealed class Ejecutor
                 Intentos = s.Estado == "contactando" ? 1 : 0,
                 CreadoPor = "eval",
                 CreadoUtc = Ahora.UtcDateTime,
+            });
+            await db.SaveChangesAsync(ct);
+        }
+
+        if (prep.HoraLiberarCupos is not null || prep.CentrosEmergencia is not null)
+        {
+            var consultorio = await db.Consultorios.FirstAsync(c => c.Id == db.ConsultorioId, ct);
+            consultorio.HoraLiberarCuposUrgencia = prep.HoraLiberarCupos ?? consultorio.HoraLiberarCuposUrgencia;
+            consultorio.CentrosEmergencia = prep.CentrosEmergencia ?? consultorio.CentrosEmergencia;
+            await db.SaveChangesAsync(ct);
+        }
+
+        foreach (var c in prep.CuposUrgencia)
+        {
+            db.CuposUrgencia.Add(new Api.Data.Entidades.CupoUrgencia
+            {
+                ConsultorioId = db.ConsultorioId, MedicoId = IdsDpm.Leer(c.Medico, "MED")!.Value, DiaSemana = (DayOfWeek)c.DiaSemana,
+                Hora = TimeOnly.ParseExact(c.Hora, "HH:mm", CultureInfo.InvariantCulture),
+            });
+            await db.SaveChangesAsync(ct);
+        }
+
+        // Agenda llena: todos los turnos normales de esos días con José (ficticio), para que no quede hueco.
+        foreach (var dia in prep.AgendaLlena.Select(d => DateOnly.ParseExact(d, "yyyy-MM-dd", CultureInfo.InvariantCulture)))
+        {
+            foreach (var medico in await dpm.ListarMedicosAsync(ct))
+            foreach (var t in await dpm.ConsultarDisponibilidadAsync(medico.Id, dia, ct))
+                await dpm.CrearCitaAsync("PAC-002", medico.Id, t, "control", ct);
+        }
+
+        foreach (var s in prep.Sobrecupos)
+        {
+            db.SolicitudesSobrecupo.Add(new Api.Data.Entidades.SolicitudSobrecupo
+            {
+                ConsultorioId = db.ConsultorioId, PacienteId = IdsDpm.Leer(s.Paciente, "PAC")!.Value, MedicoId = IdsDpm.Leer(s.Medico, "MED")!.Value,
+                Fecha = DateOnly.ParseExact(s.Fecha, "yyyy-MM-dd", CultureInfo.InvariantCulture), SesionId = "eval",
+                Estado = Api.Agenda.ServicioUrgencias.Pendiente, CreadaUtc = Ahora.UtcDateTime,
             });
             await db.SaveChangesAsync(ct);
         }

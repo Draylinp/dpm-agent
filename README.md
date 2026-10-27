@@ -57,14 +57,14 @@ DPM Agent takes over the repetitive conversation and leaves the staff what truly
 
 ### Evaluation
 
-177 cases in 17 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy, doctor follow-ups, doctor channel) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
+200 cases in 18 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy, doctor follow-ups, doctor channel, urgent requests) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
 **Against Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: run `dotnet run --project tools/DpmAgent.Eval -- --modelo real` and paste the tables from eval/resultados/ here -->
 *Pending: requires access to the Meta Model API.*
 
-**Server guarantees (scripted model, runs in CI on every push):** 177 / 177 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
+**Server guarantees (scripted model, runs in CI on every push):** 200 / 200 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
 
 ### Cost
 

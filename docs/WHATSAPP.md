@@ -41,6 +41,9 @@ WhatsApp only allows free-form text if the patient wrote in the last 24 hours. S
 | `seguimiento_contacto` | `WhatsApp__Plantillas__seguimiento_contacto` |
 | `recordatorio_7dias` | `WhatsApp__Plantillas__recordatorio_7dias` |
 | `resumen_medico` | `WhatsApp__Plantillas__resumen_medico` |
+| `sobrecupo_medico` | `WhatsApp__Plantillas__sobrecupo_medico` |
+| `sobrecupo_aprobado` | `WhatsApp__Plantillas__sobrecupo_aprobado` |
+| `sobrecupo_rechazado` | `WhatsApp__Plantillas__sobrecupo_rechazado` |
 
 Language code for each translation: `WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht` (defaults `es`, `en`, `ht`). Check in *WhatsApp Manager* which codes your account accepts; if a language is not available, point it to the English one.
 
@@ -93,6 +96,24 @@ Ready to submit for approval. All of them are **Utility** templates (never Marke
 - es: Buenos días, {{2}}. Resumen de {{1}} para hoy: {{3}} citas, {{4}} sobrecupos por decidir y {{5}} pacientes de seguimiento sin respuesta. Responda AGENDA para ver el detalle. Para no recibir este resumen, responda STOP.
 - en: Good morning, {{2}}. Summary from {{1}} for today: {{3}} appointments, {{4}} extra-slot requests to decide and {{5}} follow-up patients with no answer. Reply AGENDA to see the details. To stop receiving this summary, reply STOP.
 - ht: Bonjou {{2}}. Rezime {{1}} pou jodi a: {{3}} randevou, {{4}} demann plas siplemantè pou deside ak {{5}} pasyan swivi ki pa reponn. Reponn AGENDA pou wè detay yo. Pou pa resevwa rezime sa a ankò, reponn STOP.
+
+**sobrecupo_medico** — category *Utility*, sent to the **doctor** (verified number, only with their permission, category `resumen_medico`) the moment a patient asks for an extra slot. Variables: clinic, doctor, patient, day, request id. Sample values for review: `Consultorio Ejemplo`, `Dr. Luis Herrera`, `María Rodríguez`, `lunes 26 de octubre`, `SOB-001`
+
+- es: Hola, {{2}}. {{1}} le avisa que {{3}} pidió que lo vean lo antes posible el {{4}} y no hay espacio en la agenda. Responda APROBAR {{5}} con la hora, o RECHAZAR {{5}}. Para no recibir estos avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} lets you know that {{3}} asked to be seen as soon as possible on {{4}} and the schedule is full. Reply APROBAR {{5}} with the time, or RECHAZAR {{5}}. To stop receiving these notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} fè w konnen {{3}} mande pou yo wè l pi vit posib jou {{4}} e pa gen plas nan orè a. Reponn APROBAR {{5}} ak lè a, oswa RECHAZAR {{5}}. Pou pa resevwa avi sa yo, reponn STOP.
+
+**sobrecupo_aprobado** — category *Utility*, the answer to the patient's own request for an extra slot. Variables: clinic, patient first name, doctor, day, time, appointment id, emergency number. Sample values for review: `Consultorio Ejemplo`, `María`, `Dr. Luis Herrera`, `lunes 26 de octubre`, `5:30 p. m.`, `CITA-15`, `911`
+
+- es: Hola, {{2}}. {{1}} le confirma que {{3}} le atenderá el {{4}} a las {{5}} (cita {{6}}). Si es una emergencia antes de esa hora, llame al {{7}}. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} confirms that {{3}} will see you on {{4}} at {{5}} (appointment {{6}}). If there is an emergency before then, call {{7}}. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} konfime {{3}} ap wè w jou {{4}} a {{5}} (randevou {{6}}). Si gen yon ijans anvan lè sa a, rele {{7}}. Pou pa resevwa plis avi, reponn STOP.
+
+**sobrecupo_rechazado** — category *Utility*, the answer to the patient's own request when staff could not open an extra slot. Variables: clinic, patient first name, day, emergency number. Sample values for review: `Consultorio Ejemplo`, `María`, `lunes 26 de octubre`, `911`
+
+- es: Hola, {{2}}. {{1}} le informa que no fue posible abrir un espacio fuera de agenda el {{3}}. Responda CITA y le buscamos el próximo horario disponible. Si es una emergencia, llame al {{4}}. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} lets you know that it was not possible to open an extra slot on {{3}}. Reply APPOINTMENT and we will find the next available time. If this is an emergency, call {{4}}. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} fè w konnen li pa t posib pou louvri yon plas siplemantè jou {{3}}. Reponn RANDEVOU e n ap chèche pwochen lè ki disponib. Si se yon ijans, rele {{4}}. Pou pa resevwa plis avi, reponn STOP.
 
 If a key has no template, the message is sent as text (useful for testing inside the 24-hour window).
 

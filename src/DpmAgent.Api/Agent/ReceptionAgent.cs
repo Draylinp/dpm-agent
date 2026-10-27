@@ -33,7 +33,7 @@ public sealed class ReceptionAgent
     private static readonly HashSet<string> AccionesSensibles =
     [
         "registrar_paciente", "crear_cita", "cancelar_cita", "confirmar_datos_carnet",
-        "agregar_lista_espera", "responder_oferta", "confirmar_asistencia", "registrar_consentimiento",
+        "agregar_lista_espera", "responder_oferta", "confirmar_asistencia", "registrar_consentimiento", "pedir_cita_urgente", "reservar_urgente",
     ];
 
     private readonly IChatModel _model;
@@ -357,6 +357,10 @@ public sealed class ReceptionAgent
                 Ofrece horarios solo dentro de la ventana que indicó el médico y crea la cita con seguimiento_id.
                 Si responde CAMBIAR a una cita de seguimiento, cancélala (en dos pasos) y ofrece otro horario dentro de la ventana.
                 La fecha del control la decide el médico: nunca la adelantes ni la atrases por lo que diga el paciente sobre su salud.
+            18. Si el paciente pide que lo vean hoy, lo antes posible o "es urgente", usa pedir_cita_urgente. No preguntes por síntomas
+                ni juzgues la gravedad: todos se tratan igual, digan lo que digan. Si no hay horario, la solicitud de sobrecupo la deciden
+                la secretaria o el médico; nunca digas que está aprobada hasta que el sistema lo avise. Si además describe una posible
+                emergencia, aplica la regla 2.
 
             Idioma: el paciente escribe en {Idiomas.Idiomas.Nombre(idioma)} (código {idioma}). Responde SIEMPRE en ese idioma,
             de forma cordial y breve, como un mensaje de WhatsApp. Si el paciente cambia de idioma, cámbiate tú también.
