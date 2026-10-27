@@ -52,7 +52,7 @@ public class DemoTests
     }
 
     [Fact]
-    public async Task Con_demo_hay_seis_ejemplos_en_ambos_idiomas_y_el_escenario_listo()
+    public async Task Con_demo_hay_ocho_ejemplos_en_ambos_idiomas_y_el_escenario_listo()
     {
         using var app = Crear();
 
@@ -60,7 +60,7 @@ public class DemoTests
         var ejemplos = info!["ejemplos"]!.AsArray();
 
         Assert.True(info["habilitado"]!.GetValue<bool>());
-        Assert.Equal(6, ejemplos.Count);
+        Assert.Equal(8, ejemplos.Count);
         Assert.All(ejemplos, e =>
         {
             Assert.False(string.IsNullOrWhiteSpace(e!["etiqueta"]!["es"]?.GetValue<string>()));
@@ -78,6 +78,36 @@ public class DemoTests
         Assert.Equal(1, lista);
         Assert.Contains("demo-8295550102", sesiones);
         Assert.Contains("demo-8095550101", sesiones);
+
+        // Fase 3: un control en 6 meses (María), uno que entra hoy en la ventana de contacto (José),
+        // el médico de la demo con su número verificado y los cupos de urgencia.
+        var (seguimientos, medico, cupos) = await ConDb(app, async db => (
+            await db.Seguimientos.OrderBy(s => s.PacienteId).Select(s => s.FechaObjetivo).ToListAsync(),
+            await db.Medicos.SingleAsync(m => m.Telefono == DatosDemo.TelefonoMedico),
+            await db.CuposUrgencia.CountAsync()));
+        Assert.Equal([new DateOnly(2027, 4, 26), new DateOnly(2026, 11, 16)], seguimientos);
+        Assert.Equal("Dr. Luis Herrera (ficticio)", medico.Nombre);
+        Assert.NotNull(medico.TelefonoVerificadoUtc);
+        Assert.Equal(10, cupos);
+    }
+
+    [Fact]
+    public async Task En_la_demo_el_ejemplo_del_medico_entra_por_el_canal_del_medico_y_el_de_hoy_recuerda_el_911()
+    {
+        var modelo = new ScriptedChatModel()
+            .ThenText("¿Para qué paciente?")
+            .ThenTool("pedir_cita_urgente", new { })
+            .ThenText("Hoy tengo a las 2:00 p. m.");
+        using var app = Crear(modelo: modelo);
+
+        var r = await app.Cliente.PostAsJsonAsync("/api/chat", new { mensaje = "Control para María en 3 meses", telefono = DatosDemo.TelefonoMedico });
+        r.EnsureSuccessStatusCode();
+        Assert.Contains("Eres el asistente administrativo", modelo.Llamadas[0][0]["content"]!.ToString());
+
+        var hoy = await app.Cliente.PostAsJsonAsync("/api/chat", new { mensaje = "Necesito que me vean hoy, por favor.", telefono = DatosDemo.TelefonoMaria });
+        var json = (await hoy.Content.ReadFromJsonAsync<JsonObject>())!;
+        Assert.Contains("asistente de recepción", modelo.Llamadas[1][0]["content"]!.ToString());
+        Assert.Contains("911", json["respuesta"]!.ToString());
     }
 
     [Fact]

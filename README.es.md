@@ -37,6 +37,9 @@ DPM Agent se encarga de la conversación repetitiva y le deja al personal lo que
 - **Carnet de la ARS por foto**: Muse Spark lee nombre, ARS y número de afiliado (imagen + esquema JSON); el resultado queda pendiente hasta que el paciente o la secretaria lo confirman.
 - **Llena solo los turnos cancelados**: cuando alguien cancela, el primer paciente compatible de la lista de espera recibe la oferta por su canal; si no responde en 30 minutos, pasa al siguiente.
 - **Recordatorio 24 horas antes**, con opción de confirmar o cancelar.
+- **Seguimientos indicados por el médico** ("control en 3 meses"): si la fecha está cerca se agenda en el primer hueco de la ventana del médico; si está lejos, se contacta al paciente unas semanas antes para escoger horario, con reintentos y paso a la secretaria si no responde. Respeta feriados y los días libres del médico.
+- **Canal propio del médico**: desde su WhatsApp verificado con un código de un solo uso, el médico indica seguimientos, ve su agenda del día, bloquea días libres y decide sobrecupos, y puede recibir cada mañana un resumen administrativo (solo con su propio permiso).
+- **"Necesito que me vean hoy"**: sin preguntar síntomas ni juzgar la gravedad. El agente ofrece el primer hueco de hoy o del siguiente día hábil, incluidos los cupos de urgencia por médico; si no hay, crea una solicitud de sobrecupo que solo la secretaria o el médico pueden aprobar, y le comunica la decisión al paciente.
 - **Todo lo clínico va a una persona**: las preguntas de salud se escalan con el mensaje original y un resumen en el idioma del panel; ante una posible emergencia indica el número de emergencias del consultorio (911 por defecto) y escala como urgente.
 - **Panel del personal**: citas del día, escalamientos (urgentes primero), carnets por confirmar, borradores de autorización de ARS (nunca se envían solos), costo por conversación y por cita agendada, y la bitácora; el admin define el idioma predeterminado y el número de emergencias del consultorio. Español/inglés.
 - **Varios consultorios**: cada registro lleva su consultorio y cada consulta se filtra por él.
@@ -79,6 +82,8 @@ Cada llamada al modelo registra tokens de entrada y salida (nunca el contenido).
 
 - **Sin consejo médico.** El prompt lo prohíbe en todos los idiomas, no existe ninguna herramienta clínica, y un **filtro de salida** revisa cada respuesta antes de enviarla (reglas multilingües de dosis y medicamentos, y luego Llama Guard o el modelo como clasificador). Una respuesta bloqueada se reemplaza por un mensaje seguro, se escala y queda en la bitácora. Ver [docs/es/FILTRO-SALIDA.md](docs/es/FILTRO-SALIDA.md).
 - **Emergencias**: se le indica al paciente que llame al número de emergencias del consultorio y el personal recibe un escalamiento urgente.
+- **El agente nunca decide qué tan urgente es algo.** La prioridad la pide el paciente o la decide el personal; el agente solo la canaliza. Todo pedido urgente recibe el número de emergencias como texto fijo del servidor (no lo escribe el modelo), y fuera de horario los centros de emergencia del consultorio; un sobrecupo nunca lo aprueba el agente.
+- **Solo un médico verificado obtiene herramientas de médico**: un admin registra el número y el médico lo confirma con un código de un solo uso desde ese teléfono; sus acciones (seguimientos, días libres, sobrecupos) van en dos pasos y solo se guardan datos administrativos, nunca diagnósticos.
 - **Cada conversación solo actúa sobre su propio paciente**, identificado por el número del canal (el remitente de WhatsApp), nunca por lo que diga el modelo. La cita de otro se ve igual que una que no existe.
 - **Defensa contra prompt injection en el servidor**: los resultados de herramientas, las transcripciones y el texto leído de fotos son datos. Cancelar toma dos turnos controlados por el servidor; un turno no puede hacer más de 3 acciones que cambian datos ni usar más de 5 herramientas; el motivo de la cita solo acepta valores administrativos.
 - **Privacidad**: el audio y las fotos nunca se guardan; los logs no llevan datos de pacientes (probado); las conversaciones se borran a los 30 días (configurable); la secretaria puede exportar o borrar los datos de un paciente si lo pide. Ver [docs/es/PRIVACIDAD.md](docs/es/PRIVACIDAD.md).
@@ -123,7 +128,7 @@ tests/DpmAgent.Tests/  pruebas con un modelo guionado (sin llamadas reales)
 
 ## Probarlo
 
-**Modo demo pública**: banner, seis ejemplos de un clic (inglés, español, kreyòl, pregunta clínica, emergencia, cancelar con lista de espera), la traza de herramientas del agente y un botón de reinicio que solo toca el consultorio de demo. Ver [docs/es/DEMO.md](docs/es/DEMO.md).
+**Modo demo pública**: banner, ocho ejemplos de un clic (inglés, español, kreyòl, pregunta clínica, emergencia, cancelar con lista de espera, "que me vean hoy" y el médico pidiendo un control desde su número verificado), seguimientos sembrados (uno en 6 meses y otro que se abre hoy), la traza de herramientas del agente y un botón de reinicio que solo toca el consultorio de demo. Ver [docs/es/DEMO.md](docs/es/DEMO.md).
 
 ```bash
 export META_API_KEY="su-clave"

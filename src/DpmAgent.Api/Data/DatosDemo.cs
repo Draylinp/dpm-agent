@@ -12,6 +12,9 @@ public static class DatosDemo
     public const string TelefonoMaria = "8095550101";
     public const string TelefonoJose = "8295550102";
 
+    /// <summary>Número verificado del Dr. Luis Herrera (ficticio) en la demo: con él se prueba el canal del médico.</summary>
+    public const string TelefonoMedico = "8495550111";
+
     /// <summary>Crea el consultorio de ejemplo con sus médicos y pacientes, si la base no tiene ningún consultorio.</summary>
     public static async Task SembrarAsync(DpmDbContext db, TimeProvider clock, CancellationToken ct = default)
     {

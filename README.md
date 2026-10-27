@@ -37,6 +37,9 @@ DPM Agent takes over the repetitive conversation and leaves the staff what truly
 - **Insurance card from a photo**: Muse Spark reads name, insurer and member number (image + JSON schema); the result stays pending until the patient or the receptionist confirms it.
 - **Fills cancelled slots on its own**: when someone cancels, the first matching patient on the waiting list gets an offer on their channel; if they don't answer in 30 minutes it moves to the next one.
 - **Reminder 24 hours before**, with confirm or cancel.
+- **Follow-ups ordered by the doctor** ("control in 3 months"): booked in the first free slot of the doctor's window when it is close, or the patient is contacted a few weeks before to pick a time, with retries and a hand-off to the receptionist if there is no answer. Holidays and the doctor's days off are respected.
+- **The doctor's own channel**: from a WhatsApp number verified with a one-time code, the doctor orders follow-ups, checks the day's schedule, blocks days off and decides extra-slot requests, and can get a short administrative summary each morning (only with their own permission).
+- **"I need to be seen today"**: no questions about symptoms and no judgement of severity. The agent offers the first slot today or the next business day, including urgent slots held per doctor; if there is none, it files an extra-slot request that only the receptionist or the doctor can approve, and tells the patient the decision.
 - **Hands everything clinical to a human**: health questions are escalated with the original message and a summary in the dashboard language; a possible emergency gets the clinic's emergency number (911 by default) and an urgent escalation.
 - **Staff dashboard**: today's appointments, escalations (urgent first), cards to confirm, insurance authorization drafts (never sent on their own), cost per conversation and per booked appointment, and the audit log; the admin sets the clinic's default language and emergency number. Spanish/English.
 - **Multi-clinic**: every record carries its clinic and every query is filtered by it.
@@ -79,6 +82,8 @@ Every model call records tokens in and out (never content). Prices are set per m
 
 - **No medical advice.** The prompt forbids it in every language, there is no clinical tool, and an **output filter** checks every reply before it is sent (multilingual rules for doses and medications, then Llama Guard or the model as a classifier). A blocked reply is replaced with a safe message, escalated and logged. See [docs/OUTPUT-FILTER.md](docs/OUTPUT-FILTER.md).
 - **Emergencies**: the patient is told to call the clinic's emergency number and the staff gets an urgent escalation.
+- **The agent never decides how urgent something is.** Priority is asked for by the patient or decided by the staff; the agent only routes it. Every urgent request gets the emergency number as fixed server text (not written by the model), plus the clinic's emergency centers out of hours, and an extra slot is never approved by the agent.
+- **Only a verified doctor gets doctor tools**: the number is registered by an admin and confirmed with a one-time code from that phone; doctor actions (follow-ups, days off, extra slots) take two steps, and only administrative data is stored, never diagnoses.
 - **Each conversation only acts on its own patient**, identified by the channel's phone number (the WhatsApp sender), never by what the model says. Someone else's appointment looks the same as a non-existent one.
 - **Prompt-injection defense on the server**: tool results, transcriptions and text read from photos are data. Cancelling takes two turns controlled by the server; a turn cannot perform more than 3 data-changing actions nor more than 5 tools; appointment reasons only accept administrative values.
 - **Privacy**: audio and photos are never stored; logs carry no patient data (tested); conversations are deleted after 30 days (configurable); the receptionist can export or delete a patient's data on request. See [docs/PRIVACY.md](docs/PRIVACY.md).
@@ -125,7 +130,7 @@ tests/DpmAgent.Tests/  tests with a scripted model (no real calls)
 
 ## Try it
 
-**Public demo mode** — banner, six one-click examples (English, Spanish, Kreyòl, clinical question, emergency, cancel with waiting list), the agent's tool trace, and a reset button that only touches the demo clinic. See [docs/DEMO.md](docs/DEMO.md).
+**Public demo mode** — banner, eight one-click examples (English, Spanish, Kreyòl, clinical question, emergency, cancel with waiting list, "see me today", and the doctor ordering a follow-up from his verified number), seeded follow-ups (one in 6 months, one that opens today), the agent's tool trace, and a reset button that only touches the demo clinic. See [docs/DEMO.md](docs/DEMO.md).
 
 ```bash
 export META_API_KEY="your-key"

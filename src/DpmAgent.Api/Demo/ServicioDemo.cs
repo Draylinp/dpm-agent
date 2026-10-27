@@ -79,6 +79,33 @@ public sealed class ServicioDemo
             });
         }
 
+        // Seguimientos indicados por la doctora: el de María es en 6 meses; el de José entra hoy en la ventana de
+        // contacto, así que el motor le escribe para escoger horario.
+        var hoy = HorarioConsultorio.FechaRd(_clock.GetUtcNow());
+        foreach (var (paciente, fecha) in new[] { (maria, hoy.AddMonths(6)), (jose, hoy.AddDays(consultorio.DiasContactoSeguimiento)) })
+        {
+            _db.Seguimientos.Add(new Seguimiento
+            {
+                ConsultorioId = consultorio.Id, PacienteId = IdsDpm.Leer(paciente.Id, "PAC")!.Value, MedicoId = IdsDpm.Leer(medico.Id, "MED")!.Value,
+                FechaObjetivo = fecha, ToleranciaDias = 7, Motivo = "control", Estado = ServicioSeguimientos.Pendiente,
+                CreadoPor = "medico:" + medico.Id, CreadoUtc = ahora,
+            });
+        }
+
+        // El Dr. Luis Herrera (ficticio) ya verificó su número: en la demo se le puede escribir como médico desde el chat web.
+        var herrera = await _db.Medicos.OrderBy(m => m.Id).Skip(1).FirstAsync(ct);
+        herrera.Telefono = DatosDemo.TelefonoMedico;
+        herrera.TelefonoVerificadoUtc = ahora;
+
+        // Urgencias: un cupo reservado a las 16:30 por médico y día hábil (no se libera en la demo) y centros de emergencia ficticios.
+        consultorio.HoraLiberarCuposUrgencia = 17;
+        consultorio.CentrosEmergencia = "Hospital Ejemplo Norte (ficticio)\nClínica Ejemplo Sur (ficticia)";
+        foreach (var m in await _db.Medicos.Select(m => m.Id).ToListAsync(ct))
+        {
+            foreach (var diaSemana in new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday })
+                _db.CuposUrgencia.Add(new CupoUrgencia { ConsultorioId = consultorio.Id, MedicoId = m, DiaSemana = diaSemana, Hora = new TimeOnly(16, 30) });
+        }
+
         await _db.SaveChangesAsync(ct);
 
         if (!string.IsNullOrWhiteSpace(_opciones.ClavePanel) && !await _db.UsuariosPanel.AnyAsync(u => u.Usuario == UsuarioPanel, ct))
@@ -171,6 +198,22 @@ public sealed class ServicioDemo
             {
                 ["es"] = "Confirme con \"sí\". José (829-555-0102) está en la lista de espera: luego use \"Pedir cita en kreyòl\" o escriba con su número para ver la oferta del turno liberado.",
                 ["en"] = "Confirm with \"yes\". José (829-555-0102) is on the waiting list: then use \"Book in Haitian Creole\" or write from his number to see the offer for the freed slot.",
+            }),
+        new("urgente", DatosDemo.TelefonoMaria,
+            new() { ["es"] = "⏱️ Que me vean hoy", ["en"] = "⏱️ See me today" },
+            new() { ["es"] = "Necesito que me vean hoy, por favor.", ["en"] = "I need to be seen today, please." },
+            new()
+            {
+                ["es"] = "No pregunta síntomas ni juzga la gravedad: ofrece el primer horario o el cupo de urgencia de las 4:30 p. m.; si no hay, crea una solicitud de sobrecupo que solo la secretaria (panel → Urgencias) o el médico aprueban. Siempre recuerda el 911; de noche, también los centros de emergencia.",
+                ["en"] = "It never asks about symptoms or judges severity: it offers the first slot or the 4:30 PM urgent slot; if there is none, it files an extra-slot request that only the receptionist (dashboard → Urgent requests) or the doctor can approve. It always reminds of 911; at night, also the emergency centers.",
+            }),
+        new("medico", DatosDemo.TelefonoMedico,
+            new() { ["es"] = "🩺 El médico pide un control", ["en"] = "🩺 The doctor orders a follow-up" },
+            new() { ["es"] = "Control para María en 3 meses", ["en"] = "Follow-up for María in 3 months" },
+            new()
+            {
+                ["es"] = "Escribe como el Dr. Luis Herrera (ficticio), con su número verificado 849-555-0111. Confirme con \"sí\": el seguimiento aparece en el panel (Seguimientos) y se le avisa a María. Solo se guardan la fecha y el motivo administrativo.",
+                ["en"] = "Writes as Dr. Luis Herrera (ficticio), from his verified number 849-555-0111. Confirm with \"yes\": the follow-up shows in the dashboard (Follow-ups) and María is notified. Only the date and the administrative reason are stored.",
             }),
     ];
 }

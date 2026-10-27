@@ -23,7 +23,7 @@ dotnet run --project src/DpmAgent.Api
 ## What the visitor sees
 
 - A **"Demo with fictional data"** banner and a **Reset demo** button.
-- Six example buttons in the interface language (Spanish or English): book in English, book in Spanish, book in Haitian Creole, a clinical question, an emergency, and cancelling with the waiting list.
+- Eight example buttons in the interface language (Spanish or English): book in English, book in Spanish, book in Haitian Creole, a clinical question, an emergency, cancelling with the waiting list, "see me today" (first slot, the 4:30 PM urgent slot or an extra-slot request, always with 911) and the doctor ordering "Follow-up for María in 3 months" from his verified number.
 - The agent trace next to the chat: every tool the model decided to call, with its arguments and result.
 
 ## Ready-made scenario
@@ -33,6 +33,9 @@ On startup (and after each reset) the demo clinic has:
 - María Rodríguez (fictional, 809-555-0101) with an appointment the next business day at 9:00.
 - José Martínez (fictional, 829-555-0102) on the waiting list for that morning.
 - One fixed web conversation per phone number (`demo-` + number).
+- Two follow-ups ordered by Dra. Ana Valdez (fictional): María's in 6 months (it waits; nothing is sent yet) and José's, which enters its contact window today, so the engine writes to him to pick a time (it shows in his chat and in the dashboard's Follow-ups tab).
+- Dr. Luis Herrera (fictional) with his number 849-555-0111 already verified. In the demo clinic, and only while the demo is on, that number also works from the web chat so you can try the doctor's channel; outside the demo the doctor's channel is WhatsApp only (`CanalMedico__PermitirChatWeb` changes it).
+- An urgent slot at 4:30 PM per doctor and weekday (held all day in the demo) and two fictional emergency centers, shown out of hours.
 
 Cancelling María's appointment frees the slot; the scheduling engine offers it to José automatically. Because José's conversation is fixed, the offer shows up in the chat as soon as you write with his number (the "Book in Haitian Creole" button does it).
 

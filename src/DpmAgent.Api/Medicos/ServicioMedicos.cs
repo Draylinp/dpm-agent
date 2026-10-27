@@ -36,7 +36,8 @@ public sealed record EstadoMedico(string Id, string Nombre, string? Telefono, bo
 /// Un número que no está registrado y verificado como médico nunca obtiene herramientas de médico.
 /// </summary>
 public sealed class ServicioMedicos(
-    DpmDbContext db, Bitacora bitacora, Notificador notificador, TimeProvider clock, IOptions<CanalMedicoOptions> opciones)
+    DpmDbContext db, Bitacora bitacora, Notificador notificador, TimeProvider clock, IOptions<CanalMedicoOptions> opciones,
+    IOptions<Demo.DemoOptions> demo)
 {
     private readonly CanalMedicoOptions _opciones = opciones.Value;
 
@@ -44,7 +45,11 @@ public sealed class ServicioMedicos(
 
     public async Task<MedicoCanal?> MedicoDelCanalAsync(string? telefono, string canal, CancellationToken ct)
     {
-        if (telefono is null || (canal != CanalesConocidos.WhatsApp && !_opciones.PermitirChatWeb))
+        if (telefono is null)
+            return null;
+        // El chat web no garantiza el número: solo se acepta si se permite expresamente o en la demo pública (datos ficticios).
+        if (canal != CanalesConocidos.WhatsApp && !_opciones.PermitirChatWeb &&
+            !(demo.Value.Habilitado && await db.Consultorios.AnyAsync(c => c.Id == db.ConsultorioId && c.EsDemo, ct)))
             return null;
         var normalizado = Telefono.Normalizar(telefono);
         return await db.Medicos.AsNoTracking()
