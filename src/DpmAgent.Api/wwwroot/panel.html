@@ -88,6 +88,7 @@
       <button data-tab="seguimientos" data-i18n="tab.seguimientos"></button>
       <button data-tab="llamadas" data-i18n="tab.llamadas"></button>
       <button data-tab="medicos" data-i18n="tab.medicos"></button>
+      <button data-tab="familias" data-i18n="tab.familias"></button>
       <button data-tab="pacientes" data-i18n="tab.pacientes"></button>
       <button data-tab="costos" data-i18n="tab.costos"></button>
       <button data-tab="bitacora" data-i18n="tab.bitacora"></button>
@@ -171,7 +172,7 @@
     $('error').textContent = '';
     const vista = $('vista');
     try {
-      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, urgencias, seguimientos, llamadas, medicos, pacientes, costos, bitacora })[tab]();
+      const contenido = await ({ citas, escalamientos, carnets, autorizaciones, urgencias, seguimientos, llamadas, medicos, familias, pacientes, costos, bitacora })[tab]();
       vista.replaceChildren(contenido);
     } catch (err) {
       $('error').textContent = err.message;
@@ -195,10 +196,16 @@
       el('td', {}, c.ars || '—', el('div', { class: 'muted' }, c.numeroAfiliado || '')),
       el('td', {}, c.medico),
       el('td', {}, c.motivo),
-      el('td', {}, el('span', { class: 'chip' }, c.estado), c.asistenciaConfirmada ? el('div', { class: 'muted' }, t('citas.asistencia')) : ''),
-      el('td', {}, c.estado === 'confirmada'
+      el('td', {}, el('span', { class: 'chip' }, c.estado), c.asistenciaConfirmada ? el('div', { class: 'muted' }, t('citas.asistencia')) : '',
+        c.reprogramacion ? el('div', { class: 'muted' }, t('rep.estado.' + c.reprogramacion)) : '',
+        c.ausencias ? el('div', { class: 'muted' }, t('fam.ausencias').replace('{n}', c.ausencias)) : ''),
+      el('td', { class: 'fila-acciones' }, c.estado === 'confirmada'
         ? el('button', { class: 'sec', onclick: () => accion(() => api(`/api/panel/autorizaciones`, { method: 'POST', body: JSON.stringify({ citaId: c.id }) })) }, t('citas.borrador'))
-        : '')));
+        : '',
+        c.estado === 'confirmada' && new Date(c.fechaHora) < new Date()
+          ? el('button', { class: 'sec', 'aria-label': `${t('citas.no_asistio')} · ${c.paciente} ${c.hora}`,
+              onclick: () => accion(() => api(`/api/panel/citas/${c.id}/no-asistio`, { method: 'POST' })) }, t('citas.no_asistio'))
+          : '')));
     return el('div', {},
       el('div', { class: 'fila-acciones' }, el('label', {}, t('citas.fecha') + ' '), fecha),
       lista.length ? el('div', { class: 'tabla' }, el('table', {},
@@ -357,7 +364,8 @@
         const r = await api('/api/panel/bloqueos', { method: 'POST', body: JSON.stringify({ medicoId: bMed.value, desde: bDesde.value, hasta: bHasta.value, motivo: 'otro' }) });
         alert(t('seg.bloqueo_listo').replace('{n}', r.citasParaReprogramar));
       }) }, t('seg.bloquear')),
-      resultado);
+      resultado,
+      await cambiosAgenda(medicos));
   }
 
   // Urgencias: solicitudes de sobrecupo (solo el personal o el médico deciden), cupos de urgencia y centros de emergencia.
@@ -404,6 +412,51 @@
       el('h3', {}, t('urg.config')),
       el('div', { class: 'grid' }, campo('urgLiberar', 'urg.liberar', liberar), campo('urgCentros', 'urg.centros', centros)),
       el('button', { class: 'sec', onclick: () => accion(() => api('/api/panel/urgencias/config', { method: 'PUT', body: JSON.stringify({ horaLiberarCupos: Number(liberar.value), centrosEmergencia: centros.value }) })) }, t('urg.guardar')));
+  }
+
+  // Cambios de agenda: estado de las citas que hay que reprogramar por un bloqueo y aviso de retraso del médico.
+  let avisoRetraso = '';
+  async function cambiosAgenda(medicos) {
+    const lista = await api('/api/panel/reprogramaciones');
+    const rMed = el('select', { id: 'retMed' }, medicos.map(m => el('option', { value: m.id }, m.nombre)));
+    const rMin = el('input', { id: 'retMin', type: 'number', min: '5', max: '240', value: '30' });
+    const campo = (id, etiqueta, control) => el('div', {}, el('label', { for: id }, t(etiqueta)), control);
+    return el('div', {},
+      el('h3', {}, t('rep.titulo')),
+      lista.length ? el('ul', {}, lista.map(r => el('li', {},
+        `${r.paciente} · ${r.medico} · ${fecha(r.fechaHora)} · ${t('rep.estado.' + r.estado)}${r.prioridad ? ' · ' + t('rep.prioridad') : ''}${r.nuevaCitaId ? ' → ' + r.nuevaCitaId : ''}`)))
+        : el('p', { class: 'vacio' }, t('rep.vacio')),
+      el('h3', {}, t('rep.retraso')),
+      el('div', { class: 'grid' }, campo('retMed', 'citas.medico', rMed), campo('retMin', 'rep.minutos', rMin)),
+      el('button', { class: 'sec', onclick: () => accion(async () => {
+        const r = await api(`/api/panel/medicos/${rMed.value}/retraso`, { method: 'POST', body: JSON.stringify({ minutos: Number(rMin.value) }) });
+        avisoRetraso = t('rep.avisados').replace('{n}', r.avisados);
+      }) }, t('rep.avisar')),
+      el('p', { role: 'status' }, avisoRetraso));
+  }
+
+  // Familias: varios pacientes gestionados desde un mismo teléfono, con su contador de ausencias.
+  let telefonoFamilia = '';
+  async function familias() {
+    const tel = el('input', { id: 'famTel', type: 'tel', value: telefonoFamilia, placeholder: '809-555-0101' });
+    const nombre = el('input', { id: 'famNombre' });
+    const confirma = el('input', { id: 'famConfirma', type: 'checkbox' });
+    const miembros = telefonoFamilia ? await api(`/api/panel/familias?telefono=${encodeURIComponent(telefonoFamilia)}`) : null;
+    const campo = (id, etiqueta, control) => el('div', {}, el('label', { for: id }, t(etiqueta)), control);
+    return el('div', {},
+      el('p', { class: 'muted' }, t('fam.nota')),
+      el('div', { class: 'grid' }, campo('famTel', 'pac.telefono', tel)),
+      el('button', { class: 'sec', onclick: () => { telefonoFamilia = tel.value.trim(); cargar(); } }, t('fam.buscar')),
+      miembros === null ? '' : miembros.length
+        ? el('ul', {}, miembros.map(m => el('li', {}, `${m.id} · ${m.nombre} · ${t('fam.ausencias').replace('{n}', m.ausencias)}`)))
+        : el('p', { class: 'vacio' }, t('fam.vacio')),
+      el('h3', {}, t('fam.agregar')),
+      el('div', { class: 'grid' }, campo('famNombre', 'fam.nombre', nombre)),
+      el('div', { class: 'fila-acciones' }, confirma, el('label', { for: 'famConfirma' }, t('fam.confirma'))),
+      el('button', { onclick: () => accion(async () => {
+        telefonoFamilia = tel.value.trim();
+        await api('/api/panel/familias', { method: 'POST', body: JSON.stringify({ telefono: telefonoFamilia, nombre: nombre.value.trim(), confirmado: confirma.checked }) });
+      }) }, t('fam.vincular')));
   }
 
   // Médicos: teléfono verificado para el canal del médico y permiso para su resumen diario.

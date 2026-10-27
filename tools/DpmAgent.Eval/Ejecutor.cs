@@ -237,6 +237,9 @@ public sealed class Ejecutor
             await db.SaveChangesAsync(ct);
         }
 
+        foreach (var f in prep.Familiares)
+            await dpm.RegistrarPacienteAsync(f.Nombre, f.Telefono, null, ct);
+
         foreach (var (pacienteId, idioma) in prep.IdiomasPacientes)
         {
             var id = IdsDpm.Leer(pacienteId, "PAC");
@@ -253,6 +256,14 @@ public sealed class Ejecutor
             var cita = await dpm.CrearCitaAsync(c.Paciente, c.Medico, HorarioConsultorio.EnHoraRd(fecha, hora), "control", ct);
             reemplazos[$"{{cita{ids.Count}}}"] = cita.Id;
             ids.Add(cita.Id);
+        }
+
+        foreach (var indice in prep.Reprogramar)
+        {
+            var c = await db.Citas.FirstAsync(x => x.Id == IdsDpm.Leer(ids[indice], "CITA"), ct);
+            c.ParaReprogramar = true;
+            c.Reprogramacion = ServicioReprogramacion.Contactado;
+            await db.SaveChangesAsync(ct);
         }
 
         var lista = scope.ServiceProvider.GetRequiredService<ServicioListaEspera>();

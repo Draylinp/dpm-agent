@@ -81,7 +81,8 @@ public sealed class Notificador
 
         var sesion = await _conversaciones.ObtenerAsync(sesionId, ct);
         sesion.VincularTelefono(paciente.Telefono);
-        sesion.PacienteId ??= IdsDpm.Paciente(pacienteId);
+        // Si el número gestiona a una familia, la respuesta a este aviso es de este paciente.
+        sesion.PacienteId = IdsDpm.Paciente(pacienteId);
         sesion.Mensajes.Add(new JsonObject { ["role"] = "assistant", ["content"] = texto });
         await _conversaciones.GuardarAsync(sesion, ct);
 

@@ -39,6 +39,7 @@ DPM Agent takes over the repetitive conversation and leaves the staff what truly
 - **Reminder 24 hours before**, with confirm or cancel.
 - **Follow-ups ordered by the doctor** ("control in 3 months"): booked in the first free slot of the doctor's window when it is close, or the patient is contacted a few weeks before to pick a time, with retries and a hand-off to the receptionist if there is no answer. Holidays and the doctor's days off are respected.
 - **The doctor's own channel**: from a WhatsApp number verified with a one-time code, the doctor orders follow-ups, checks the day's schedule, blocks days off and decides extra-slot requests, and can get a short administrative summary each morning (only with their own permission).
+- **Families and schedule changes**: one phone number can manage several patients (children, parents); the agent asks who it is for, and linking a new one needs a confirmation. When the doctor blocks a day, every affected patient is contacted with new times (follow-ups and urgent visits first); if the doctor runs late, today's remaining patients are told; after a no-show the patient is offered a new time once.
 - **"I need to be seen today"**: no questions about symptoms and no judgement of severity. The agent offers the first slot today or the next business day, including urgent slots held per doctor; if there is none, it files an extra-slot request that only the receptionist or the doctor can approve, and tells the patient the decision.
 - **Hands everything clinical to a human**: health questions are escalated with the original message and a summary in the dashboard language; a possible emergency gets the clinic's emergency number (911 by default) and an urgent escalation.
 - **Staff dashboard**: today's appointments, escalations (urgent first), cards to confirm, insurance authorization drafts (never sent on their own), cost per conversation and per booked appointment, and the audit log; the admin sets the clinic's default language and emergency number. Spanish/English.
@@ -60,14 +61,14 @@ DPM Agent takes over the repetitive conversation and leaves the staff what truly
 
 ### Evaluation
 
-200 cases in 18 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy, doctor follow-ups, doctor channel, urgent requests) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
+214 cases in 19 categories (booking, rescheduling, cancelling, new patient, insurance card, waiting list, clinical question, emergency, prompt injection, someone else's appointment, language switch, off-topic requests, transparency, consent, privacy, doctor follow-ups, doctor channel, urgent requests, families and schedule changes) in Spanish, English and Haitian Creole, plus French and Portuguese for tier 2. Two layers: deterministic checks on tools and database state, and an LLM judge with a rubric. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
 **Against Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: run `dotnet run --project tools/DpmAgent.Eval -- --modelo real` and paste the tables from eval/resultados/ here -->
 *Pending: requires access to the Meta Model API.*
 
-**Server guarantees (scripted model, runs in CI on every push):** 200 / 200 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
+**Server guarantees (scripted model, runs in CI on every push):** 214 / 214 cases pass — [latest report](eval/resultados/2026-10-26-modelo-falso.md). Some scripts play a model that obeys an injection on purpose; the server still blocks cancelling someone else's appointment or cancelling without the patient's confirmation. The output filter blocked the 5 scripted replies with doses and the 3 with code (off-topic).
 
 ### Cost
 

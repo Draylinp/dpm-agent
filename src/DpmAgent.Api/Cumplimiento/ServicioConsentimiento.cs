@@ -31,7 +31,8 @@ public static class CategoriasConsentimiento
     /// <summary>Categoría de consentimiento que necesita cada tipo de mensaje proactivo.</summary>
     public static string? DeTipoMensaje(string tipo) => tipo switch
     {
-        "recordatorio" => Recordatorios,
+        // Avisos sobre una cita que el paciente ya tiene: el bloqueo de la agenda, el retraso del médico, la ausencia.
+        "recordatorio" or "reprogramar" or "retraso" or "ausencia" => Recordatorios,
         "oferta" or "aviso" => ListaEspera,
         "seguimiento" => Seguimientos,
         _ => null,

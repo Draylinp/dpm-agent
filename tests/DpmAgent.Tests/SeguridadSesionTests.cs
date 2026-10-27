@@ -137,15 +137,22 @@ public class SeguridadSesionTests
     }
 
     [Fact]
-    public async Task No_registra_un_duplicado_del_paciente_del_telefono()
+    public async Task No_registra_un_duplicado_ni_vincula_a_un_familiar_sin_confirmacion()
     {
         var sesion = new Sesion("s");
         sesion.VincularTelefono("8095550101");
 
-        var r = await _tools.ExecuteAsync(sesion, "registrar_paciente", """{"nombre":"Otra persona (ficticia)"}""", CancellationToken.None);
+        // El mismo paciente otra vez: no.
+        var r = await _tools.ExecuteAsync(sesion, "registrar_paciente", """{"nombre":"María Rodríguez"}""", CancellationToken.None);
+        Assert.Contains("ya está vinculado a este número", r);
 
-        Assert.Contains("Ya hay un paciente registrado", r);
+        // Otra persona con el mismo número (un familiar): solo se propone; en el mismo turno no se registra.
+        r = await _tools.ExecuteAsync(sesion, "registrar_paciente", """{"nombre":"Otra persona (ficticia)"}""", CancellationToken.None);
+        Assert.Contains("requiere_confirmacion", r);
+        r = await _tools.ExecuteAsync(sesion, "registrar_paciente", """{"nombre":"Otra persona (ficticia)"}""", CancellationToken.None);
+        Assert.Contains("requiere_confirmacion", r);
         Assert.Null(sesion.PacienteId);
+        Assert.Single(await _dpm.PacientesDelTelefonoAsync("8095550101", CancellationToken.None));
     }
 
     [Fact]

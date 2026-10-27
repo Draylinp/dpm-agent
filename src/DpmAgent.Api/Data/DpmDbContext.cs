@@ -123,6 +123,7 @@ public abstract class DpmDbContext : DbContext
         {
             e.Property(x => x.Motivo).HasMaxLength(200);
             e.Property(x => x.Estado).HasMaxLength(20);
+            e.Property(x => x.Reprogramacion).HasMaxLength(20);
             e.HasOne(x => x.Paciente).WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Medico).WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);

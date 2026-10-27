@@ -17,7 +17,9 @@ public sealed record CitaDelDia(
     string Medico,
     string Motivo,
     string Estado,
-    bool AsistenciaConfirmada);
+    bool AsistenciaConfirmada,
+    int Ausencias = 0,
+    string? Reprogramacion = null);
 
 /// <summary>Consultas y acciones del panel de la secretaria, siempre dentro de su consultorio.</summary>
 public sealed class ServicioPanel
@@ -43,6 +45,7 @@ public sealed class ServicioPanel
             .OrderBy(c => c.FechaHoraUtc)
             .ThenBy(c => c.MedicoId)
             .ToListAsync(ct);
+        var ausencias = await Agenda.ServicioReprogramacion.AusenciasAsync(_db, citas.Select(c => c.PacienteId), ct);
 
         return citas.Select(c =>
         {
@@ -50,7 +53,8 @@ public sealed class ServicioPanel
             return new CitaDelDia(
                 IdsDpm.Cita(c.Id), fechaHora, Agenda.TextosAgenda.Hora(fechaHora),
                 IdsDpm.Paciente(c.PacienteId), c.Paciente!.Nombre, c.Paciente.Telefono, c.Paciente.Ars, c.Paciente.NumeroAfiliado,
-                IdsDpm.Medico(c.MedicoId), c.Medico!.Nombre, c.Motivo, c.Estado, c.AsistenciaConfirmadaUtc is not null);
+                IdsDpm.Medico(c.MedicoId), c.Medico!.Nombre, c.Motivo, c.Estado, c.AsistenciaConfirmadaUtc is not null,
+                ausencias.GetValueOrDefault(c.PacienteId), c.Reprogramacion);
         }).ToList();
     }
 

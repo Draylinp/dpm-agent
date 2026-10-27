@@ -39,6 +39,7 @@ DPM Agent se encarga de la conversación repetitiva y le deja al personal lo que
 - **Recordatorio 24 horas antes**, con opción de confirmar o cancelar.
 - **Seguimientos indicados por el médico** ("control en 3 meses"): si la fecha está cerca se agenda en el primer hueco de la ventana del médico; si está lejos, se contacta al paciente unas semanas antes para escoger horario, con reintentos y paso a la secretaria si no responde. Respeta feriados y los días libres del médico.
 - **Canal propio del médico**: desde su WhatsApp verificado con un código de un solo uso, el médico indica seguimientos, ve su agenda del día, bloquea días libres y decide sobrecupos, y puede recibir cada mañana un resumen administrativo (solo con su propio permiso).
+- **Familias y cambios de agenda**: un mismo teléfono puede gestionar a varios pacientes (hijos, padres); el agente pregunta para quién es, y vincular a uno nuevo pide confirmación. Si el médico bloquea un día, se contacta a cada paciente afectado con horarios nuevos (primero seguimientos y urgencias); si el médico va con retraso, se avisa a los pacientes que le quedan; tras una ausencia se ofrece reagendar una vez.
 - **"Necesito que me vean hoy"**: sin preguntar síntomas ni juzgar la gravedad. El agente ofrece el primer hueco de hoy o del siguiente día hábil, incluidos los cupos de urgencia por médico; si no hay, crea una solicitud de sobrecupo que solo la secretaria o el médico pueden aprobar, y le comunica la decisión al paciente.
 - **Todo lo clínico va a una persona**: las preguntas de salud se escalan con el mensaje original y un resumen en el idioma del panel; ante una posible emergencia indica el número de emergencias del consultorio (911 por defecto) y escala como urgente.
 - **Panel del personal**: citas del día, escalamientos (urgentes primero), carnets por confirmar, borradores de autorización de ARS (nunca se envían solos), costo por conversación y por cita agendada, y la bitácora; el admin define el idioma predeterminado y el número de emergencias del consultorio. Español/inglés.
@@ -60,14 +61,14 @@ DPM Agent se encarga de la conversación repetitiva y le deja al personal lo que
 
 ### Evaluación
 
-200 casos en 18 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena, cambio de idioma, fuera de tema, transparencia, consentimiento, privacidad, seguimientos del médico, canal del médico, urgencias) en español, inglés y kreyòl, más francés y portugués para el nivel 2. Dos capas: verificación determinista de herramientas y estado de la base, y un juez LLM con rúbrica. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
+214 casos en 19 categorías (agendar, reprogramar, cancelar, paciente nuevo, carnet, lista de espera, pregunta clínica, emergencia, prompt injection, cita ajena, cambio de idioma, fuera de tema, transparencia, consentimiento, privacidad, seguimientos del médico, canal del médico, urgencias, familias y cambios de agenda) en español, inglés y kreyòl, más francés y portugués para el nivel 2. Dos capas: verificación determinista de herramientas y estado de la base, y un juez LLM con rúbrica. Ver [docs/es/EVALUACION.md](docs/es/EVALUACION.md).
 
 **Contra Muse Spark:**
 
 <!-- RESULTADOS MUSE SPARK: correr `dotnet run --project tools/DpmAgent.Eval -- --modelo real` y pegar aquí las tablas de eval/resultados/ -->
 *Pendiente: requiere acceso a la Meta Model API.*
 
-**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 200 / 200 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones simulan un modelo que obedece una inyección a propósito; aun así el servidor impide cancelar la cita de otro o cancelar sin la confirmación del paciente. El filtro de salida bloqueó las 5 respuestas guionadas con dosis y las 3 con código (fuera de tema).
+**Garantías del servidor (modelo guionado, corre en el CI en cada push):** 214 / 214 casos pasan — [último informe](eval/resultados/2026-10-26-modelo-falso.md). Algunos guiones simulan un modelo que obedece una inyección a propósito; aun así el servidor impide cancelar la cita de otro o cancelar sin la confirmación del paciente. El filtro de salida bloqueó las 5 respuestas guionadas con dosis y las 3 con código (fuera de tema).
 
 ### Costo
 

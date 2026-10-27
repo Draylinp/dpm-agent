@@ -39,14 +39,16 @@ public sealed class AgentTools
     private readonly ServicioConsentimiento? _consentimientos;
     private readonly ServicioSeguimientos? _seguimientos;
     private readonly ServicioUrgencias? _urgencias;
+    private readonly ServicioReprogramacion? _reprogramacion;
 
     /// <param name="consentimientos">Opt-in para mensajes proactivos. Sin él, esas herramientas no están disponibles.</param>
     /// <param name="agenda">Lista de espera y respuestas a mensajes automáticos. Sin ella esas herramientas no están disponibles.</param>
     /// <param name="bitacora">Si se da, cada acción que cambia datos queda registrada.</param>
     public AgentTools(
         IDpmGateway dpm, ServicioListaEspera? agenda = null, Bitacora? bitacora = null, ServicioConsentimiento? consentimientos = null,
-        ServicioSeguimientos? seguimientos = null, ServicioUrgencias? urgencias = null)
+        ServicioSeguimientos? seguimientos = null, ServicioUrgencias? urgencias = null, ServicioReprogramacion? reprogramacion = null)
     {
+        _reprogramacion = reprogramacion;
         _urgencias = urgencias;
         _seguimientos = seguimientos;
         _consentimientos = consentimientos;
@@ -84,6 +86,7 @@ public sealed class AgentTools
             {
                 "listar_medicos" => await ListarMedicos(ct),
                 "buscar_paciente" => await BuscarPaciente(sesion, ct),
+                "seleccionar_paciente" => await SeleccionarPaciente(sesion, args, ct),
                 "registrar_paciente" => await RegistrarPaciente(sesion, args, ct),
                 "consultar_disponibilidad" => await ConsultarDisponibilidad(args, ct),
                 "crear_cita" => await CrearCita(sesion, args, ct),
@@ -100,6 +103,7 @@ public sealed class AgentTools
                 "seguimientos_del_paciente" => await SeguimientosDelPaciente(sesion, ct),
                 "pedir_cita_urgente" => await PedirCitaUrgente(sesion, args, ct),
                 "reservar_urgente" => await ReservarUrgente(sesion, args, ct),
+                "reprogramar_cita" => await ReprogramarCita(sesion, args, ct),
                 _ => Error($"Herramienta desconocida: {name}"),
             };
         }
@@ -129,12 +133,46 @@ public sealed class AgentTools
         if (sesion.TelefonoCanal is null)
             return Error(SinTelefono);
 
-        var p = await _dpm.BuscarPacienteAsync(sesion.TelefonoCanal, ct);
-        if (p is null || !Telefono.Iguales(p.Telefono, sesion.TelefonoCanal))
+        var familia = await _dpm.PacientesDelTelefonoAsync(sesion.TelefonoCanal, ct);
+        if (familia.Count == 0)
             return Ok(new { encontrado = false });
 
+        if (familia.Count == 1)
+        {
+            var p = familia[0];
+            sesion.PacienteId = p.Id;
+            return Ok(new { encontrado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars }, avisos = await EstadoAvisos(p.Id, ct) });
+        }
+
+        // Una familia con el mismo número: hay que saber para quién es antes de actuar.
+        if (familia.All(p => p.Id != sesion.PacienteId))
+            sesion.PacienteId = null;
+        return Ok(new
+        {
+            encontrado = true,
+            varios = true,
+            pacientes = familia.Select(p => new { id = p.Id, nombre = p.Nombre }),
+            seleccionado = sesion.PacienteId,
+            instruccion = "Este número gestiona a varios pacientes. Pregunta para quién es y usa seleccionar_paciente antes de ver o agendar citas.",
+        });
+    }
+
+    private async Task<string> SeleccionarPaciente(Sesion sesion, JsonObject args, CancellationToken ct)
+    {
+        if (sesion.TelefonoCanal is null)
+            return Error(SinTelefono);
+        var id = Req(args, "paciente_id").ToUpperInvariant();
+        var familia = await _dpm.PacientesDelTelefonoAsync(sesion.TelefonoCanal, ct);
+        // Un paciente de otro número se ve igual que uno que no existe.
+        var p = familia.FirstOrDefault(x => x.Id == id) ?? throw new ArgumentException($"No hay un paciente {id} vinculado a este número.");
+        if (sesion.PacienteId != p.Id)
+        {
+            sesion.CancelacionPropuesta = null;
+            sesion.CancelacionPropuestaTurno = null;
+        }
+
         sesion.PacienteId = p.Id;
-        return Ok(new { encontrado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars }, avisos = await EstadoAvisos(p.Id, ct) });
+        return Ok(new { seleccionado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars }, avisos = await EstadoAvisos(p.Id, ct) });
     }
 
     private async Task<string> RegistrarPaciente(Sesion sesion, JsonObject args, CancellationToken ct)
@@ -142,17 +180,37 @@ public sealed class AgentTools
         if (sesion.TelefonoCanal is null)
             return Error(SinTelefono);
 
-        if (sesion.PacienteId is not null)
-            return Error($"Esta conversación ya está vinculada al paciente {sesion.PacienteId}.");
+        var nombre = Req(args, "nombre");
+        var familia = await _dpm.PacientesDelTelefonoAsync(sesion.TelefonoCanal, ct);
+        if (familia.Count == 0)
+        {
+            if (sesion.PacienteId is not null)
+                return Error($"Esta conversación ya está vinculada al paciente {sesion.PacienteId}.");
+            var nuevo = await _dpm.RegistrarPacienteAsync(nombre, sesion.TelefonoCanal, Opt(args, "ars"), ct);
+            sesion.PacienteId = nuevo.Id;
+            await Registrar(sesion, "paciente_registrado", "paciente", nuevo.Id, null, ct);
+            return Ok(new { registrado = true, paciente = new { id = nuevo.Id, nombre = nuevo.Nombre, ars = nuevo.Ars } });
+        }
 
-        var existente = await _dpm.BuscarPacienteAsync(sesion.TelefonoCanal, ct);
-        if (existente is not null && Telefono.Iguales(existente.Telefono, sesion.TelefonoCanal))
-            return Error("Ya hay un paciente registrado con este teléfono. Usa buscar_paciente.");
+        // Ya hay pacientes con este número: vincular a un familiar nuevo (hijo, padre) requiere su confirmación en otro mensaje.
+        var clave = PedidosDirectos.SinAcentos(nombre).ToLowerInvariant().Trim();
+        if (familia.Any(p => PedidosDirectos.SinAcentos(p.Nombre).ToLowerInvariant().StartsWith(clave, StringComparison.Ordinal)))
+            return Error("Ese paciente ya está vinculado a este número. Usa buscar_paciente y seleccionar_paciente.");
+        if (!sesion.ConfirmarPropuesta("vincular|" + clave))
+        {
+            return Ok(new
+            {
+                requiere_confirmacion = true,
+                nombre,
+                pacientes_del_numero = familia.Select(p => p.Nombre),
+                instruccion = "Todavía no se registró. Pregúntale si confirma registrar a esta persona como paciente vinculado a este número (por ejemplo, un hijo o un padre); si confirma, vuelve a llamar con el mismo nombre.",
+            });
+        }
 
-        var p = await _dpm.RegistrarPacienteAsync(Req(args, "nombre"), sesion.TelefonoCanal, Opt(args, "ars"), ct);
+        var p = await _dpm.RegistrarPacienteAsync(nombre, sesion.TelefonoCanal, Opt(args, "ars"), ct);
         sesion.PacienteId = p.Id;
-        await Registrar(sesion, "paciente_registrado", "paciente", p.Id, null, ct);
-        return Ok(new { registrado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars } });
+        await Registrar(sesion, "paciente_vinculado", "paciente", p.Id, null, ct);
+        return Ok(new { registrado = true, vinculado = true, paciente = new { id = p.Id, nombre = p.Nombre, ars = p.Ars } });
     }
 
     private async Task<string> ConsultarDisponibilidad(JsonObject args, CancellationToken ct)
@@ -196,8 +254,16 @@ public sealed class AgentTools
 
     private async Task<string> CitasDelPaciente(Sesion sesion, CancellationToken ct)
     {
-        var citas = await _dpm.CitasDePacienteAsync(PacienteDeSesion(sesion), ct);
-        return Ok(new { citas = citas.Select(Resumen) });
+        var pacienteId = PacienteDeSesion(sesion);
+        var citas = await _dpm.CitasDePacienteAsync(pacienteId, ct);
+        var mover = _reprogramacion is null ? [] : await _reprogramacion.ParaReprogramarAsync(pacienteId, ct);
+        if (mover.Count == 0)
+            return Ok(new { citas = citas.Select(Resumen) });
+        return Ok(new
+        {
+            citas = citas.Select(c => new { cita = Resumen(c), para_reprogramar = mover.Contains(c.Id) }),
+            instruccion = "Las citas con para_reprogramar = true se deben mover: ofrece horarios (los del aviso o de consultar_disponibilidad) y usa reprogramar_cita.",
+        });
     }
 
     /// <summary>
@@ -297,11 +363,19 @@ public sealed class AgentTools
         }, ct);
     }
 
-    /// <summary>El paciente respondió STOP (o equivalente): se revocan todos sus permisos de avisos.</summary>
+    /// <summary>
+    /// El paciente respondió STOP (o equivalente): se revocan todos los permisos de avisos de ese número,
+    /// es decir, de todos los pacientes vinculados a él.
+    /// </summary>
     public async Task BajaPorMensajeAsync(Sesion sesion, CancellationToken ct)
     {
         await IdentificarPorTelefonoAsync(sesion, ct);
-        if (_consentimientos is not null && IdsDpm.Leer(sesion.PacienteId, "PAC") is { } id)
+        if (_consentimientos is null)
+            return;
+        var ids = sesion.TelefonoCanal is { } tel ? (await _dpm.PacientesDelTelefonoAsync(tel, ct)).Select(p => p.Id).ToList() : [];
+        if (sesion.PacienteId is { } actual && !ids.Contains(actual))
+            ids.Add(actual);
+        foreach (var id in ids.Select(i => IdsDpm.Leer(i, "PAC")).OfType<int>())
             await _consentimientos.RevocarTodoAsync(id, CanalDeSesion(sesion), sesion.Idioma, Bitacora.Agente, sesion.Id, ct);
     }
 
@@ -473,6 +547,17 @@ public sealed class AgentTools
         return Ok(new { creada = true, cita = Resumen(cita) });
     }
 
+    /// <summary>El consultorio movió la cita (bloqueo de agenda) y el paciente escoge el horario nuevo: no hace falta segundo paso.</summary>
+    private async Task<string> ReprogramarCita(Sesion sesion, JsonObject args, CancellationToken ct)
+    {
+        if (_reprogramacion is null)
+            return Error("La reprogramación no está disponible en este momento. Usa escalar_a_personal.");
+        var fechaHora = DateTimeOffset.Parse(Req(args, "fecha_hora"), CultureInfo.InvariantCulture);
+        var nueva = await _reprogramacion.ReprogramarAsync(PacienteDeSesion(sesion), Req(args, "cita_id").ToUpperInvariant(),
+            Opt(args, "medico_id")?.ToUpperInvariant(), fechaHora, ct);
+        return Ok(new { reprogramada = true, cita = Resumen(nueva) });
+    }
+
     private const string SinConsentimientos = "Los permisos de avisos no están disponibles en este momento. Usa escalar_a_personal.";
 
     private async Task<object?> EstadoAvisos(string pacienteId, CancellationToken ct)
@@ -625,8 +710,12 @@ public sealed class AgentTools
             Tool("buscar_paciente",
                 "Identifica al paciente por el número de teléfono desde el que escribe (lo pone el sistema, no hay que pedirlo). Usarla al inicio de la conversación.",
                 new JsonObject()),
+            Tool("seleccionar_paciente",
+                "Cuando este número gestiona a varios pacientes (una familia), indica para cuál de ellos es la conversación. Solo acepta pacientes vinculados a este número.",
+                new JsonObject { ["paciente_id"] = Str("Id del paciente, de la lista de buscar_paciente.") },
+                "paciente_id"),
             Tool("registrar_paciente",
-                "Registra como paciente nuevo a quien escribe desde este número. Usarla solo si buscar_paciente no lo encontró y después de pedir el nombre completo.",
+                "Registra como paciente nuevo a quien escribe desde este número, o a un familiar (hijo, padre) que se gestionará desde este número; en ese caso pide confirmación en dos pasos. Pedir antes el nombre completo.",
                 new JsonObject
                 {
                     ["nombre"] = Str("Nombre completo."),
@@ -696,6 +785,15 @@ public sealed class AgentTools
             Tool("seguimientos_del_paciente",
                 "Lista los seguimientos que el médico indicó al paciente identificado (controles), con la ventana de fechas permitida y su estado.",
                 new JsonObject()),
+            Tool("reprogramar_cita",
+                "Mueve una cita que el consultorio marcó para reprogramar (el médico no podrá atender ese día) al horario que el paciente escoja. Solo para citas con para_reprogramar = true.",
+                new JsonObject
+                {
+                    ["cita_id"] = Str("Id de la cita afectada."),
+                    ["fecha_hora"] = Str("Valor fecha_hora exacto devuelto por consultar_disponibilidad o el horario del aviso."),
+                    ["medico_id"] = Str("Solo si el paciente prefiere otro médico."),
+                },
+                "cita_id", "fecha_hora"),
             Tool("pedir_cita_urgente",
                 "El paciente pide que lo vean hoy o lo antes posible. Busca el primer horario de hoy o del siguiente día hábil (incluidos los cupos de urgencia); si no hay, crea una solicitud de sobrecupo que decide el personal. No recibe síntomas.",
                 new JsonObject { ["medico_id"] = Str("Solo si el paciente pidió un médico concreto.") }),

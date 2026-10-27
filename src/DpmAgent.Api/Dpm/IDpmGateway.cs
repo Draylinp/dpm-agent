@@ -73,6 +73,9 @@ public interface IDpmGateway
 {
     Task<Paciente?> BuscarPacienteAsync(string telefonoOId, CancellationToken ct);
 
+    /// <summary>Todos los pacientes vinculados a un teléfono (una familia: el titular, sus hijos, sus padres), por id.</summary>
+    Task<IReadOnlyList<Paciente>> PacientesDelTelefonoAsync(string telefono, CancellationToken ct);
+
     Task<Paciente> RegistrarPacienteAsync(string nombre, string telefono, string? ars, CancellationToken ct);
 
     Task<IReadOnlyList<Medico>> ListarMedicosAsync(CancellationToken ct);

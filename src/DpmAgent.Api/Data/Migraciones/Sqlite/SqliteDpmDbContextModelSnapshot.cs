@@ -184,6 +184,9 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.Property<DateTime?>("AsistenciaConfirmadaUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("AusenciaOfrecidaUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("CanceladaUtc")
                         .HasColumnType("TEXT");
 
@@ -224,7 +227,20 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.Property<DateTime?>("RecordatorioSieteDiasUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Reprogramacion")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReprogramacionContactoUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ReprogramadaAId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SeguimientoId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Urgente")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

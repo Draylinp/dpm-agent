@@ -44,6 +44,14 @@ public sealed class MockDpmGateway : IDpmGateway
         return Task.FromResult(paciente);
     }
 
+    public Task<IReadOnlyList<Paciente>> PacientesDelTelefonoAsync(string telefono, CancellationToken ct)
+    {
+        var normalizado = Telefono.Normalizar(telefono);
+        IReadOnlyList<Paciente> lista = normalizado is null ? [] :
+            _pacientes.Values.Where(p => Telefono.Normalizar(p.Telefono) == normalizado).OrderBy(p => p.Id, StringComparer.Ordinal).ToList();
+        return Task.FromResult(lista);
+    }
+
     public Task<Paciente> RegistrarPacienteAsync(string nombre, string telefono, string? ars, CancellationToken ct)
     {
         string id;

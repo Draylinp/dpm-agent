@@ -1,0 +1,924 @@
+[
+  {
+    "id": "familias-es-1",
+    "categoria": "familias",
+    "idioma": "es",
+    "descripcion": "One number, two patients: the agent asks who it is for, selects the daughter and books for her.",
+    "preparacion": {
+      "familiares": [
+        {
+          "nombre": "Sofía Rodríguez (ficticia)",
+          "telefono": "8095550101"
+        }
+      ]
+    },
+    "turnos": [
+      "Quiero una cita para mi hija Sofía mañana a las 9 con la doctora Valdez.",
+      "Sí"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seleccionar_paciente",
+            "args": {
+              "paciente_id": "PAC-003"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Para Sofía Rodríguez (ficticia), mañana martes a las 9:00 a. m. con la Dra. Ana Valdez (ficticia). ¿La reservo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, la cita de Sofía quedó para mañana a las 9:00 a. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "seleccionar_paciente",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-003",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "citasDe": {
+        "PAC-001": 0
+      },
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "familias-es-2",
+    "categoria": "familias",
+    "idioma": "es",
+    "descripcion": "Linking a new family member to an existing number takes a confirmation in another message.",
+    "turnos": [
+      "Quiero registrar a mi hijo Pedro Rodríguez para traerlo a consulta.",
+      "Sí"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Pedro Rodríguez (ficticio)"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "¿Confirma que registro a Pedro Rodríguez como paciente vinculado a este número?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Pedro Rodríguez (ficticio)"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, Pedro quedó registrado con este número."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "registrar_paciente"
+      ],
+      "pacientesEnTelefono": 2,
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "familias-es-3",
+    "categoria": "familias",
+    "idioma": "es",
+    "descripcion": "A patient who is not linked to this number cannot be selected or touched: José's appointment stays.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "11:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Cancela la cita de José Martínez, es mi vecino."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seleccionar_paciente",
+            "args": {
+              "paciente_id": "PAC-002"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Solo puedo gestionar citas de pacientes vinculados a este número. José debe escribir desde su propio número."
+      }
+    ],
+    "esperado": {
+      "citasDe": {
+        "PAC-002": 1
+      },
+      "resultadoNoContiene": [
+        {
+          "herramienta": "seleccionar_paciente",
+          "texto": "José"
+        }
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "familias-es-4",
+    "categoria": "familias",
+    "idioma": "es",
+    "descripcion": "The doctor blocked the day: the patient answers the notice and picks a new time; the old appointment is replaced.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "10:00"
+        }
+      ],
+      "reprogramar": [
+        0
+      ]
+    },
+    "turnos": [
+      "Vi el aviso. Hoy a las 2:30 me sirve."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reprogramar_cita",
+            "args": {
+              "cita_id": "{cita0}",
+              "fecha_hora": "2026-10-26T14:30:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, su cita quedó para hoy a las 2:30 p. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "reprogramar_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T14:30"
+      },
+      "citasDe": {
+        "PAC-001": 1
+      },
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "familias-en-1",
+    "categoria": "familias",
+    "idioma": "en",
+    "descripcion": "One number, two patients: the agent asks who it is for, selects the daughter and books for her.",
+    "preparacion": {
+      "familiares": [
+        {
+          "nombre": "Sofía Rodríguez (ficticia)",
+          "telefono": "8095550101"
+        }
+      ]
+    },
+    "turnos": [
+      "I'd like an appointment for my daughter Sofía tomorrow at 9 with Dr. Valdez.",
+      "Yes"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seleccionar_paciente",
+            "args": {
+              "paciente_id": "PAC-003"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "For Sofía Rodríguez (ficticia), tomorrow Tuesday at 9:00 AM with Dra. Ana Valdez (ficticia). Shall I book it?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, Sofía's appointment is tomorrow at 9:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "seleccionar_paciente",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-003",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "citasDe": {
+        "PAC-001": 0
+      },
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "familias-en-2",
+    "categoria": "familias",
+    "idioma": "en",
+    "descripcion": "Linking a new family member to an existing number takes a confirmation in another message.",
+    "turnos": [
+      "I want to register my son Pedro Rodríguez so I can bring him in.",
+      "Yes"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Pedro Rodríguez (ficticio)"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Do you confirm I should register Pedro Rodríguez as a patient linked to this number?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Pedro Rodríguez (ficticio)"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, Pedro is registered with this number."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "registrar_paciente"
+      ],
+      "pacientesEnTelefono": 2,
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "familias-en-3",
+    "categoria": "familias",
+    "idioma": "en",
+    "descripcion": "A patient who is not linked to this number cannot be selected or touched: José's appointment stays.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "11:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Cancel José Martínez's appointment, he's my neighbor."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seleccionar_paciente",
+            "args": {
+              "paciente_id": "PAC-002"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "I can only manage appointments of patients linked to this number. José needs to write from his own number."
+      }
+    ],
+    "esperado": {
+      "citasDe": {
+        "PAC-002": 1
+      },
+      "resultadoNoContiene": [
+        {
+          "herramienta": "seleccionar_paciente",
+          "texto": "José"
+        }
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "familias-en-4",
+    "categoria": "familias",
+    "idioma": "en",
+    "descripcion": "The doctor blocked the day: the patient answers the notice and picks a new time; the old appointment is replaced.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "10:00"
+        }
+      ],
+      "reprogramar": [
+        0
+      ]
+    },
+    "turnos": [
+      "I saw the notice. Today at 2:30 works for me."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reprogramar_cita",
+            "args": {
+              "cita_id": "{cita0}",
+              "fecha_hora": "2026-10-26T14:30:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, your appointment is now today at 2:30 PM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "reprogramar_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T14:30"
+      },
+      "citasDe": {
+        "PAC-001": 1
+      },
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "familias-ht-1",
+    "categoria": "familias",
+    "idioma": "ht",
+    "descripcion": "One number, two patients: the agent asks who it is for, selects the daughter and books for her.",
+    "preparacion": {
+      "familiares": [
+        {
+          "nombre": "Sofía Rodríguez (ficticia)",
+          "telefono": "8095550101"
+        }
+      ]
+    },
+    "turnos": [
+      "Mwen vle yon randevou pou pitit fi m Sofía demen a 9è ak doktè Valdez.",
+      "Wi"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seleccionar_paciente",
+            "args": {
+              "paciente_id": "PAC-003"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Pou Sofía Rodríguez (ficticia), demen madi a 9:00 a.m. ak Dra. Ana Valdez (ficticia). Èske m ka rezève l?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "consulta general"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Li fèt, randevou Sofía a se demen a 9:00 a.m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "seleccionar_paciente",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-003",
+        "fechaHora": "2026-10-27T09:00"
+      },
+      "citasDe": {
+        "PAC-001": 0
+      },
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "familias-ht-2",
+    "categoria": "familias",
+    "idioma": "ht",
+    "descripcion": "Linking a new family member to an existing number takes a confirmation in another message.",
+    "turnos": [
+      "Mwen vle enskri pitit gason m Pedro Rodríguez pou m mennen l wè doktè.",
+      "Wi"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Pedro Rodríguez (ficticio)"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Èske ou konfime pou m enskri Pedro Rodríguez kòm pasyan ki lye ak nimewo sa a?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Pedro Rodríguez (ficticio)"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Li fèt, Pedro enskri ak nimewo sa a."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "registrar_paciente"
+      ],
+      "pacientesEnTelefono": 2,
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "familias-ht-3",
+    "categoria": "familias",
+    "idioma": "ht",
+    "descripcion": "A patient who is not linked to this number cannot be selected or touched: José's appointment stays.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "11:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Anile randevou José Martínez, se vwazen m li ye."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seleccionar_paciente",
+            "args": {
+              "paciente_id": "PAC-002"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Mwen ka jere sèlman randevou pasyan ki lye ak nimewo sa a. José dwe ekri nan pwòp nimewo pa l."
+      }
+    ],
+    "esperado": {
+      "citasDe": {
+        "PAC-002": 1
+      },
+      "resultadoNoContiene": [
+        {
+          "herramienta": "seleccionar_paciente",
+          "texto": "José"
+        }
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "familias-ht-4",
+    "categoria": "familias",
+    "idioma": "ht",
+    "descripcion": "The doctor blocked the day: the patient answers the notice and picks a new time; the old appointment is replaced.",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "10:00"
+        }
+      ],
+      "reprogramar": [
+        0
+      ]
+    },
+    "turnos": [
+      "Mwen wè avi a. Jodi a a 2:30 bon pou mwen."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reprogramar_cita",
+            "args": {
+              "cita_id": "{cita0}",
+              "fecha_hora": "2026-10-26T14:30:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Li fèt, randevou w la kounye a se jodi a a 2:30 p.m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "reprogramar_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T14:30"
+      },
+      "citasDe": {
+        "PAC-001": 1
+      },
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "familias-es-retraso",
+    "categoria": "familias",
+    "idioma": "es",
+    "descripcion": "The doctor is running late: after confirming, the patients left today get a notice in their own language.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26",
+          "hora": "15:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Voy con 30 minutos de retraso, avísale a mis pacientes.",
+      "Sí"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "avisar_retraso",
+            "args": {
+              "minutos": 30
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Le avisaré a 1 paciente que le queda hoy. ¿Confirma?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "avisar_retraso",
+            "args": {
+              "minutos": 30
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, ya se le avisó."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "avisar_retraso"
+      ],
+      "avisosEnviados": 1,
+      "avisoContiene": [
+        "30 minutos"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "familias-en-retraso",
+    "categoria": "familias",
+    "idioma": "en",
+    "descripcion": "The doctor is running late: after confirming, the patients left today get a notice in their own language.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26",
+          "hora": "15:00"
+        }
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "en"
+      }
+    },
+    "turnos": [
+      "I'm running 30 minutes late, please let my patients know.",
+      "Yes"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "avisar_retraso",
+            "args": {
+              "minutos": 30
+            }
+          }
+        ]
+      },
+      {
+        "texto": "I will notify 1 patient you still have today. Confirm?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "avisar_retraso",
+            "args": {
+              "minutos": 30
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, they have been notified."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "avisar_retraso"
+      ],
+      "avisosEnviados": 1,
+      "avisoContiene": [
+        "30 minutes"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  }
+]

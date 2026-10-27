@@ -148,7 +148,7 @@ public static class Verificador
             }
         }
 
-        var tiposAviso = new[] { "oferta", "aviso", "recordatorio", "seguimiento" };
+        var tiposAviso = new[] { "oferta", "aviso", "recordatorio", "seguimiento", "reprogramar", "retraso", "ausencia" };
         if (e.AvisosParaLlamar is { } paraLlamar)
         {
             var n = await db.MensajesSalientes.CountAsync(m => m.Estado == Api.Agenda.Notificador.EstadoLlamar, ct);
@@ -187,6 +187,14 @@ public static class Verificador
             var textos = await db.MensajesSalientes.AsNoTracking().Where(m => m.Tipo != "respuesta").Select(m => m.Texto).ToListAsync(ct);
             foreach (var t in avisosEsperados.Where(t => !textos.Any(x => x.Contains(t, StringComparison.OrdinalIgnoreCase))))
                 fallos.Add($"Ningún aviso contiene \"{t}\".");
+        }
+
+        if (e.PacientesEnTelefono is { } enTelefono)
+        {
+            var tel = Telefono.Normalizar(caso.Telefono);
+            var n = await db.Pacientes.CountAsync(p => p.Telefono == tel, ct);
+            if (n != enTelefono)
+                fallos.Add($"Hay {n} pacientes con el teléfono del caso; se esperaban {enTelefono}.");
         }
 
         if (e.CarnetsPendientes is { } pendientes)

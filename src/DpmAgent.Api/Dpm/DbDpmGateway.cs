@@ -41,6 +41,14 @@ public sealed class DbDpmGateway : IDpmGateway
         return p is null ? null : APaciente(p);
     }
 
+    public async Task<IReadOnlyList<Paciente>> PacientesDelTelefonoAsync(string telefono, CancellationToken ct)
+    {
+        if (Telefono.Normalizar(telefono) is not { } normalizado)
+            return [];
+        var lista = await _db.Pacientes.AsNoTracking().Where(x => x.Telefono == normalizado).OrderBy(x => x.Id).ToListAsync(ct);
+        return lista.Select(APaciente).ToList();
+    }
+
     public async Task<Paciente> RegistrarPacienteAsync(string nombre, string telefono, string? ars, CancellationToken ct)
     {
         var p = new E.Paciente

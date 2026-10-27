@@ -50,5 +50,8 @@
   "urgencia.centros": "Centros de emergencia cercanos:",
   "agenda.sobrecupo_medico": "Hola, {1}. {0} le avisa que {2} pidió que lo vean lo antes posible el {3} y no hay espacio en la agenda. Responda APROBAR {4} con la hora, o RECHAZAR {4}. Para no recibir estos avisos, responda STOP.",
   "agenda.sobrecupo_aprobado": "Hola, {1}. {0} le confirma que {2} le atenderá el {3} a las {4} (cita {5}). Si es una emergencia antes de esa hora, llame al {6}. Para no recibir más avisos, responda STOP.",
-  "agenda.sobrecupo_rechazado": "Hola, {1}. {0} le informa que no fue posible abrir un espacio fuera de agenda el {2}. Responda CITA y le buscamos el próximo horario disponible. Si es una emergencia, llame al {3}. Para no recibir más avisos, responda STOP."
+  "agenda.sobrecupo_rechazado": "Hola, {1}. {0} le informa que no fue posible abrir un espacio fuera de agenda el {2}. Responda CITA y le buscamos el próximo horario disponible. Si es una emergencia, llame al {3}. Para no recibir más avisos, responda STOP.",
+  "agenda.reprogramar": "Hola, {1}. {0} le informa que {2} no podrá atender el {3} a las {4} (cita {5}). Le proponemos estos horarios: {6}. Responda con el que prefiera o escriba OTRO para buscar otro día. Para no recibir más avisos, responda STOP.",
+  "agenda.retraso": "Hola, {1}. {0} le avisa que {2} tiene un retraso de unos {3} minutos. Su cita de hoy a las {4} podría empezar más tarde. Si no puede esperar, responda CAMBIAR. Para no recibir más avisos, responda STOP.",
+  "agenda.ausencia": "Hola, {1}. {0} notó que no pudo asistir a su cita con {2} del {3}. ¿Quiere que le busquemos otro horario? Responda SÍ y le mostramos opciones. Para no recibir más avisos, responda STOP."
 }

@@ -130,7 +130,13 @@ public sealed class ServicioUrgencias(
                       ?? throw new InvalidOperationException("Ese horario ya no está disponible. Vuelve a usar pedir_cita_urgente.");
 
         if (!elegida.CupoUrgencia)
-            return await dpm.CrearCitaAsync(pacienteId, medicoId, fechaHora, "consulta general", ct);
+        {
+            var normal = await dpm.CrearCitaAsync(pacienteId, medicoId, fechaHora, "consulta general", ct);
+            var creada = await db.Citas.FirstAsync(c => c.Id == IdsDpm.Leer(normal.Id, "CITA"), ct);
+            creada.Urgente = true; // pedida como urgente: prioridad si hay que reprogramarla
+            await db.SaveChangesAsync(ct);
+            return normal;
+        }
 
         var cita = new CitaDb
         {
@@ -140,6 +146,7 @@ public sealed class ServicioUrgencias(
             FechaHoraUtc = fechaHora.UtcDateTime,
             Motivo = "consulta general",
             Estado = "confirmada",
+            Urgente = true,
             CreadaUtc = Ahora.UtcDateTime,
         };
         db.Citas.Add(cita);
@@ -239,7 +246,7 @@ public sealed class ServicioUrgencias(
             var cita = new CitaDb
             {
                 ConsultorioId = db.ConsultorioId, PacienteId = s.PacienteId, MedicoId = s.MedicoId, FechaHoraUtc = momento.UtcDateTime,
-                Motivo = "consulta general", Estado = "confirmada", CreadaUtc = Ahora.UtcDateTime,
+                Motivo = "consulta general", Estado = "confirmada", Urgente = true, CreadaUtc = Ahora.UtcDateTime,
             };
             db.Citas.Add(cita);
             s.Estado = Aprobada;

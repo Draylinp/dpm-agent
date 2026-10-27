@@ -50,5 +50,8 @@
   "urgencia.centros": "Sant ijans ki toupre:",
   "agenda.sobrecupo_medico": "Bonjou {1}. {0} fè w konnen {2} mande pou yo wè l pi vit posib jou {3} e pa gen plas nan orè a. Reponn APROBAR {4} ak lè a, oswa RECHAZAR {4}. Pou pa resevwa avi sa yo, reponn STOP.",
   "agenda.sobrecupo_aprobado": "Bonjou {1}. {0} konfime {2} ap wè w jou {3} a {4} (randevou {5}). Si gen yon ijans anvan lè sa a, rele {6}. Pou pa resevwa plis avi, reponn STOP.",
-  "agenda.sobrecupo_rechazado": "Bonjou {1}. {0} fè w konnen li pa t posib pou louvri yon plas siplemantè jou {2}. Reponn RANDEVOU e n ap chèche pwochen lè ki disponib. Si se yon ijans, rele {3}. Pou pa resevwa plis avi, reponn STOP."
+  "agenda.sobrecupo_rechazado": "Bonjou {1}. {0} fè w konnen li pa t posib pou louvri yon plas siplemantè jou {2}. Reponn RANDEVOU e n ap chèche pwochen lè ki disponib. Si se yon ijans, rele {3}. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.reprogramar": "Bonjou {1}. {0} fè w konnen {2} p ap ka wè w jou {3} a {4} (randevou {5}). Men lè nou ka ofri w: {6}. Reponn ak sa ou prefere oswa ekri LÒT pou n chèche yon lòt jou. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.retraso": "Bonjou {1}. {0} fè w konnen {2} an reta anviwon {3} minit. Randevou w jodi a a {4} ka kòmanse pi ta. Si ou pa ka tann, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.ausencia": "Bonjou {1}. {0} remake ou pa t ka vini nan randevou w ak {2} jou {3}. Èske ou vle nou chèche yon lòt lè pou ou? Reponn WI e n ap montre w opsyon yo. Pou pa resevwa plis avi, reponn STOP."
 }

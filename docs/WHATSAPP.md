@@ -44,6 +44,9 @@ WhatsApp only allows free-form text if the patient wrote in the last 24 hours. S
 | `sobrecupo_medico` | `WhatsApp__Plantillas__sobrecupo_medico` |
 | `sobrecupo_aprobado` | `WhatsApp__Plantillas__sobrecupo_aprobado` |
 | `sobrecupo_rechazado` | `WhatsApp__Plantillas__sobrecupo_rechazado` |
+| `reprogramar` | `WhatsApp__Plantillas__reprogramar` |
+| `retraso` | `WhatsApp__Plantillas__retraso` |
+| `ausencia` | `WhatsApp__Plantillas__ausencia` |
 
 Language code for each translation: `WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht` (defaults `es`, `en`, `ht`). Check in *WhatsApp Manager* which codes your account accepts; if a language is not available, point it to the English one.
 
@@ -114,6 +117,24 @@ Ready to submit for approval. All of them are **Utility** templates (never Marke
 - es: Hola, {{2}}. {{1}} le informa que no fue posible abrir un espacio fuera de agenda el {{3}}. Responda CITA y le buscamos el próximo horario disponible. Si es una emergencia, llame al {{4}}. Para no recibir más avisos, responda STOP.
 - en: Hi, {{2}}. {{1}} lets you know that it was not possible to open an extra slot on {{3}}. Reply APPOINTMENT and we will find the next available time. If this is an emergency, call {{4}}. To stop receiving notices, reply STOP.
 - ht: Bonjou {{2}}. {{1}} fè w konnen li pa t posib pou louvri yon plas siplemantè jou {{3}}. Reponn RANDEVOU e n ap chèche pwochen lè ki disponib. Si se yon ijans, rele {{4}}. Pou pa resevwa plis avi, reponn STOP.
+
+**reprogramar** — category *Utility*, about an appointment the patient already has when the doctor blocks that day (permission category `recordatorios`). Variables: clinic, patient first name, doctor, day, time, appointment id, proposed times. Sample values for review: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `martes 27 de octubre`, `10:00 a. m.`, `CITA-12`, `lunes 26 de octubre, 2:00 p. m.; lunes 26 de octubre, 2:30 p. m.`
+
+- es: Hola, {{2}}. {{1}} le informa que {{3}} no podrá atender el {{4}} a las {{5}} (cita {{6}}). Le proponemos estos horarios: {{7}}. Responda con el que prefiera o escriba OTRO para buscar otro día. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} lets you know that {{3}} will not be able to see you on {{4}} at {{5}} (appointment {{6}}). We can offer these times: {{7}}. Reply with the one you prefer or write OTHER to look for another day. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} fè w konnen {{3}} p ap ka wè w jou {{4}} a {{5}} (randevou {{6}}). Men lè nou ka ofri w: {{7}}. Reponn ak sa ou prefere oswa ekri LÒT pou n chèche yon lòt jou. Pou pa resevwa plis avi, reponn STOP.
+
+**retraso** — category *Utility*, the doctor is running late (category `recordatorios`). Variables: clinic, patient first name, doctor, minutes, time. Sample values for review: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `30`, `3:00 p. m.`
+
+- es: Hola, {{2}}. {{1}} le avisa que {{3}} tiene un retraso de unos {{4}} minutos. Su cita de hoy a las {{5}} podría empezar más tarde. Si no puede esperar, responda CAMBIAR. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} lets you know that {{3}} is running about {{4}} minutes late. Your appointment today at {{5}} may start later. If you can't wait, reply CHANGE. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} fè w konnen {{3}} an reta anviwon {{4}} minit. Randevou w jodi a a {{5}} ka kòmanse pi ta. Si ou pa ka tann, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP.
+
+**ausencia** — category *Utility*, sent once after the receptionist marks a no-show (category `recordatorios`). Variables: clinic, patient first name, doctor, day. Sample values for review: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `martes 27 de octubre`
+
+- es: Hola, {{2}}. {{1}} notó que no pudo asistir a su cita con {{3}} del {{4}}. ¿Quiere que le busquemos otro horario? Responda SÍ y le mostramos opciones. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} noticed you could not make it to your appointment with {{3}} on {{4}}. Would you like us to find another time? Reply YES and we will show you the options. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} remake ou pa t ka vini nan randevou w ak {{3}} jou {{4}}. Èske ou vle nou chèche yon lòt lè pou ou? Reponn WI e n ap montre w opsyon yo. Pou pa resevwa plis avi, reponn STOP.
 
 If a key has no template, the message is sent as text (useful for testing inside the 24-hour window).
 

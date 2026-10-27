@@ -197,6 +197,9 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime?>("AsistenciaConfirmadaUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("AusenciaOfrecidaUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("CanceladaUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -237,8 +240,21 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime?>("RecordatorioSieteDiasUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Reprogramacion")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("ReprogramacionContactoUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ReprogramadaAId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("SeguimientoId")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("Urgente")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 

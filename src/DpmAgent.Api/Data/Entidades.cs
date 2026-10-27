@@ -160,6 +160,23 @@ public sealed class Cita
     /// <summary>Un bloqueo de agenda nuevo chocó con esta cita: hay que reprogramarla.</summary>
     public bool ParaReprogramar { get; set; }
 
+    /// <summary>
+    /// Estado de la reprogramación de una cita afectada por un bloqueo: pendiente (sin contactar), contactado,
+    /// reprogramada, llamar (sin permiso de avisos o sin opciones) o sin_respuesta.
+    /// </summary>
+    public string? Reprogramacion { get; set; }
+
+    public DateTime? ReprogramacionContactoUtc { get; set; }
+
+    /// <summary>Cita nueva que la reemplazó al reprogramarla.</summary>
+    public int? ReprogramadaAId { get; set; }
+
+    /// <summary>Cita pedida como urgente (cupo de urgencia o sobrecupo): tiene prioridad al reprogramar.</summary>
+    public bool Urgente { get; set; }
+
+    /// <summary>En una cita marcada "no_asistio": cuándo se le ofreció reagendar (una sola vez).</summary>
+    public DateTime? AusenciaOfrecidaUtc { get; set; }
+
     /// <summary>En una cita cancelada: cuándo terminó el intento de llenar el hueco con la lista de espera.</summary>
     public DateTime? HuecoProcesadoUtc { get; set; }
 }

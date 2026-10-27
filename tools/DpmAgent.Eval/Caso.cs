@@ -86,7 +86,15 @@ public sealed class Preparacion
 
     /// <summary>Solicitudes de sobrecupo pendientes (SOB-001, SOB-002... en orden).</summary>
     public List<SobrecupoPreparado> Sobrecupos { get; init; } = [];
+
+    /// <summary>Familiares registrados con el teléfono de otro paciente (PAC-003, PAC-004... en orden).</summary>
+    public List<FamiliarPreparado> Familiares { get; init; } = [];
+
+    /// <summary>Índices de <see cref="Citas"/> que quedan marcadas para reprogramar (el médico bloqueó ese día).</summary>
+    public List<int> Reprogramar { get; init; } = [];
 }
+
+public sealed record FamiliarPreparado(string Nombre, string Telefono);
 
 /// <param name="DiaSemana">1 = lunes … 5 = viernes.</param>
 public sealed record CupoPreparado(string Medico, int DiaSemana, string Hora);
@@ -164,6 +172,9 @@ public sealed class Esperado
 
     /// <summary>Estado esperado de cada solicitud de sobrecupo al final (SOB-001: aprobada).</summary>
     public Dictionary<string, string>? Sobrecupos { get; init; }
+
+    /// <summary>Pacientes vinculados al teléfono del caso al final.</summary>
+    public int? PacientesEnTelefono { get; init; }
 
     /// <summary>Textos que deben aparecer en algún mensaje saliente al paciente (por ejemplo, la decisión de un sobrecupo).</summary>
     public List<string>? AvisoContiene { get; init; }

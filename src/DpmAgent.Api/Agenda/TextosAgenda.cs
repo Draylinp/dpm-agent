@@ -65,6 +65,30 @@ public static class TextosAgenda
         return new(Textos.Obtener("agenda.recordatorio_7dias", i, p), "recordatorio_7dias", p, i);
     }
 
+    /// <param name="opciones">Horarios propuestos, ya en texto.</param>
+    public static MensajeAgenda Reprogramar(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId,
+        IReadOnlyList<DateTimeOffset> opciones)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        var lista = string.Join("; ", opciones.Select(o => $"{Textos.Dia(o, i)}, {Textos.Hora(o, i)}"));
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId, lista];
+        return new(Textos.Obtener("agenda.reprogramar", i, p), "reprogramar", p, i);
+    }
+
+    public static MensajeAgenda Retraso(string idioma, string consultorio, string nombrePaciente, string medico, int minutos, DateTimeOffset fechaHora)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, minutos.ToString(System.Globalization.CultureInfo.InvariantCulture), Textos.Hora(fechaHora, i)];
+        return new(Textos.Obtener("agenda.retraso", i, p), "retraso", p, i);
+    }
+
+    public static MensajeAgenda Ausencia(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i)];
+        return new(Textos.Obtener("agenda.ausencia", i, p), "ausencia", p, i);
+    }
+
     /// <summary>Hora en español (para el panel).</summary>
     public static string Hora(DateTimeOffset d) => Textos.Hora(d, Idiomas.Idiomas.Espanol);
 

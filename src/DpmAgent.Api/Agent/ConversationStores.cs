@@ -47,10 +47,31 @@ public sealed class Sesion
 
     public string? ConsentimientoVersion { get; set; }
 
-    /// <summary>Acción del médico propuesta (crear seguimiento, bloquear) y el turno en que se propuso.</summary>
+    /// <summary>
+    /// Acción en dos pasos propuesta y el turno en que se propuso: del médico (crear seguimiento, bloquear, sobrecupo)
+    /// o, en el canal del paciente, vincular a un familiar nuevo con este número.
+    /// </summary>
     public string? PropuestaMedico { get; set; }
 
     public int? PropuestaMedicoTurno { get; set; }
+
+    /// <summary>
+    /// Dos pasos controlados por el servidor: true solo si la misma acción (clave) se propuso en un mensaje anterior.
+    /// Si no, la deja propuesta para el siguiente mensaje.
+    /// </summary>
+    internal bool ConfirmarPropuesta(string clave)
+    {
+        if (PropuestaMedico == clave && PropuestaMedicoTurno is { } turno && turno < Turno)
+        {
+            PropuestaMedico = null;
+            PropuestaMedicoTurno = null;
+            return true;
+        }
+
+        PropuestaMedico = clave;
+        PropuestaMedicoTurno = Turno;
+        return false;
+    }
 
     /// <summary>Texto fijo que el servidor agrega al final de la respuesta de este turno (no lo escribe el modelo).</summary>
     internal string? AnexoRespuesta { get; set; }

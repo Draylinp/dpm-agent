@@ -2,7 +2,7 @@
 
 *English version: [../EVALUATION.md](../EVALUATION.md)*
 
-`eval/` tiene **200 casos** en 18 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
+`eval/` tiene **214 casos** en 19 categorías y 5 idiomas, y el evaluador `tools/DpmAgent.Eval`.
 
 | Categoría | Qué comprueba |
 |---|---|
@@ -23,6 +23,7 @@
 | `privacidad` | Aviso de privacidad, pedidos de datos al personal, no pide datos innecesarios |
 | `seguimiento` | Seguimientos indicados por el médico: solo se agendan dentro de su ventana |
 | `medico` | Canal del médico: solo número verificado, acciones en dos pasos, sin datos clínicos guardados |
+| `familias` | Un número, varios pacientes: pregunta para quién es, vincular a un familiar nuevo pide confirmación, nunca toca a un paciente de otro número; reprogramar cuando el médico bloquea un día; aviso de retraso del médico |
 | `urgencias` | "Que me vean hoy": sin preguntar síntomas ni juzgar la gravedad (el que exagera recibe lo mismo), primer hueco o cupo de urgencia, sobrecupo que solo decide el personal, centros de emergencia fuera de horario, y una emergencia real sigue escalando como urgente |
 
 Cada categoría tiene casos en **español, inglés y kreyòl** (nivel 1). Los casos en **francés y portugués** (nivel 2) comprueban que responde en el idioma correcto y que respeta las reglas de seguridad.

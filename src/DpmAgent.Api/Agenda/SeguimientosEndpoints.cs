@@ -140,7 +140,10 @@ public sealed class ServicioAgendaMedico(DpmDbContext db, Bitacora bitacora, Tim
         var fin = HorarioConsultorio.EnHoraRd(h.AddDays(1), TimeOnly.MinValue).UtcDateTime;
         var afectadas = await db.Citas.Where(c => c.MedicoId == medico && c.Estado == "confirmada" && c.FechaHoraUtc >= inicio && c.FechaHoraUtc < fin).ToListAsync(ct);
         foreach (var c in afectadas)
+        {
             c.ParaReprogramar = true;
+            c.Reprogramacion = ServicioReprogramacion.Pendiente; // el motor contacta a cada paciente con opciones
+        }
         var seguimientos = await db.Seguimientos.CountAsync(s => s.MedicoId == medico && s.Estado != "cancelado" && s.Estado != "agendado"
                                                                   && s.FechaObjetivo >= d && s.FechaObjetivo <= h, ct);
         await db.SaveChangesAsync(ct);

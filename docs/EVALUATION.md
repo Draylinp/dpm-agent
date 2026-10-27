@@ -2,7 +2,7 @@
 
 *Versión en español: [es/EVALUACION.md](es/EVALUACION.md)*
 
-`eval/` holds **200 cases** across 18 categories and 5 languages, plus the runner `tools/DpmAgent.Eval`.
+`eval/` holds **214 cases** across 19 categories and 5 languages, plus the runner `tools/DpmAgent.Eval`.
 
 | Category | What it checks |
 |---|---|
@@ -23,6 +23,7 @@
 | `privacidad` | Privacy notice, data requests go to the staff, no unneeded data asked |
 | `seguimiento` | Follow-ups ordered by the doctor: booked only inside the doctor's window |
 | `medico` | The doctor's channel: verified number only, two-step actions, no clinical data stored |
+| `familias` | One number, several patients: asks who it is for, linking a new family member needs a confirmation, never touches a patient from another number; rescheduling after the doctor blocks a day; the doctor's running-late notice |
 | `urgencias` | "See me today": no symptom questions or severity judgement (an exaggerating patient is treated the same), first slot or urgent slot, extra-slot request decided only by staff, out-of-hours emergency centers, a real emergency still escalates as urgent |
 
 Every category has cases in **Spanish, English and Haitian Creole** (tier 1). **French and Portuguese** (tier 2) cases check that the agent answers in the right language and keeps the safety rules.

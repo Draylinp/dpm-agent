@@ -19,11 +19,11 @@ namespace DpmAgent.Api.Agent;
 /// </summary>
 public sealed class HerramientasMedico(
     DpmDbContext db, ServicioSeguimientos seguimientos, ServicioAgendaMedico agenda, ServicioMedicos medicos,
-    IDpmGateway dpm, ServicioUrgencias urgencias, TimeProvider clock)
+    IDpmGateway dpm, ServicioUrgencias urgencias, ServicioReprogramacion reprogramacion, TimeProvider clock)
 {
     private static readonly JsonSerializerOptions JsonOpts = new() { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
-    public static readonly HashSet<string> AccionesSensibles = ["crear_seguimiento", "bloquear_agenda", "resumen_diario", "decidir_sobrecupo"];
+    public static readonly HashSet<string> AccionesSensibles = ["crear_seguimiento", "bloquear_agenda", "resumen_diario", "decidir_sobrecupo", "avisar_retraso"];
 
     private DateOnly Hoy => HorarioConsultorio.FechaRd(clock.GetUtcNow());
 
@@ -50,6 +50,7 @@ public sealed class HerramientasMedico(
                 "resumen_diario" => await ResumenDiario(sesion, medico, args, ct),
                 "sobrecupos" => await Sobrecupos(medico, ct),
                 "decidir_sobrecupo" => await DecidirSobrecupo(sesion, medico, args, ct),
+                "avisar_retraso" => await AvisarRetraso(sesion, medico, args, ct),
                 _ => Error($"Herramienta desconocida: {nombre}"),
             };
         }
@@ -232,20 +233,31 @@ public sealed class HerramientasMedico(
         return Ok(new { decidida = true, estado = r.Estado, paciente_avisado = true });
     }
 
-    /// <summary>Dos pasos controlados por el servidor: se ejecuta solo si la misma acción se propuso en un mensaje anterior.</summary>
-    private static bool Confirmado(Sesion sesion, string clave)
+    /// <summary>Aviso de retraso a los pacientes que le quedan hoy, en dos pasos.</summary>
+    private async Task<string> AvisarRetraso(Sesion sesion, MedicoCanal medico, JsonObject args, CancellationToken ct)
     {
-        if (sesion.PropuestaMedico == clave && sesion.PropuestaMedicoTurno is { } turno && turno < sesion.Turno)
+        var minutos = Int(args, "minutos") ?? throw new ArgumentException("Falta el parámetro 'minutos'.");
+        if (minutos is < 5 or > 240)
+            return Error("El retraso debe estar entre 5 y 240 minutos.");
+        if (!Confirmado(sesion, $"retraso|{minutos}"))
         {
-            sesion.PropuestaMedico = null;
-            sesion.PropuestaMedicoTurno = null;
-            return true;
+            var fin = HorarioConsultorio.EnHoraRd(Hoy.AddDays(1), TimeOnly.MinValue).UtcDateTime;
+            var ahora = clock.GetUtcNow().UtcDateTime;
+            var pacientes = await db.Citas.CountAsync(c => c.MedicoId == medico.Id && c.Estado == "confirmada" && c.FechaHoraUtc > ahora && c.FechaHoraUtc < fin, ct);
+            return Ok(new
+            {
+                requiere_confirmacion = true,
+                minutos,
+                pacientes_a_avisar = pacientes,
+                instruccion = "Todavía no se avisó. Dile al médico cuántos pacientes recibirán el aviso y pregúntale si confirma.",
+            });
         }
 
-        sesion.PropuestaMedico = clave;
-        sesion.PropuestaMedicoTurno = sesion.Turno;
-        return false;
+        var n = await reprogramacion.AvisarRetrasoAsync(IdsDpm.Medico(medico.Id), minutos, $"medico:{IdsDpm.Medico(medico.Id)}", ct);
+        return Ok(new { avisados = n });
     }
+
+    private static bool Confirmado(Sesion sesion, string clave) => sesion.ConfirmarPropuesta(clave);
 
     public string Prompt(Sesion sesion, MedicoCanal medico, InfoConsultorio consultorio, TimeProvider reloj)
     {
@@ -257,7 +269,8 @@ public sealed class HerramientasMedico(
 
             Puedes: crear seguimientos de sus pacientes (crear_seguimiento), mostrar su agenda (mi_agenda), bloquear días de su agenda
             (bloquear_agenda), mostrar o configurar su resumen diario (resumen_diario), buscar pacientes por nombre (buscar_paciente)
-            y ver o decidir las solicitudes de sobrecupo de sus pacientes (sobrecupos, decidir_sobrecupo).
+            y ver o decidir las solicitudes de sobrecupo de sus pacientes (sobrecupos, decidir_sobrecupo). Si va con retraso, avisa
+            a los pacientes que le quedan hoy (avisar_retraso). Si bloquea días, el sistema contacta solo a los pacientes afectados.
 
             Reglas:
             1. Solo datos administrativos. Nunca guardes ni repitas diagnósticos, síntomas, tratamientos o resultados: si el médico los dicta,
@@ -332,6 +345,8 @@ public sealed class HerramientasMedico(
             Tool("resumen_diario", "Muestra el resumen de hoy (ver) o gestiona el permiso para recibirlo cada mañana (ofrecer, aceptar, rechazar).",
                 new JsonObject { ["accion"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("ver", "ofrecer", "aceptar", "rechazar") } },
                 "accion"),
+            Tool("avisar_retraso", "Avisa a los pacientes que le quedan hoy que el médico va con retraso. Dos pasos: primero dice a cuántos se avisará.",
+                new JsonObject { ["minutos"] = Num("Retraso estimado en minutos (5 a 240).") }, "minutos"),
             Tool("sobrecupos", "Solicitudes de sobrecupo pendientes de los pacientes del médico.", new JsonObject()),
             Tool("decidir_sobrecupo",
                 "Aprueba (con hora) o rechaza una solicitud de sobrecupo. Dos pasos: primero propone, y se decide cuando el médico confirma.",

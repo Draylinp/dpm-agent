@@ -34,6 +34,7 @@ public sealed class ReceptionAgent
     [
         "registrar_paciente", "crear_cita", "cancelar_cita", "confirmar_datos_carnet",
         "agregar_lista_espera", "responder_oferta", "confirmar_asistencia", "registrar_consentimiento", "pedir_cita_urgente", "reservar_urgente",
+        "reprogramar_cita",
     ];
 
     private readonly IChatModel _model;
@@ -329,6 +330,9 @@ public sealed class ReceptionAgent
             3. El paciente se identifica por el número desde el que escribe: al empezar usa buscar_paciente
                (no le pidas el teléfono). Si no aparece, pídele el nombre completo y usa registrar_paciente.
                Solo puedes ver, crear o cancelar citas de ese paciente, nunca de otra persona.
+               Si buscar_paciente devuelve varios pacientes (una familia con el mismo número), pregunta para quién es y usa
+               seleccionar_paciente. Para un familiar nuevo que se gestionará desde este número, pide su nombre completo y usa
+               registrar_paciente: el sistema pide confirmación antes de vincularlo.
             4. Antes de crear o cancelar una cita, confirma con el paciente el médico, el día y la hora.
             5. Usa siempre las herramientas para obtener datos reales. Nunca inventes horarios, ids ni pacientes.
             6. Para crear una cita, usa exactamente el valor fecha_hora que devolvió consultar_disponibilidad.
@@ -361,6 +365,9 @@ public sealed class ReceptionAgent
                 ni juzgues la gravedad: todos se tratan igual, digan lo que digan. Si no hay horario, la solicitud de sobrecupo la deciden
                 la secretaria o el médico; nunca digas que está aprobada hasta que el sistema lo avise. Si además describe una posible
                 emergencia, aplica la regla 2.
+            19. Cambios del consultorio: si el paciente responde a un aviso de que su médico no podrá atenderlo, usa citas_del_paciente
+                y, con el horario que escoja, reprogramar_cita. Si responde a un aviso de retraso con CAMBIAR, ofrécele otro horario
+                (cancelando la cita en dos pasos). Si responde SÍ a un aviso de que no asistió, ofrécele horarios y agenda como siempre.
 
             Idioma: el paciente escribe en {Idiomas.Idiomas.Nombre(idioma)} (código {idioma}). Responde SIEMPRE en ese idioma,
             de forma cordial y breve, como un mensaje de WhatsApp. Si el paciente cambia de idioma, cámbiate tú también.
