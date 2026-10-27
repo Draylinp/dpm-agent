@@ -47,6 +47,7 @@ WhatsApp only allows free-form text if the patient wrote in the last 24 hours. S
 | `reprogramar` | `WhatsApp__Plantillas__reprogramar` |
 | `retraso` | `WhatsApp__Plantillas__retraso` |
 | `ausencia` | `WhatsApp__Plantillas__ausencia` |
+| `seguimiento_confirmar_numero` | `WhatsApp__Plantillas__seguimiento_confirmar_numero` |
 
 Language code for each translation: `WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht` (defaults `es`, `en`, `ht`). Check in *WhatsApp Manager* which codes your account accepts; if a language is not available, point it to the English one.
 
@@ -135,6 +136,12 @@ Ready to submit for approval. All of them are **Utility** templates (never Marke
 - es: Hola, {{2}}. {{1}} notó que no pudo asistir a su cita con {{3}} del {{4}}. ¿Quiere que le busquemos otro horario? Responda SÍ y le mostramos opciones. Para no recibir más avisos, responda STOP.
 - en: Hi, {{2}}. {{1}} noticed you could not make it to your appointment with {{3}} on {{4}}. Would you like us to find another time? Reply YES and we will show you the options. To stop receiving notices, reply STOP.
 - ht: Bonjou {{2}}. {{1}} remake ou pa t ka vini nan randevou w ak {{3}} jou {{4}}. Èske ou vle nou chèche yon lòt lè pou ou? Reponn WI e n ap montre w opsyon yo. Pou pa resevwa plis avi, reponn STOP.
+
+**seguimiento_confirmar_numero** — category *Utility*, first contact of a follow-up ordered more than 3 months earlier: it only asks whether the number is still the patient's, with no doctor or health details (category `seguimientos`). Variables: clinic, patient first name. Sample values for review: `Consultorio Ejemplo`, `María`
+
+- es: Hola. {{1}} busca a {{2}} para una cita de control. ¿Este sigue siendo su número? Responda SÍ y le mostramos los horarios, o NO si no es la persona. Para no recibir más avisos, responda STOP.
+- en: Hello. {{1}} is looking for {{2}} about a follow-up visit. Is this still their number? Reply YES and we will show the available times, or NO if this is not that person. To stop receiving notices, reply STOP.
+- ht: Bonjou. {{1}} ap chèche {{2}} pou yon randevou kontwòl. Èske se toujou nimewo li sa a? Reponn WI e n ap montre lè ki disponib yo, oswa NON si se pa moun sa a. Pou pa resevwa plis avi, reponn STOP.
 
 If a key has no template, the message is sent as text (useful for testing inside the 24-hour window).
 

@@ -119,6 +119,17 @@ public sealed class Paciente
     public string? Idioma { get; set; }
 
     public DateTime CreadoUtc { get; set; }
+
+    /// <summary>
+    /// false: la secretaria lo desactivó (por ejemplo, se mudó). No recibe mensajes, sus seguimientos se cancelan
+    /// y su número ya no lo identifica (el número pudo pasar a otra persona).
+    /// </summary>
+    public bool Activo { get; set; } = true;
+
+    public DateTime? DesactivadoUtc { get; set; }
+
+    /// <summary>Los mensajes a su número fallan o dijeron que no es la persona: no se le escribe; la secretaria lo llama.</summary>
+    public DateTime? NoLocalizableUtc { get; set; }
 }
 
 public sealed class Cita
@@ -607,6 +618,9 @@ public sealed class Seguimiento
     public bool SiguienteCreado { get; set; }
 
     public required string CreadoPor { get; set; }
+
+    /// <summary>En seguimientos lejanos, el paciente confirmó que el número sigue siendo suyo.</summary>
+    public DateTime? NumeroConfirmadoUtc { get; set; }
 
     public DateTime CreadoUtc { get; set; }
 }

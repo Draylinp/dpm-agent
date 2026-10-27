@@ -92,6 +92,9 @@ public sealed class Preparacion
 
     /// <summary>Índices de <see cref="Citas"/> que quedan marcadas para reprogramar (el médico bloqueó ese día).</summary>
     public List<int> Reprogramar { get; init; } = [];
+
+    /// <summary>Pacientes que la secretaria desactivó (PAC-001...).</summary>
+    public List<string> Desactivados { get; init; } = [];
 }
 
 public sealed record FamiliarPreparado(string Nombre, string Telefono);

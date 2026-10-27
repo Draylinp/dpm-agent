@@ -40,14 +40,17 @@ public sealed class AgentTools
     private readonly ServicioSeguimientos? _seguimientos;
     private readonly ServicioUrgencias? _urgencias;
     private readonly ServicioReprogramacion? _reprogramacion;
+    private readonly ServicioContacto? _contacto;
 
     /// <param name="consentimientos">Opt-in para mensajes proactivos. Sin él, esas herramientas no están disponibles.</param>
     /// <param name="agenda">Lista de espera y respuestas a mensajes automáticos. Sin ella esas herramientas no están disponibles.</param>
     /// <param name="bitacora">Si se da, cada acción que cambia datos queda registrada.</param>
     public AgentTools(
         IDpmGateway dpm, ServicioListaEspera? agenda = null, Bitacora? bitacora = null, ServicioConsentimiento? consentimientos = null,
-        ServicioSeguimientos? seguimientos = null, ServicioUrgencias? urgencias = null, ServicioReprogramacion? reprogramacion = null)
+        ServicioSeguimientos? seguimientos = null, ServicioUrgencias? urgencias = null, ServicioReprogramacion? reprogramacion = null,
+        ServicioContacto? contacto = null)
     {
+        _contacto = contacto;
         _reprogramacion = reprogramacion;
         _urgencias = urgencias;
         _seguimientos = seguimientos;
@@ -104,6 +107,7 @@ public sealed class AgentTools
                 "pedir_cita_urgente" => await PedirCitaUrgente(sesion, args, ct),
                 "reservar_urgente" => await ReservarUrgente(sesion, args, ct),
                 "reprogramar_cita" => await ReprogramarCita(sesion, args, ct),
+                "confirmar_numero" => await ConfirmarNumero(sesion, args, ct),
                 _ => Error($"Herramienta desconocida: {name}"),
             };
         }
@@ -558,6 +562,33 @@ public sealed class AgentTools
         return Ok(new { reprogramada = true, cita = Resumen(nueva) });
     }
 
+    /// <summary>
+    /// Respuesta al mensaje que pregunta si el número sigue siendo del paciente (seguimientos lejanos). Si no lo es,
+    /// la conversación deja de estar vinculada a ese paciente y la secretaria actualiza el número.
+    /// </summary>
+    private async Task<string> ConfirmarNumero(Sesion sesion, JsonObject args, CancellationToken ct)
+    {
+        if (_contacto is null)
+            return Error("No disponible en este momento. Usa escalar_a_personal.");
+        var correcto = args["correcto"]?.GetValueKind() switch
+        {
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            _ => throw new ArgumentException("Falta el parámetro 'correcto' (true o false)."),
+        };
+        var pid = IdsDpm.Leer(PacienteDeSesion(sesion), "PAC")!.Value;
+        await _contacto.ConfirmarNumeroAsync(pid, correcto, sesion.Id, ct);
+        if (correcto)
+            return Ok(new { confirmado = true, instruccion = "Usa seguimientos_del_paciente y ofrécele horarios dentro de la ventana." });
+
+        sesion.PacienteId = null;
+        return Ok(new
+        {
+            confirmado = false,
+            instruccion = "Discúlpate por la molestia y despídete. No des ningún dato del paciente ni del consultorio más allá de su nombre.",
+        });
+    }
+
     private const string SinConsentimientos = "Los permisos de avisos no están disponibles en este momento. Usa escalar_a_personal.";
 
     private async Task<object?> EstadoAvisos(string pacienteId, CancellationToken ct)
@@ -794,6 +825,10 @@ public sealed class AgentTools
                     ["medico_id"] = Str("Solo si el paciente prefiere otro médico."),
                 },
                 "cita_id", "fecha_hora"),
+            Tool("confirmar_numero",
+                "Registra la respuesta al mensaje que pregunta si este número sigue siendo del paciente (SÍ o NO).",
+                new JsonObject { ["correcto"] = new JsonObject { ["type"] = "boolean", ["description"] = "true si es su número, false si no es la persona." } },
+                "correcto"),
             Tool("pedir_cita_urgente",
                 "El paciente pide que lo vean hoy o lo antes posible. Busca el primer horario de hoy o del siguiente día hábil (incluidos los cupos de urgencia); si no hay, crea una solicitud de sobrecupo que decide el personal. No recibe síntomas.",
                 new JsonObject { ["medico_id"] = Str("Solo si el paciente pidió un médico concreto.") }),

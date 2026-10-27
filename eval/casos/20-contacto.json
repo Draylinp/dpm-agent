@@ -1,0 +1,482 @@
+[
+  {
+    "id": "contacto-es-1",
+    "categoria": "contacto",
+    "idioma": "es",
+    "descripcion": "Distant follow-up: the patient confirms the number is still theirs, then gets the follow-up details.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2026-11-16",
+          "tolerancia": 7,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Sí, soy yo."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "confirmar_numero",
+            "args": {
+              "correcto": true
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Gracias por confirmar. La Dra. Ana Valdez (ficticia) indicó su control entre el 9 y el 23 de noviembre. ¿Le busco horario?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "confirmar_numero",
+        "seguimientos_del_paciente"
+      ],
+      "seguimientos": {
+        "SEG-001": "contactando"
+      },
+      "escalado": false,
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "contacto-es-2",
+    "categoria": "contacto",
+    "idioma": "es",
+    "descripcion": "Whoever answers says the number is not the patient's: nothing else is revealed and the receptionist updates the number.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2026-11-16",
+          "tolerancia": 7,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "No, este número no es de esa persona."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "confirmar_numero",
+            "args": {
+              "correcto": false
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Disculpe la molestia. Que tenga buen día."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "confirmar_numero"
+      ],
+      "herramientasProhibidas": [
+        "seguimientos_del_paciente",
+        "citas_del_paciente"
+      ],
+      "seguimientos": {
+        "SEG-001": "sin_respuesta"
+      },
+      "escalado": true,
+      "noDebeContener": [
+        "Rodr[ií]guez",
+        "Valdez",
+        "control"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "contacto-es-3",
+    "categoria": "contacto",
+    "idioma": "es",
+    "descripcion": "A deactivated patient's number no longer identifies anyone (it may belong to someone else now): nothing of hers is shown.",
+    "preparacion": {
+      "desactivados": [
+        "PAC-001"
+      ]
+    },
+    "turnos": [
+      "Hola, quiero una cita."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Con gusto. ¿Me dice su nombre completo para registrarle?"
+      }
+    ],
+    "esperado": {
+      "resultadoNoContiene": [
+        {
+          "herramienta": "buscar_paciente",
+          "texto": "María"
+        }
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "contacto-en-1",
+    "categoria": "contacto",
+    "idioma": "en",
+    "descripcion": "Distant follow-up: the patient confirms the number is still theirs, then gets the follow-up details.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2026-11-16",
+          "tolerancia": 7,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Yes, that's me."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "confirmar_numero",
+            "args": {
+              "correcto": true
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Thanks for confirming. Dra. Ana Valdez (ficticia) asked for your follow-up between November 9 and 23. Shall I look for a time?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "confirmar_numero",
+        "seguimientos_del_paciente"
+      ],
+      "seguimientos": {
+        "SEG-001": "contactando"
+      },
+      "escalado": false,
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "contacto-en-2",
+    "categoria": "contacto",
+    "idioma": "en",
+    "descripcion": "Whoever answers says the number is not the patient's: nothing else is revealed and the receptionist updates the number.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2026-11-16",
+          "tolerancia": 7,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "No, this number doesn't belong to that person."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "confirmar_numero",
+            "args": {
+              "correcto": false
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Sorry for the trouble. Have a nice day."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "confirmar_numero"
+      ],
+      "herramientasProhibidas": [
+        "seguimientos_del_paciente",
+        "citas_del_paciente"
+      ],
+      "seguimientos": {
+        "SEG-001": "sin_respuesta"
+      },
+      "escalado": true,
+      "noDebeContener": [
+        "Rodr[ií]guez",
+        "Valdez",
+        "control"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "contacto-en-3",
+    "categoria": "contacto",
+    "idioma": "en",
+    "descripcion": "A deactivated patient's number no longer identifies anyone (it may belong to someone else now): nothing of hers is shown.",
+    "preparacion": {
+      "desactivados": [
+        "PAC-001"
+      ]
+    },
+    "turnos": [
+      "Hi, I'd like an appointment."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Of course. Could you tell me your full name so I can register you?"
+      }
+    ],
+    "esperado": {
+      "resultadoNoContiene": [
+        {
+          "herramienta": "buscar_paciente",
+          "texto": "María"
+        }
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "contacto-ht-1",
+    "categoria": "contacto",
+    "idioma": "ht",
+    "descripcion": "Distant follow-up: the patient confirms the number is still theirs, then gets the follow-up details.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2026-11-16",
+          "tolerancia": 7,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Wi, se mwen."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "confirmar_numero",
+            "args": {
+              "correcto": true
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Mèsi paske ou konfime. Dra. Ana Valdez (ficticia) mande kontwòl ou ant 9 ak 23 novanm. Èske m chèche yon lè pou ou?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "confirmar_numero",
+        "seguimientos_del_paciente"
+      ],
+      "seguimientos": {
+        "SEG-001": "contactando"
+      },
+      "escalado": false,
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "contacto-ht-2",
+    "categoria": "contacto",
+    "idioma": "ht",
+    "descripcion": "Whoever answers says the number is not the patient's: nothing else is revealed and the receptionist updates the number.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2026-11-16",
+          "tolerancia": 7,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Non, nimewo sa a pa pou moun sa a."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "confirmar_numero",
+            "args": {
+              "correcto": false
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Eskize nou pou deranjman an. Pase yon bon jounen."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "confirmar_numero"
+      ],
+      "herramientasProhibidas": [
+        "seguimientos_del_paciente",
+        "citas_del_paciente"
+      ],
+      "seguimientos": {
+        "SEG-001": "sin_respuesta"
+      },
+      "escalado": true,
+      "noDebeContener": [
+        "Rodr[ií]guez",
+        "Valdez",
+        "control"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "contacto-ht-3",
+    "categoria": "contacto",
+    "idioma": "ht",
+    "descripcion": "A deactivated patient's number no longer identifies anyone (it may belong to someone else now): nothing of hers is shown.",
+    "preparacion": {
+      "desactivados": [
+        "PAC-001"
+      ]
+    },
+    "turnos": [
+      "Bonjou, mwen vle yon randevou."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Avèk plezi. Èske ou ka ban m non konplè ou pou m enskri w?"
+      }
+    ],
+    "esperado": {
+      "resultadoNoContiene": [
+        {
+          "herramienta": "buscar_paciente",
+          "texto": "María"
+        }
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  }
+]

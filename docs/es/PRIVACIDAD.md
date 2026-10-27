@@ -26,10 +26,14 @@ El aviso para pacientes es `wwwroot/privacidad.html` (español e inglés, con re
 
 En **Pacientes y avisos**, la secretaria busca al paciente por teléfono y puede:
 
-- **Descargar una copia** (`GET /api/panel/pacientes/{id}/exportar`): JSON con el paciente, citas, lista de espera, permisos, mensajes de la conversación (solo el texto del paciente y del consultorio), escalamientos, lecturas de carnet, borradores de autorización y avisos automáticos. La exportación queda en la bitácora.
+- **Descargar una copia** (`GET /api/panel/pacientes/{id}/exportar`): JSON con el paciente, citas, lista de espera, seguimientos, solicitudes de sobrecupo, estado de contacto (activo, no localizable), los demás pacientes que se gestionan desde el mismo número (solo id y nombre), permisos, mensajes de la conversación (solo el texto del paciente y del consultorio), escalamientos, lecturas de carnet, borradores de autorización y avisos automáticos. La exportación queda en la bitácora.
 - **Borrar todo** (`POST /api/panel/pacientes/{id}/borrar` con `{"confirmacion":"BORRAR"}`): elimina al paciente, sus conversaciones y mensajes, permisos, carnets, escalamientos, citas, lista de espera, ofertas, borradores de autorización y mensajes de canal, en una transacción. La bitácora conserva solo las acciones (quién, qué, cuándo), con sesión, entidad, detalle y textos borrados, más un registro `datos_borrados` sin datos personales.
 
+Si el número también gestiona a otros pacientes (una familia), borrar a uno elimina solo lo suyo (citas, seguimientos, solicitudes de sobrecupo, permisos, conversaciones vinculadas a él); las conversaciones y los mensajes de canal del número compartido se conservan, porque también son de los demás.
+
 Si el paciente se lo pide al agente, este escala a la secretaria y comparte el aviso de privacidad (regla 16 del prompt).
+
+**Estado de contacto.** La secretaria puede **desactivar** a un paciente (se mudó, pidió que no lo contacten): ningún mensaje, seguimientos y lista de espera cancelados, y su número ya no identifica a nadie, porque puede ser de otra persona. Un número cuyos últimos 3 mensajes fallaron (configurable, `Contacto__FallosParaNoLocalizable`) o cuyo dueño dijo "no es esa persona" queda **no localizable**: no se le escribe más, los avisos pasan a "Llamadas pendientes" y la secretaria recibe un escalamiento. Antes de contactar un seguimiento indicado hace más de 3 meses, el primer mensaje solo pregunta si el número sigue siendo del paciente, sin datos del médico ni de salud.
 
 ## Sin datos de pacientes en logs, informes ni errores
 

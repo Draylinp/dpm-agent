@@ -76,7 +76,8 @@ public class SeguimientosTests
         Assert.Equal(1, (await Motor(app)).Contactos);
         var leido = await Leer(app, s.Id);
         Assert.Equal((ServicioSeguimientos.Contactando, 1), (leido.Estado, leido.Intentos));
-        Assert.Equal("seguimiento_contacto", (await Avisos(app))[^1].Plantilla);
+        // Más de 3 meses desde que se indicó: el primer contacto confirma que el número sigue siendo del paciente (F21).
+        Assert.Equal("seguimiento_confirmar_numero", (await Avisos(app))[^1].Plantilla);
     }
 
     [Fact]

@@ -15,6 +15,8 @@ public static class AgendaExtensions
         services.AddScoped<ServicioSeguimientos>();
         services.AddScoped<ServicioUrgencias>();
         services.AddScoped<ServicioReprogramacion>();
+        services.AddScoped<ServicioContacto>();
+        services.Configure<ContactoOptions>(config.GetSection(ContactoOptions.SectionName));
         services.AddScoped<ServicioAgendaMedico>();
         services.AddScoped<DespachadorMensajes>();
         services.AddSingleton<IMessageChannel, WebChatChannel>();

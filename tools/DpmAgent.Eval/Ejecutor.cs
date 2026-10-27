@@ -237,6 +237,9 @@ public sealed class Ejecutor
             await db.SaveChangesAsync(ct);
         }
 
+        foreach (var d in prep.Desactivados)
+            await scope.ServiceProvider.GetRequiredService<ServicioContacto>().DesactivarAsync(IdsDpm.Leer(d, "PAC")!.Value, "eval", ct);
+
         foreach (var f in prep.Familiares)
             await dpm.RegistrarPacienteAsync(f.Nombre, f.Telefono, null, ct);
 

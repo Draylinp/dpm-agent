@@ -53,5 +53,6 @@
   "agenda.sobrecupo_rechazado": "Hola, {1}. {0} le informa que no fue posible abrir un espacio fuera de agenda el {2}. Responda CITA y le buscamos el próximo horario disponible. Si es una emergencia, llame al {3}. Para no recibir más avisos, responda STOP.",
   "agenda.reprogramar": "Hola, {1}. {0} le informa que {2} no podrá atender el {3} a las {4} (cita {5}). Le proponemos estos horarios: {6}. Responda con el que prefiera o escriba OTRO para buscar otro día. Para no recibir más avisos, responda STOP.",
   "agenda.retraso": "Hola, {1}. {0} le avisa que {2} tiene un retraso de unos {3} minutos. Su cita de hoy a las {4} podría empezar más tarde. Si no puede esperar, responda CAMBIAR. Para no recibir más avisos, responda STOP.",
-  "agenda.ausencia": "Hola, {1}. {0} notó que no pudo asistir a su cita con {2} del {3}. ¿Quiere que le busquemos otro horario? Responda SÍ y le mostramos opciones. Para no recibir más avisos, responda STOP."
+  "agenda.ausencia": "Hola, {1}. {0} notó que no pudo asistir a su cita con {2} del {3}. ¿Quiere que le busquemos otro horario? Responda SÍ y le mostramos opciones. Para no recibir más avisos, responda STOP.",
+  "agenda.seguimiento_confirmar_numero": "Hola. {0} busca a {1} para una cita de control. ¿Este sigue siendo su número? Responda SÍ y le mostramos los horarios, o NO si no es la persona. Para no recibir más avisos, responda STOP."
 }

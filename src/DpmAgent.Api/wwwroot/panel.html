@@ -448,7 +448,14 @@
       el('div', { class: 'grid' }, campo('famTel', 'pac.telefono', tel)),
       el('button', { class: 'sec', onclick: () => { telefonoFamilia = tel.value.trim(); cargar(); } }, t('fam.buscar')),
       miembros === null ? '' : miembros.length
-        ? el('ul', {}, miembros.map(m => el('li', {}, `${m.id} · ${m.nombre} · ${t('fam.ausencias').replace('{n}', m.ausencias)}`)))
+        ? el('div', {}, miembros.map(m => el('div', { class: 'item fila-acciones' },
+            el('strong', {}, m.nombre), el('span', { class: 'muted' }, m.id),
+            el('span', { class: 'chip' }, t('fam.ausencias').replace('{n}', m.ausencias)),
+            !m.activo ? el('span', { class: 'chip' }, t('fam.inactivo')) : '',
+            m.noLocalizable ? el('span', { class: 'chip urgente' }, t('fam.no_localizable')) : '',
+            el('button', { class: m.activo ? 'peligro' : 'sec', 'aria-label': `${t(m.activo ? 'fam.desactivar' : 'fam.reactivar')} · ${m.nombre}`,
+              onclick: () => accion(() => api(`/api/panel/pacientes/${m.id}/${m.activo ? 'desactivar' : 'reactivar'}`, { method: 'POST' })) },
+              t(m.activo ? 'fam.desactivar' : 'fam.reactivar')))))
         : el('p', { class: 'vacio' }, t('fam.vacio')),
       el('h3', {}, t('fam.agregar')),
       el('div', { class: 'grid' }, campo('famNombre', 'fam.nombre', nombre)),

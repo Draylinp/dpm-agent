@@ -925,6 +925,9 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Ars")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -935,9 +938,15 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DesactivadoUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Idioma")
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
+
+                    b.Property<DateTime?>("NoLocalizableUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -1112,6 +1121,9 @@ namespace DpmAgent.Api.Data.Migraciones.Postgres
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime?>("NumeroConfirmadoUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("PacienteId")
                         .HasColumnType("integer");

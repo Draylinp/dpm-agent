@@ -53,5 +53,6 @@
   "agenda.sobrecupo_rechazado": "Bonjou {1}. {0} fè w konnen li pa t posib pou louvri yon plas siplemantè jou {2}. Reponn RANDEVOU e n ap chèche pwochen lè ki disponib. Si se yon ijans, rele {3}. Pou pa resevwa plis avi, reponn STOP.",
   "agenda.reprogramar": "Bonjou {1}. {0} fè w konnen {2} p ap ka wè w jou {3} a {4} (randevou {5}). Men lè nou ka ofri w: {6}. Reponn ak sa ou prefere oswa ekri LÒT pou n chèche yon lòt jou. Pou pa resevwa plis avi, reponn STOP.",
   "agenda.retraso": "Bonjou {1}. {0} fè w konnen {2} an reta anviwon {3} minit. Randevou w jodi a a {4} ka kòmanse pi ta. Si ou pa ka tann, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP.",
-  "agenda.ausencia": "Bonjou {1}. {0} remake ou pa t ka vini nan randevou w ak {2} jou {3}. Èske ou vle nou chèche yon lòt lè pou ou? Reponn WI e n ap montre w opsyon yo. Pou pa resevwa plis avi, reponn STOP."
+  "agenda.ausencia": "Bonjou {1}. {0} remake ou pa t ka vini nan randevou w ak {2} jou {3}. Èske ou vle nou chèche yon lòt lè pou ou? Reponn WI e n ap montre w opsyon yo. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.seguimiento_confirmar_numero": "Bonjou. {0} ap chèche {1} pou yon randevou kontwòl. Èske se toujou nimewo li sa a? Reponn WI e n ap montre lè ki disponib yo, oswa NON si se pa moun sa a. Pou pa resevwa plis avi, reponn STOP."
 }

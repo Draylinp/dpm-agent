@@ -19,14 +19,17 @@ public sealed class DespachadorMensajes
     private readonly AgendaOptions _opciones;
     private readonly TimeProvider _clock;
     private readonly ILogger<DespachadorMensajes> _logger;
+    private readonly ContactoOptions _contacto;
 
     public DespachadorMensajes(
         DpmDbContext db,
         IEnumerable<IMessageChannel> canales,
         IOptions<AgendaOptions> opciones,
         TimeProvider clock,
-        ILogger<DespachadorMensajes> logger)
+        ILogger<DespachadorMensajes> logger,
+        IOptions<ContactoOptions>? contacto = null)
     {
+        _contacto = contacto?.Value ?? new ContactoOptions();
         _db = db;
         _canales = canales;
         _opciones = opciones.Value;
@@ -77,6 +80,9 @@ public sealed class DespachadorMensajes
             }
 
             await _db.SaveChangesAsync(ct);
+            if (m.Estado == "fallido" &&
+                await ServicioContacto.RegistrarFalloAsync(_db, m.ConsultorioId, m.Destino, _contacto.FallosParaNoLocalizable, _clock.GetUtcNow().UtcDateTime, ct))
+                _logger.LogWarning("Un número del consultorio {Consultorio} quedó como no localizable.", m.ConsultorioId);
         }
 
         return entregados;

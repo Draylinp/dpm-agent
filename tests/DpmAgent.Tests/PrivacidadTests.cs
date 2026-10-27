@@ -228,6 +228,74 @@ public class DerechosDelPacienteTests
 
         Assert.Equal(HttpStatusCode.NotFound, (await app.Cliente.GetAsync("/api/panel/pacientes/PAC-001/exportar")).StatusCode);
     }
+
+    /// <summary>Datos de las fases 3 y 4: seguimientos, sobrecupos, familia, estado de contacto y consentimientos.</summary>
+    private static async Task AgregarDatosNuevosAsync(AppDePrueba app)
+    {
+        await app.ConGateway(g => g.RegistrarPacienteAsync("Sofía Rodríguez (ficticia)", "8095550101", null, CancellationToken.None));
+        await app.EnAmbito(async sp =>
+        {
+            var db = sp.GetRequiredService<DpmDbContext>();
+            db.Seguimientos.Add(new Api.Data.Entidades.Seguimiento
+            {
+                ConsultorioId = 1, PacienteId = 1, MedicoId = 1, FechaObjetivo = new DateOnly(2027, 4, 26), ToleranciaDias = 7, Motivo = "control",
+                Estado = "pendiente", CreadoPor = "prueba", CreadoUtc = DateTime.UtcNow,
+            });
+            db.SolicitudesSobrecupo.Add(new Api.Data.Entidades.SolicitudSobrecupo
+            {
+                ConsultorioId = 1, PacienteId = 1, MedicoId = 1, Fecha = new DateOnly(2026, 10, 27), SesionId = "s", Estado = "pendiente", CreadaUtc = DateTime.UtcNow,
+            });
+            db.Consentimientos.Add(new Api.Data.Entidades.Consentimiento
+            {
+                ConsultorioId = 1, PacienteId = 3, Telefono = "8095550101", Categoria = "recordatorios", Estado = "otorgado", Canal = "presencial",
+                VersionTexto = "v", Idioma = "es", RegistradoPor = "prueba", FechaUtc = DateTime.UtcNow,
+            });
+            return await db.SaveChangesAsync();
+        });
+    }
+
+    [Fact]
+    public async Task La_exportacion_incluye_seguimientos_sobrecupos_familia_y_contacto()
+    {
+        using var app = await ConHistoriaAsync();
+        await AgregarDatosNuevosAsync(app);
+        await app.IniciarSesionAsync();
+
+        var json = JsonNode.Parse(await app.Cliente.GetStringAsync("/api/panel/pacientes/PAC-001/exportar"))!;
+        Assert.Equal("2027-04-26", json["seguimientos"]![0]!["fechaObjetivo"]!.ToString());
+        Assert.Equal("pendiente", json["solicitudesSobrecupo"]![0]!["estado"]!.ToString());
+        Assert.Equal("Sofía Rodríguez (ficticia)", Assert.Single(json["vinculosFamiliares"]!.AsArray())!["nombre"]!.ToString());
+        Assert.True(json["contacto"]!["activo"]!.GetValue<bool>());
+        Assert.Equal(3, json["consentimientos"]!.AsArray().Count); // los de Sofía no van en la copia de María
+    }
+
+    [Fact]
+    public async Task Borrar_a_un_miembro_de_la_familia_conserva_lo_del_numero_y_lo_de_los_demas()
+    {
+        using var app = await ConHistoriaAsync();
+        await AgregarDatosNuevosAsync(app);
+        await app.IniciarSesionAsync();
+
+        var res = await app.Cliente.PostAsJsonAsync("/api/panel/pacientes/PAC-001/borrar", new { confirmacion = "BORRAR" });
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+
+        var estado = await app.EnAmbito(async sp =>
+        {
+            var db = sp.GetRequiredService<DpmDbContext>();
+            return new
+            {
+                Pacientes = await db.Pacientes.Select(p => p.Id).OrderBy(i => i).ToListAsync(),
+                Seguimientos = await db.Seguimientos.CountAsync(),
+                Sobrecupos = await db.SolicitudesSobrecupo.CountAsync(),
+                Consentimientos = await db.Consentimientos.Where(c => c.PacienteId == 1).CountAsync(),
+                ConsentimientoSofia = await db.Consentimientos.CountAsync(c => c.PacienteId == 3),
+            };
+        });
+        Assert.Equal([2, 3], estado.Pacientes);
+        Assert.Equal((0, 0, 0, 1), (estado.Seguimientos, estado.Sobrecupos, estado.Consentimientos, estado.ConsentimientoSofia));
+        var sofia = JsonNode.Parse(await app.Cliente.GetStringAsync("/api/panel/pacientes/PAC-003/exportar"))!;
+        Assert.Empty(sofia["vinculosFamiliares"]!.AsArray());
+    }
 }
 
 public class ErroresAmablesTests

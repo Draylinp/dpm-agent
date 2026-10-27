@@ -45,22 +45,31 @@ public static class CambiosAgendaEndpoints
             }
         });
 
-        panel.MapGet("/familias", async (string? telefono, IDpmGateway dpm, DpmDbContext db, ServicioConsentimiento consentimientos, CancellationToken ct) =>
+        // Incluye a los desactivados y a los no localizables, para que la secretaria los vea y los reactive.
+        panel.MapGet("/familias", async (string? telefono, DpmDbContext db, ServicioConsentimiento consentimientos, CancellationToken ct) =>
         {
-            if (Telefono.Normalizar(telefono) is null)
+            if (Telefono.Normalizar(telefono) is not { } normalizado)
                 return Results.BadRequest(new { error = "Indique un teléfono válido." });
-            var familia = await dpm.PacientesDelTelefonoAsync(telefono!, ct);
-            var ids = familia.Select(p => IdsDpm.Leer(p.Id, "PAC")!.Value).ToList();
-            var ausencias = await ServicioReprogramacion.AusenciasAsync(db, ids, ct);
+            var familia = await db.Pacientes.AsNoTracking().Where(p => p.Telefono == normalizado).OrderBy(p => p.Id).ToListAsync(ct);
+            var ausencias = await ServicioReprogramacion.AusenciasAsync(db, familia.Select(p => p.Id), ct);
             var lista = new List<object>();
             foreach (var p in familia)
             {
-                var pid = IdsDpm.Leer(p.Id, "PAC")!.Value;
-                lista.Add(new { id = p.Id, nombre = p.Nombre, ausencias = ausencias.GetValueOrDefault(pid), consentimientos = await consentimientos.EstadoAsync(pid, ct) });
+                lista.Add(new
+                {
+                    id = IdsDpm.Paciente(p.Id), nombre = p.Nombre, activo = p.Activo, noLocalizable = p.NoLocalizableUtc is not null,
+                    ausencias = ausencias.GetValueOrDefault(p.Id), consentimientos = await consentimientos.EstadoAsync(p.Id, ct),
+                });
             }
 
             return Results.Ok(lista);
         });
+
+        panel.MapPost("/pacientes/{id}/desactivar", async (string id, ClaimsPrincipal user, ServicioContacto s, CancellationToken ct) =>
+            IdsDpm.Leer(id, "PAC") is { } pid && await s.DesactivarAsync(pid, user.Actor(), ct) ? Results.Ok(new { activo = false }) : Results.NotFound());
+
+        panel.MapPost("/pacientes/{id}/reactivar", async (string id, ClaimsPrincipal user, ServicioContacto s, CancellationToken ct) =>
+            IdsDpm.Leer(id, "PAC") is { } pid && await s.ReactivarAsync(pid, user.Actor(), ct) ? Results.Ok(new { activo = true }) : Results.NotFound());
 
         // Vincular a un familiar a un número que ya tiene pacientes: la secretaria debe confirmarlo (lo dijo el titular en persona).
         panel.MapPost("/familias", async (FamiliarRequest req, ClaimsPrincipal user, IDpmGateway dpm, Bitacora bitacora, CancellationToken ct) =>

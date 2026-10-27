@@ -28,6 +28,9 @@ public sealed record ResultadoSeguimientos(int Contactos, int Reintentos, int Si
 public sealed class ServicioSeguimientos
 {
     public const string Pendiente = "pendiente";
+
+    /// <summary>Seguimientos a más de este plazo confirman primero el número.</summary>
+    public const int MesesConfirmarNumero = 3;
     public const string Contactando = "contactando";
     public const string Agendado = "agendado";
     public const string SinRespuesta = "sin_respuesta";
@@ -158,8 +161,12 @@ public sealed class ServicioSeguimientos
         await _db.SaveChangesAsync(ct);
 
         var (nombre, medico) = await NombresAsync(seg, ct);
+        // Seguimiento lejano (más de 3 meses desde que se indicó): el número pudo cambiar de dueño, así que primero se confirma.
+        var confirmar = seg.NumeroConfirmadoUtc is null && seg.FechaObjetivo.DayNumber - DateOnly.FromDateTime(seg.CreadoUtc).DayNumber > MesesConfirmarNumero * 30;
         var r = await _notificador.NotificarPacienteAsync(seg.PacienteId,
-            (idioma, consultorio) => TextosAgenda.SeguimientoContacto(idioma, consultorio, nombre, medico, seg.FechaObjetivo), "seguimiento", ct);
+            (idioma, consultorio) => confirmar
+                ? TextosAgenda.SeguimientoConfirmarNumero(idioma, consultorio, nombre)
+                : TextosAgenda.SeguimientoContacto(idioma, consultorio, nombre, medico, seg.FechaObjetivo), "seguimiento", ct);
         seg.PorLlamada = !r.Enviado;
         await _db.SaveChangesAsync(ct);
         await _bitacora.RegistrarAsync(Bitacora.Sistema, "seguimiento_contacto", "seguimiento", Id(seg.Id), null,

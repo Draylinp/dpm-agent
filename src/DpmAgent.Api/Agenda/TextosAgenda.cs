@@ -58,6 +58,14 @@ public static class TextosAgenda
         return new(Textos.Obtener("agenda.seguimiento_contacto", i, p), "seguimiento_contacto", p, i);
     }
 
+    /// <summary>Primer contacto de un seguimiento lejano: confirma que el número sigue siendo del paciente, sin más detalles.</summary>
+    public static MensajeAgenda SeguimientoConfirmarNumero(string idioma, string consultorio, string nombrePaciente)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente)];
+        return new(Textos.Obtener("agenda.seguimiento_confirmar_numero", i, p), "seguimiento_confirmar_numero", p, i);
+    }
+
     public static MensajeAgenda RecordatorioSieteDias(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId)
     {
         var i = Idiomas.Idiomas.ParaTextos(idioma);

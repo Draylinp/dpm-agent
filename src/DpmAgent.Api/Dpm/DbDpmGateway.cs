@@ -35,7 +35,7 @@ public sealed class DbDpmGateway : IDpmGateway
             var telefono = Telefono.Normalizar(telefonoOId);
             p = telefono is null
                 ? null
-                : await _db.Pacientes.AsNoTracking().OrderBy(x => x.Id).FirstOrDefaultAsync(x => x.Telefono == telefono, ct);
+                : await _db.Pacientes.AsNoTracking().OrderBy(x => x.Id).FirstOrDefaultAsync(x => x.Telefono == telefono && x.Activo, ct);
         }
 
         return p is null ? null : APaciente(p);
@@ -45,7 +45,8 @@ public sealed class DbDpmGateway : IDpmGateway
     {
         if (Telefono.Normalizar(telefono) is not { } normalizado)
             return [];
-        var lista = await _db.Pacientes.AsNoTracking().Where(x => x.Telefono == normalizado).OrderBy(x => x.Id).ToListAsync(ct);
+        // Un paciente desactivado ya no se identifica por el número (pudo pasar a otra persona).
+        var lista = await _db.Pacientes.AsNoTracking().Where(x => x.Telefono == normalizado && x.Activo).OrderBy(x => x.Id).ToListAsync(ct);
         return lista.Select(APaciente).ToList();
     }
 

@@ -886,6 +886,9 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("Activo")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Ars")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
@@ -896,8 +899,14 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.Property<DateTime>("CreadoUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DesactivadoUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Idioma")
                         .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("NoLocalizableUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Nombre")
@@ -1066,6 +1075,9 @@ namespace DpmAgent.Api.Data.Migraciones.Sqlite
                     b.Property<string>("Motivo")
                         .IsRequired()
                         .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("NumeroConfirmadoUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("PacienteId")

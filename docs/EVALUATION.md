@@ -2,7 +2,7 @@
 
 *Versión en español: [es/EVALUACION.md](es/EVALUACION.md)*
 
-`eval/` holds **214 cases** across 19 categories and 5 languages, plus the runner `tools/DpmAgent.Eval`.
+`eval/` holds **223 cases** across 20 categories and 5 languages, plus the runner `tools/DpmAgent.Eval`.
 
 | Category | What it checks |
 |---|---|
@@ -23,6 +23,7 @@
 | `privacidad` | Privacy notice, data requests go to the staff, no unneeded data asked |
 | `seguimiento` | Follow-ups ordered by the doctor: booked only inside the doctor's window |
 | `medico` | The doctor's channel: verified number only, two-step actions, no clinical data stored |
+| `contacto` | A distant follow-up first confirms the number; "not that person" reveals nothing and goes to the receptionist; a deactivated patient's number identifies no one |
 | `familias` | One number, several patients: asks who it is for, linking a new family member needs a confirmation, never touches a patient from another number; rescheduling after the doctor blocks a day; the doctor's running-late notice |
 | `urgencias` | "See me today": no symptom questions or severity judgement (an exaggerating patient is treated the same), first slot or urgent slot, extra-slot request decided only by staff, out-of-hours emergency centers, a real emergency still escalates as urgent |
 

@@ -22,7 +22,9 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
         if (p is null)
             return null;
 
-        var sesiones = await SesionesAsync(pacienteId, p.Telefono, ct);
+        var familia = await db.Pacientes.AsNoTracking().Where(x => x.Telefono == p.Telefono && x.Id != pacienteId)
+            .OrderBy(x => x.Id).Select(x => new { x.Id, x.Nombre }).ToListAsync(ct);
+        var sesiones = await SesionesAsync(pacienteId, p.Telefono, familia.Count > 0, ct);
         var conversaciones = await db.Conversaciones.AsNoTracking().Where(c => sesiones.Contains(c.SesionId))
             .Select(c => new { c.Id, c.CreadaUtc, c.Idioma }).ToListAsync(ct);
         var idsConv = conversaciones.Select(c => c.Id).ToList();
@@ -59,6 +61,13 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
             {
                 ["fechaObjetivo"] = s.FechaObjetivo.ToString("yyyy-MM-dd"), ["toleranciaDias"] = s.ToleranciaDias, ["motivo"] = s.Motivo, ["estado"] = s.Estado,
             }).ToArray()),
+            ["contacto"] = new JsonObject
+            {
+                ["activo"] = p.Activo, ["desactivado"] = p.DesactivadoUtc is { } d ? Fecha(d) : null,
+                ["noLocalizable"] = p.NoLocalizableUtc is { } n ? Fecha(n) : null,
+            },
+            // Pacientes que se gestionan desde el mismo número (una familia): solo id y nombre.
+            ["vinculosFamiliares"] = new JsonArray(familia.Select(f => (JsonNode)new JsonObject { ["id"] = IdsDpm.Paciente(f.Id), ["nombre"] = f.Nombre }).ToArray()),
             ["solicitudesSobrecupo"] = new JsonArray(sobrecupos.Select(s => (JsonNode)new JsonObject
             {
                 ["fecha"] = s.Fecha.ToString("yyyy-MM-dd"), ["estado"] = s.Estado, ["creada"] = Fecha(s.CreadaUtc),
@@ -113,7 +122,10 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
 
         var telefono = p.Telefono;
         var internacional = Telefono.Internacional(telefono) ?? telefono;
-        var sesiones = await SesionesAsync(pacienteId, telefono, ct);
+        // Si el número también gestiona a otros pacientes (una familia), lo que es del número (conversaciones de ese
+        // teléfono, mensajes del canal) también es de ellos: se borra solo lo que es de este paciente.
+        var compartido = await db.Pacientes.AnyAsync(x => x.Telefono == telefono && x.Id != pacienteId, ct);
+        var sesiones = await SesionesAsync(pacienteId, telefono, compartido, ct);
         var idPaciente = IdsDpm.Paciente(pacienteId);
         var idsCitas = await db.Citas.Where(c => c.PacienteId == pacienteId).Select(c => c.Id).ToListAsync(ct);
         var entidadesCita = idsCitas.Select(IdsDpm.Cita).ToList();
@@ -123,13 +135,15 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
         var idsConv = db.Conversaciones.Where(c => sesiones.Contains(c.SesionId)).Select(c => c.Id);
         var mensajes = await db.Mensajes.Where(m => idsConv.Contains(m.ConversacionId)).ExecuteDeleteAsync(ct);
         var conversaciones = await db.Conversaciones.Where(c => sesiones.Contains(c.SesionId)).ExecuteDeleteAsync(ct);
-        var canal = await db.MensajesSalientes.Where(m => m.Destino == telefono || sesiones.Contains(m.SesionId)).ExecuteDeleteAsync(ct)
-                    + await db.MensajesEntrantes.Where(m => m.Telefono == telefono || m.Telefono == internacional).ExecuteDeleteAsync(ct);
+        var canal = compartido
+            ? await db.MensajesSalientes.Where(m => sesiones.Contains(m.SesionId)).ExecuteDeleteAsync(ct)
+            : await db.MensajesSalientes.Where(m => m.Destino == telefono || sesiones.Contains(m.SesionId)).ExecuteDeleteAsync(ct)
+              + await db.MensajesEntrantes.Where(m => m.Telefono == telefono || m.Telefono == internacional).ExecuteDeleteAsync(ct);
         var consentimientos = await db.Consentimientos.Where(c => c.PacienteId == pacienteId).ExecuteDeleteAsync(ct);
         await db.Seguimientos.Where(s => s.PacienteId == pacienteId).ExecuteDeleteAsync(ct);
         await db.SolicitudesSobrecupo.Where(s => s.PacienteId == pacienteId).ExecuteDeleteAsync(ct);
         var carnets = await db.CarnetsPendientes
-            .Where(c => c.PacienteId == pacienteId || c.TelefonoCanal == telefono || sesiones.Contains(c.SesionId)).ExecuteDeleteAsync(ct);
+            .Where(c => c.PacienteId == pacienteId || (!compartido && c.TelefonoCanal == telefono) || sesiones.Contains(c.SesionId)).ExecuteDeleteAsync(ct);
         var escalamientos = await db.Escalamientos.Where(e => e.PacienteId == pacienteId || sesiones.Contains(e.SesionId)).ExecuteDeleteAsync(ct);
         await db.OfertasHueco.Where(o => o.PacienteId == pacienteId).ExecuteDeleteAsync(ct);
         await db.ListaEspera.Where(l => l.PacienteId == pacienteId).ExecuteDeleteAsync(ct);
@@ -155,13 +169,16 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
         return new ResultadoBorrado(conversaciones, mensajes, consentimientos, carnets, escalamientos, citas, canal, bitacoraAnonimizada);
     }
 
-    /// <summary>Todas las sesiones del paciente: las vinculadas a él, las de su teléfono y la de WhatsApp.</summary>
-    private async Task<List<string>> SesionesAsync(int pacienteId, string telefono, CancellationToken ct)
+    /// <summary>
+    /// Las sesiones del paciente: las vinculadas a él y, si el número es solo suyo, las de su teléfono y la de WhatsApp.
+    /// </summary>
+    private async Task<List<string>> SesionesAsync(int pacienteId, string telefono, bool compartido, CancellationToken ct)
     {
         var sesiones = await db.Conversaciones.AsNoTracking()
-            .Where(c => c.PacienteId == pacienteId || c.TelefonoCanal == telefono)
+            .Where(c => c.PacienteId == pacienteId || (!compartido && c.TelefonoCanal == telefono))
             .Select(c => c.SesionId).ToListAsync(ct);
-        sesiones.Add(CanalesConocidos.SesionWhatsApp(telefono));
+        if (!compartido)
+            sesiones.Add(CanalesConocidos.SesionWhatsApp(telefono));
         return sesiones.Distinct().ToList();
     }
 

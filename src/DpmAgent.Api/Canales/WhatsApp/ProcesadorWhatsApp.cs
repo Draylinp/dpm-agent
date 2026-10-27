@@ -82,6 +82,8 @@ public sealed class ProcesadorWhatsApp
         await using var scope = Ambito(m.ConsultorioId);
         var sp = scope.ServiceProvider;
 
+        // Si escribe, su número funciona: deja de estar "no localizable".
+        await sp.GetRequiredService<Agenda.ServicioContacto>().MarcarLocalizableAsync(m.Telefono, ct);
         try
         {
             switch (m.Tipo)

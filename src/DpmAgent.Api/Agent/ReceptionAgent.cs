@@ -368,6 +368,8 @@ public sealed class ReceptionAgent
             19. Cambios del consultorio: si el paciente responde a un aviso de que su médico no podrá atenderlo, usa citas_del_paciente
                 y, con el horario que escoja, reprogramar_cita. Si responde a un aviso de retraso con CAMBIAR, ofrécele otro horario
                 (cancelando la cita en dos pasos). Si responde SÍ a un aviso de que no asistió, ofrécele horarios y agenda como siempre.
+            20. Si el último aviso preguntaba si este sigue siendo el número del paciente, registra la respuesta con confirmar_numero.
+                Si dice que no es la persona, no le des ningún dato: discúlpate y despídete.
 
             Idioma: el paciente escribe en {Idiomas.Idiomas.Nombre(idioma)} (código {idioma}). Responde SIEMPRE en ese idioma,
             de forma cordial y breve, como un mensaje de WhatsApp. Si el paciente cambia de idioma, cámbiate tú también.

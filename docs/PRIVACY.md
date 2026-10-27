@@ -26,10 +26,14 @@ The patient-facing notice is `wwwroot/privacidad.html` (Spanish and English, wit
 
 In **Patients and notices**, the receptionist searches the patient by phone and can:
 
-- **Download a copy** (`GET /api/panel/pacientes/{id}/exportar`): JSON with the patient, appointments, waiting list, consents, conversation messages (patient and clinic text only), escalations, card readings, insurance drafts and automatic notices. The export is recorded in the audit log.
+- **Download a copy** (`GET /api/panel/pacientes/{id}/exportar`): JSON with the patient, appointments, waiting list, follow-ups, extra-slot requests, contact status (active, unreachable), the other patients managed from the same number (id and name only), consents, conversation messages (patient and clinic text only), escalations, card readings, insurance drafts and automatic notices. The export is recorded in the audit log.
 - **Delete everything** (`POST /api/panel/pacientes/{id}/borrar` with `{"confirmacion":"BORRAR"}`): removes the patient, conversations and messages, consents, cards, escalations, appointments, waiting list, offers, insurance drafts and channel messages, in one transaction. The audit log keeps only the actions (who, what, when), with session, entity, detail and texts cleared, plus one `datos_borrados` entry with no personal data.
 
+If the number also manages other patients (a family), deleting one of them removes only that patient's own data (appointments, follow-ups, extra-slot requests, consents, conversations linked to them); conversations and channel messages of the shared number stay, because they belong to the others too.
+
 If the patient asks the agent, it escalates to the receptionist and shares the privacy notice (prompt rule 16).
+
+**Contact status.** The receptionist can **deactivate** a patient (moved away, asked not to be contacted): no messages at all, follow-ups and waiting list cancelled, and their number no longer identifies anyone, since it may now belong to someone else. A number whose last 3 messages failed (configurable, `Contacto__FallosParaNoLocalizable`) or whose holder said "this is not that person" becomes **unreachable**: no more messages, notices go to "Calls to make" and the receptionist gets an escalation. Before contacting a follow-up ordered more than 3 months earlier, the first message only asks whether the number is still the patient's, with no doctor or health details.
 
 ## No patient data in logs, reports or errors
 

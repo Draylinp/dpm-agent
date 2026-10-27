@@ -42,6 +42,9 @@ public sealed class Notificador
     public async Task<ResultadoAviso> NotificarPacienteAsync(int pacienteId, Func<string, string, MensajeAgenda> crear, string tipo, CancellationToken ct)
     {
         var paciente = await _db.Pacientes.AsNoTracking().FirstAsync(p => p.Id == pacienteId, ct);
+        // Desactivado por la secretaria: no se le escribe ni queda para llamar.
+        if (!paciente.Activo)
+            return new ResultadoAviso(CanalesConocidos.SesionWhatsApp(paciente.Telefono), false);
 
         var ultima = await _db.Conversaciones.AsNoTracking()
             .Where(c => c.PacienteId == pacienteId)
@@ -56,8 +59,9 @@ public sealed class Notificador
         var mensaje = crear(idioma ?? Idiomas.Idiomas.Espanol, string.IsNullOrWhiteSpace(consultorio?.Nombre) ? "DPM" : consultorio.Nombre);
         var texto = mensaje.Texto;
 
-        if (CategoriasConsentimiento.DeTipoMensaje(tipo) is { } categoria &&
-            !await ServicioConsentimiento.VigenteAsync(_db, pacienteId, categoria, ct))
+        var categoria = CategoriasConsentimiento.DeTipoMensaje(tipo);
+        var sinPermiso = categoria is not null && !await ServicioConsentimiento.VigenteAsync(_db, pacienteId, categoria, ct);
+        if (sinPermiso || paciente.NoLocalizableUtc is not null)
         {
             // No sale ni entra al historial: el paciente no lo recibió.
             _db.MensajesSalientes.Add(new MensajeSaliente
@@ -72,7 +76,7 @@ public sealed class Notificador
                 Plantilla = mensaje.Plantilla,
                 ParametrosJson = JsonSerializer.Serialize(mensaje.Parametros),
                 Estado = EstadoLlamar,
-                Error = $"Sin consentimiento para {categoria}",
+                Error = sinPermiso ? $"Sin consentimiento para {categoria}" : "Número no localizable",
                 CreadoUtc = _clock.GetUtcNow().UtcDateTime,
             });
             await _db.SaveChangesAsync(ct);

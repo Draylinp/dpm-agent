@@ -53,5 +53,6 @@
   "agenda.sobrecupo_rechazado": "Hi, {1}. {0} lets you know that it was not possible to open an extra slot on {2}. Reply APPOINTMENT and we will find the next available time. If this is an emergency, call {3}. To stop receiving notices, reply STOP.",
   "agenda.reprogramar": "Hi, {1}. {0} lets you know that {2} will not be able to see you on {3} at {4} (appointment {5}). We can offer these times: {6}. Reply with the one you prefer or write OTHER to look for another day. To stop receiving notices, reply STOP.",
   "agenda.retraso": "Hi, {1}. {0} lets you know that {2} is running about {3} minutes late. Your appointment today at {4} may start later. If you can't wait, reply CHANGE. To stop receiving notices, reply STOP.",
-  "agenda.ausencia": "Hi, {1}. {0} noticed you could not make it to your appointment with {2} on {3}. Would you like us to find another time? Reply YES and we will show you the options. To stop receiving notices, reply STOP."
+  "agenda.ausencia": "Hi, {1}. {0} noticed you could not make it to your appointment with {2} on {3}. Would you like us to find another time? Reply YES and we will show you the options. To stop receiving notices, reply STOP.",
+  "agenda.seguimiento_confirmar_numero": "Hello. {0} is looking for {1} about a follow-up visit. Is this still their number? Reply YES and we will show the available times, or NO if this is not that person. To stop receiving notices, reply STOP."
 }
