@@ -26,4 +26,16 @@ public sealed class AgendaOptions
     public int RecordatorioSiCreadaHaceHoras { get; set; } = 6;
 
     public int MaxIntentosEnvio { get; set; } = 5;
+
+    /// <summary>Intentos de contacto de un seguimiento antes de pasarlo a "sin respuesta".</summary>
+    public int SeguimientoIntentos { get; set; } = 3;
+
+    /// <summary>Días entre un intento de contacto y el siguiente.</summary>
+    public int SeguimientoDiasEntreIntentos { get; set; } = 3;
+
+    /// <summary>Recordatorio extra antes de una cita de seguimiento (0 lo apaga). El de 24 horas sigue igual.</summary>
+    public int SeguimientoRecordatorioDiasAntes { get; set; } = 7;
+
+    /// <summary>Avisar al paciente cuando se crea un seguimiento lejano (con la fecha aproximada).</summary>
+    public bool SeguimientoAvisarAlCrear { get; set; } = true;
 }

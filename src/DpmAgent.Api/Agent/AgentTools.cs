@@ -37,12 +37,16 @@ public sealed class AgentTools
     private readonly ServicioListaEspera? _agenda;
     private readonly Bitacora? _bitacora;
     private readonly ServicioConsentimiento? _consentimientos;
+    private readonly ServicioSeguimientos? _seguimientos;
 
     /// <param name="consentimientos">Opt-in para mensajes proactivos. Sin él, esas herramientas no están disponibles.</param>
     /// <param name="agenda">Lista de espera y respuestas a mensajes automáticos. Sin ella esas herramientas no están disponibles.</param>
     /// <param name="bitacora">Si se da, cada acción que cambia datos queda registrada.</param>
-    public AgentTools(IDpmGateway dpm, ServicioListaEspera? agenda = null, Bitacora? bitacora = null, ServicioConsentimiento? consentimientos = null)
+    public AgentTools(
+        IDpmGateway dpm, ServicioListaEspera? agenda = null, Bitacora? bitacora = null, ServicioConsentimiento? consentimientos = null,
+        ServicioSeguimientos? seguimientos = null)
     {
+        _seguimientos = seguimientos;
         _consentimientos = consentimientos;
         _dpm = dpm;
         _carnets = new ServicioCarnet(dpm);
@@ -91,6 +95,7 @@ public sealed class AgentTools
                 "ofrecer_consentimiento" => await OfrecerConsentimiento(sesion, ct),
                 "registrar_consentimiento" => await RegistrarConsentimiento(sesion, args, ct),
                 "darse_de_baja" => await DarseDeBaja(sesion, args, ct),
+                "seguimientos_del_paciente" => await SeguimientosDelPaciente(sesion, ct),
                 _ => Error($"Herramienta desconocida: {name}"),
             };
         }
@@ -165,7 +170,21 @@ public sealed class AgentTools
     {
         var pacienteId = PacienteDeSesion(sesion);
         var fechaHora = DateTimeOffset.Parse(Req(args, "fecha_hora"), CultureInfo.InvariantCulture);
-        var cita = await _dpm.CrearCitaAsync(pacienteId, Req(args, "medico_id"), fechaHora, MotivoAdministrativo(Opt(args, "motivo")), ct);
+        var medicoId = Req(args, "medico_id");
+
+        // Cita de un seguimiento indicado por el médico: debe caer dentro de la ventana que él decidió.
+        Data.Entidades.Seguimiento? seguimiento = null;
+        if (Opt(args, "seguimiento_id") is { Length: > 0 } segId)
+        {
+            if (_seguimientos is null)
+                return Error("Los seguimientos no están disponibles en este momento. Usa escalar_a_personal.");
+            seguimiento = await _seguimientos.ValidarParaAgendarAsync(segId, pacienteId, fechaHora, medicoId, ct);
+        }
+
+        var cita = await _dpm.CrearCitaAsync(pacienteId, medicoId, fechaHora,
+            seguimiento?.Motivo ?? MotivoAdministrativo(Opt(args, "motivo")), ct);
+        if (seguimiento is not null)
+            await _seguimientos!.VincularCitaAsync(seguimiento, cita.Id, ct);
         await Registrar(sesion, "cita_creada", "cita", cita.Id, $"{cita.PacienteId} con {cita.MedicoId}", ct);
 
         return Ok(new { creada = true, cita = Resumen(cita) });
@@ -210,6 +229,8 @@ public sealed class AgentTools
             return Error($"No encontré la cita {citaId} entre las citas de este paciente.");
 
         await Registrar(sesion, "cita_cancelada", "cita", cita.Id, cita.PacienteId, ct);
+        if (_seguimientos is not null && IdsDpm.Leer(cita.Id, "CITA") is { } idCita)
+            await _seguimientos.CitaCanceladaAsync(idCita, ct);
         _agenda?.AvisarHuecoLiberado();
         return Ok(new { cancelada = true, cita = Resumen(cita) });
     }
@@ -377,6 +398,29 @@ public sealed class AgentTools
         var cita = await _agenda.ConfirmarAsistenciaAsync(PacienteDeSesion(sesion), citaId, ct);
         await Registrar(sesion, "asistencia_confirmada", "cita", cita.Id, null, ct);
         return Ok(new { asistencia_confirmada = true, cita = Resumen(cita) });
+    }
+
+    private async Task<string> SeguimientosDelPaciente(Sesion sesion, CancellationToken ct)
+    {
+        if (_seguimientos is null)
+            return Error("Los seguimientos no están disponibles en este momento. Usa escalar_a_personal.");
+        var pid = IdsDpm.Leer(PacienteDeSesion(sesion), "PAC");
+        var lista = (await _seguimientos.ListarAsync(null, ct, pacienteId: pid))
+            .Where(s => s.Estado is not ServicioSeguimientos.Cancelado);
+        return Ok(new
+        {
+            seguimientos = lista.Select(s => new
+            {
+                id = s.Id,
+                medico_id = s.MedicoId,
+                medico = s.Medico,
+                ventana_desde = s.VentanaDesde.ToString("yyyy-MM-dd"),
+                ventana_hasta = s.VentanaHasta.ToString("yyyy-MM-dd"),
+                estado = s.Estado,
+                cita_id = s.CitaId,
+            }),
+            instruccion = "Para agendar un seguimiento abierto, consulta disponibilidad solo entre ventana_desde y ventana_hasta y pasa seguimiento_id a crear_cita.",
+        });
     }
 
     private const string SinConsentimientos = "Los permisos de avisos no están disponibles en este momento. Usa escalar_a_personal.";
@@ -551,6 +595,7 @@ public sealed class AgentTools
                 {
                     ["medico_id"] = Str("Id del médico."),
                     ["fecha_hora"] = Str("Valor fecha_hora exacto devuelto por consultar_disponibilidad."),
+                    ["seguimiento_id"] = Str("Solo si la cita es de un seguimiento indicado por el médico (SEG-...), de seguimientos_del_paciente."),
                     ["motivo"] = new JsonObject
                     {
                         ["type"] = "string",
@@ -598,6 +643,9 @@ public sealed class AgentTools
                     ["urgente"] = new JsonObject { ["type"] = "boolean", ["description"] = "true si el paciente describe una posible emergencia." },
                 },
                 "resumen_es", "resumen_en", "urgente"),
+            Tool("seguimientos_del_paciente",
+                "Lista los seguimientos que el médico indicó al paciente identificado (controles), con la ventana de fechas permitida y su estado.",
+                new JsonObject()),
             Tool("ofrecer_consentimiento",
                 "Muestra al paciente el texto oficial para pedirle permiso de enviarle avisos (recordatorios, seguimiento de trámites, lista de espera). Usarla una vez si buscar_paciente indica ofrecer_consentimiento = true, o si el paciente pide recibir avisos.",
                 new JsonObject()),

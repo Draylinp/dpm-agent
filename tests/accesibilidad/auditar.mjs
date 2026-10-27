@@ -41,7 +41,7 @@ if (process.env.PANEL_CLAVE) {
     await pagina.fill('#clave', process.env.PANEL_CLAVE);
     await pagina.click('#formLogin button');
     await pagina.waitForSelector('#app:not([hidden])');
-    for (const tab of ['citas', 'escalamientos', 'carnets', 'autorizaciones', 'llamadas', 'pacientes', 'costos', 'bitacora']) {
+    for (const tab of ['citas', 'escalamientos', 'carnets', 'autorizaciones', 'seguimientos', 'llamadas', 'pacientes', 'costos', 'bitacora']) {
       await pagina.click(`#tabs button[data-tab="${tab}"]`);
       await pagina.waitForTimeout(500);
       await pagina.addScriptTag({ path: axePath });

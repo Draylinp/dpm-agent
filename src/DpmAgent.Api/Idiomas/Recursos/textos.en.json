@@ -32,5 +32,9 @@
   "error.no_disponible": "The assistant is not available right now. Please try later or call the clinic.",
   "entrada.sesion_invalida": "This conversation is no longer valid. Please start a new conversation.",
   "entrada.demasiadas": "You have sent many messages in a row. Please wait a moment and try again.",
-  "entrada.limite_demo": "You have reached today's message limit for the demo. Thanks for trying it; come back tomorrow."
+  "entrada.limite_demo": "You have reached today's message limit for the demo. Thanks for trying it; come back tomorrow.",
+  "agenda.seguimiento_creado": "Hi, {1}. {0} would like you to know that {2} asked for a follow-up visit around {3}. A few weeks before, we will write to you so you can choose a time. To stop receiving notices, reply STOP.",
+  "agenda.seguimiento_agendado": "Hi, {1}. {0} would like you to know that {2} asked for a follow-up visit, and we booked it for {3} at {4} (appointment {5}). Reply CONFIRM to confirm it or CHANGE if you prefer another time. To stop receiving notices, reply STOP.",
+  "agenda.seguimiento_contacto": "Hi, {1}. {0} reminds you that {2} asked for a follow-up visit around {3}. Would you like us to find a time for you? Reply YES and we will show you the options. To stop receiving notices, reply STOP.",
+  "agenda.recordatorio_7dias": "Hi, {1}. {0} reminds you that in one week you have your follow-up visit with {2}, on {3} at {4} (appointment {5}). If you can't make it, reply CHANGE. To stop receiving notices, reply STOP."
 }

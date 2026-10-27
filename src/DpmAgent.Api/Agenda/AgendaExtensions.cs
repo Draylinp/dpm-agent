@@ -12,6 +12,8 @@ public static class AgendaExtensions
         services.AddScoped<Notificador>();
         services.AddScoped<ServicioListaEspera>();
         services.AddScoped<MotorAgenda>();
+        services.AddScoped<ServicioSeguimientos>();
+        services.AddScoped<ServicioAgendaMedico>();
         services.AddScoped<DespachadorMensajes>();
         services.AddSingleton<IMessageChannel, WebChatChannel>();
         services.AddSingleton<AgendaHostedService>();

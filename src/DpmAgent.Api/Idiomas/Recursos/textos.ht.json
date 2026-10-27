@@ -32,5 +32,9 @@
   "error.no_disponible": "Asistan an pa disponib kounye a. Tanpri eseye pita oswa rele klinik la.",
   "entrada.sesion_invalida": "Konvèsasyon sa a pa valab ankò. Tanpri kòmanse yon nouvo konvèsasyon.",
   "entrada.demasiadas": "Ou voye anpil mesaj youn dèyè lòt. Tanpri tann yon ti moman epi eseye ankò.",
-  "entrada.limite_demo": "Ou rive nan limit mesaj demo a pou jodi a. Mèsi paske w te eseye l; tounen demen."
+  "entrada.limite_demo": "Ou rive nan limit mesaj demo a pou jodi a. Mèsi paske w te eseye l; tounen demen.",
+  "agenda.seguimiento_creado": "Bonjou {1}. {0} fè w konnen {2} mande pou w retounen fè yon kontwòl anviwon {3}. Kèk semèn anvan, n ap ekri w pou w chwazi lè a. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.seguimiento_agendado": "Bonjou {1}. {0} fè w konnen {2} mande yon kontwòl e nou rezève yon randevou pou ou jou {3} a {4} (randevou {5}). Reponn KONFIME pou konfime l oswa CHANJE si ou prefere yon lòt lè. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.seguimiento_contacto": "Bonjou {1}. {0} raple w {2} mande yon kontwòl anviwon {3}. Èske ou vle nou chèche yon lè pou ou? Reponn WI e n ap montre w opsyon yo. Pou pa resevwa plis avi, reponn STOP.",
+  "agenda.recordatorio_7dias": "Bonjou {1}. {0} raple w nan yon semèn ou gen kontwòl ou ak {2}, jou {3} a {4} (randevou {5}). Si ou pa ka vini, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP."
 }

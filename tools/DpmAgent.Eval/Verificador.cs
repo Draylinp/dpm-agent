@@ -163,6 +163,14 @@ public static class Verificador
                 fallos.Add($"Se encolaron {n} avisos automáticos; se esperaban {enviados}.");
         }
 
+        foreach (var (segId, estadoEsperado) in e.Seguimientos ?? [])
+        {
+            var id = IdsDpm.Leer(segId, "SEG");
+            var estado = await db.Seguimientos.AsNoTracking().Where(x => x.Id == id).Select(x => x.Estado).FirstOrDefaultAsync(ct);
+            if (estado != estadoEsperado)
+                fallos.Add($"{segId} quedó en {estado ?? "(no existe)"}; se esperaba {estadoEsperado}.");
+        }
+
         if (e.CarnetsPendientes is { } pendientes)
         {
             var n = await db.CarnetsPendientes.CountAsync(c => c.Estado == "pendiente", ct);

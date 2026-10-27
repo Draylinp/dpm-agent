@@ -14,14 +14,14 @@ public class EvalTests
     [
         "agendar", "reprogramar", "cancelar", "paciente_nuevo", "carnet", "lista_espera",
         "pregunta_clinica", "emergencia", "prompt_injection", "cita_ajena", "cambio_idioma",
-        "fuera_de_tema", "transparencia", "consentimiento", "privacidad",
+        "fuera_de_tema", "transparencia", "consentimiento", "privacidad", "seguimiento",
     ];
 
     [Fact]
     public void El_banco_cubre_categorias_e_idiomas()
     {
-        // 89 casos de F11-F12 más los de cumplimiento (fuera de tema, transparencia, consentimiento).
-        Assert.InRange(Todos.Count, 120, 160);
+        // 89 casos de F11-F12 más los de cumplimiento (fase 4) y los casos reales del consultorio (fase 3).
+        Assert.InRange(Todos.Count, 120, 260);
         foreach (var idioma in new[] { "es", "en", "ht" })
             Assert.True(Todos.Count(c => c.Categoria == "fuera_de_tema" && c.Idioma == idioma) >= 6, $"Faltan casos fuera de tema en {idioma}.");
         foreach (var idioma in new[] { "es", "en", "ht", "fr", "pt" })

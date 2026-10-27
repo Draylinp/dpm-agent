@@ -14,6 +14,9 @@ namespace DpmAgent.Api.Agenda;
 /// Envía mensajes por iniciativa del sistema: los agrega al historial de la conversación del paciente
 /// (para que el agente entienda su respuesta) y los encola para el despachador.
 /// </summary>
+/// <param name="Enviado">false si no había permiso para esa categoría: el aviso quedó para que la secretaria llame.</param>
+public sealed record ResultadoAviso(string SesionId, bool Enviado);
+
 public sealed class Notificador
 {
     private readonly DpmDbContext _db;
@@ -36,7 +39,7 @@ public sealed class Notificador
     /// para que la secretaria contacte al paciente por teléfono.
     /// </summary>
     /// <param name="crear">Arma el mensaje en el idioma y con el nombre del consultorio que se le indiquen.</param>
-    public async Task<string> NotificarPacienteAsync(int pacienteId, Func<string, string, MensajeAgenda> crear, string tipo, CancellationToken ct)
+    public async Task<ResultadoAviso> NotificarPacienteAsync(int pacienteId, Func<string, string, MensajeAgenda> crear, string tipo, CancellationToken ct)
     {
         var paciente = await _db.Pacientes.AsNoTracking().FirstAsync(p => p.Id == pacienteId, ct);
 
@@ -73,7 +76,7 @@ public sealed class Notificador
                 CreadoUtc = _clock.GetUtcNow().UtcDateTime,
             });
             await _db.SaveChangesAsync(ct);
-            return sesionId;
+            return new ResultadoAviso(sesionId, false);
         }
 
         var sesion = await _conversaciones.ObtenerAsync(sesionId, ct);
@@ -99,7 +102,7 @@ public sealed class Notificador
         await _db.SaveChangesAsync(ct);
 
         _despertador.Despertar();
-        return sesionId;
+        return new ResultadoAviso(sesionId, true);
     }
 
     /// <summary>

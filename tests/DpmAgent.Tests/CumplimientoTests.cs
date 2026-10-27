@@ -267,7 +267,10 @@ public class CumplimientoTests
     public void Las_plantillas_cumplen_el_formato_de_meta(string idioma)
     {
         // Meta rechaza cuerpos que empiezan o terminan con una variable, o con variables pegadas.
-        foreach (var clave in new[] { "agenda.oferta", "agenda.oferta_vencida", "agenda.recordatorio" })
+        var claves = Api.Idiomas.Textos.Claves(idioma).Where(c => c.StartsWith("agenda.", StringComparison.Ordinal)).ToList();
+        Assert.Contains("agenda.seguimiento_contacto", claves);
+        Assert.Contains("agenda.recordatorio_7dias", claves);
+        foreach (var clave in claves)
         {
             var cuerpo = Api.Idiomas.Textos.Obtener(clave, idioma);
             Assert.False(cuerpo.TrimStart().StartsWith('{'), $"{clave} ({idioma}) empieza con una variable.");

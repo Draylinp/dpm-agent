@@ -1,3 +1,4 @@
+using DpmAgent.Api.Dpm;
 using DpmAgent.Api.Idiomas;
 
 namespace DpmAgent.Api.Agenda;
@@ -34,6 +35,34 @@ public static class TextosAgenda
         var i = Idiomas.Idiomas.ParaTextos(idioma);
         string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId];
         return new(Textos.Obtener("agenda.recordatorio", i, p), "recordatorio", p, i);
+    }
+
+    public static MensajeAgenda SeguimientoCreado(string idioma, string consultorio, string nombrePaciente, string medico, DateOnly fechaObjetivo)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(HorarioConsultorio.EnHoraRd(fechaObjetivo, new TimeOnly(12, 0)), i)];
+        return new(Textos.Obtener("agenda.seguimiento_creado", i, p), "seguimiento_creado", p, i);
+    }
+
+    public static MensajeAgenda SeguimientoAgendado(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId];
+        return new(Textos.Obtener("agenda.seguimiento_agendado", i, p), "seguimiento_agendado", p, i);
+    }
+
+    public static MensajeAgenda SeguimientoContacto(string idioma, string consultorio, string nombrePaciente, string medico, DateOnly fechaObjetivo)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(HorarioConsultorio.EnHoraRd(fechaObjetivo, new TimeOnly(12, 0)), i)];
+        return new(Textos.Obtener("agenda.seguimiento_contacto", i, p), "seguimiento_contacto", p, i);
+    }
+
+    public static MensajeAgenda RecordatorioSieteDias(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId];
+        return new(Textos.Obtener("agenda.recordatorio_7dias", i, p), "recordatorio_7dias", p, i);
     }
 
     /// <summary>Hora en español (para el panel).</summary>

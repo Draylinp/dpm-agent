@@ -36,10 +36,14 @@ WhatsApp solo deja enviar texto libre si el paciente escribió en las últimas 2
 | `recordatorio` | `WhatsApp__Plantillas__recordatorio` |
 | `oferta` | `WhatsApp__Plantillas__oferta` |
 | `oferta_vencida` | `WhatsApp__Plantillas__oferta_vencida` |
+| `seguimiento_creado` | `WhatsApp__Plantillas__seguimiento_creado` |
+| `seguimiento_agendado` | `WhatsApp__Plantillas__seguimiento_agendado` |
+| `seguimiento_contacto` | `WhatsApp__Plantillas__seguimiento_contacto` |
+| `recordatorio_7dias` | `WhatsApp__Plantillas__recordatorio_7dias` |
 
 Códigos de idioma de cada traducción (`WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht`; por defecto `es`, `en`, `ht`). Verifique en *WhatsApp Manager* qué códigos acepta su cuenta; si un idioma no está disponible, apúntelo al de inglés.
 
-Listas para enviar a aprobación. Las tres son plantillas de **Utilidad** (nunca de Marketing): tratan de una cita que el paciente ya tiene o pidió, nombran al consultorio (`{{1}}`) dentro del texto y terminan con cómo darse de baja (STOP). Ningún cuerpo empieza ni termina con una variable, algo que Meta rechaza. Los textos salen de `src/DpmAgent.Api/Idiomas/Recursos/` (los mismos que el sistema envía dentro de la ventana de 24 horas); las pruebas revisan en cada traducción el nombre del consultorio, la línea de baja y ese formato.
+Listas para enviar a aprobación. Todas son plantillas de **Utilidad** (nunca de Marketing): tratan de una cita que el paciente ya tiene o pidió, nombran al consultorio (`{{1}}`) dentro del texto y terminan con cómo darse de baja (STOP). Ningún cuerpo empieza ni termina con una variable, algo que Meta rechaza. Los textos salen de `src/DpmAgent.Api/Idiomas/Recursos/` (los mismos que el sistema envía dentro de la ventana de 24 horas); las pruebas revisan en cada traducción el nombre del consultorio, la línea de baja y ese formato.
 
 **recordatorio** — categoría *Utilidad*, variables: consultorio, primer nombre del paciente, médico, día, hora, id de la cita. Valores de ejemplo para la revisión: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `martes 27 de octubre`, `9:00 a. m.`, `CITA-12`
 
@@ -58,6 +62,30 @@ Listas para enviar a aprobación. Las tres son plantillas de **Utilidad** (nunca
 - es: Aviso de {{1}}: el turno del {{2}} a las {{3}} ya no está disponible porque venció el tiempo para aceptarlo. Sigue en la lista de espera y le avisaremos si se libera otro. Para no recibir más avisos, responda STOP.
 - en: Notice from {{1}}: the slot on {{2}} at {{3}} is no longer available because the time to accept it ran out. You are still on the waiting list and we will let you know if another one opens up. To stop receiving notices, reply STOP.
 - ht: Avi {{1}}: randevou {{2}} a {{3}} pa disponib ankò paske tan pou aksepte l la fini. Ou toujou sou lis datant lan e n ap fè ou konnen si gen yon lòt ki libere. Pou pa resevwa plis avi, reponn STOP.
+
+**seguimiento_creado** — categoría *Utilidad*, variables: consultorio, primer nombre del paciente, médico, fecha aproximada. Valores de ejemplo para la revisión: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `lunes 26 de abril`
+
+- es: Hola, {{2}}. {{1}} le informa que {{3}} indicó un control para alrededor del {{4}}. Unas semanas antes le escribiremos para escoger el horario. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} would like you to know that {{3}} asked for a follow-up visit around {{4}}. A few weeks before, we will write to you so you can choose a time. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} fè w konnen {{3}} mande pou w retounen fè yon kontwòl anviwon {{4}}. Kèk semèn anvan, n ap ekri w pou w chwazi lè a. Pou pa resevwa plis avi, reponn STOP.
+
+**seguimiento_agendado** — categoría *Utilidad*, variables: consultorio, primer nombre del paciente, médico, día, hora, id de la cita. Valores de ejemplo para la revisión: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `lunes 9 de noviembre`, `8:00 a. m.`, `CITA-14`
+
+- es: Hola, {{2}}. {{1}} le informa que {{3}} indicó un control y le reservamos cita el {{4}} a las {{5}} (cita {{6}}). Responda CONFIRMO para confirmarla o CAMBIAR si prefiere otro horario. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} would like you to know that {{3}} asked for a follow-up visit, and we booked it for {{4}} at {{5}} (appointment {{6}}). Reply CONFIRM to confirm it or CHANGE if you prefer another time. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} fè w konnen {{3}} mande yon kontwòl e nou rezève yon randevou pou ou jou {{4}} a {{5}} (randevou {{6}}). Reponn KONFIME pou konfime l oswa CHANJE si ou prefere yon lòt lè. Pou pa resevwa plis avi, reponn STOP.
+
+**seguimiento_contacto** — categoría *Utilidad*, variables: consultorio, primer nombre del paciente, médico, fecha aproximada. Valores de ejemplo para la revisión: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `lunes 26 de abril`
+
+- es: Hola, {{2}}. {{1}} le recuerda que {{3}} indicó un control para alrededor del {{4}}. ¿Quiere que le busquemos un horario? Responda SÍ y le mostramos las opciones. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} reminds you that {{3}} asked for a follow-up visit around {{4}}. Would you like us to find a time for you? Reply YES and we will show you the options. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} raple w {{3}} mande yon kontwòl anviwon {{4}}. Èske ou vle nou chèche yon lè pou ou? Reponn WI e n ap montre w opsyon yo. Pou pa resevwa plis avi, reponn STOP.
+
+**recordatorio_7dias** — categoría *Utilidad*, variables: consultorio, primer nombre del paciente, médico, día, hora, id de la cita. Valores de ejemplo para la revisión: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `lunes 9 de noviembre`, `8:00 a. m.`, `CITA-14`
+
+- es: Hola, {{2}}. {{1}} le recuerda que en una semana tiene su control con {{3}}, el {{4}} a las {{5}} (cita {{6}}). Si no puede ir, responda CAMBIAR. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} reminds you that in one week you have your follow-up visit with {{3}}, on {{4}} at {{5}} (appointment {{6}}). If you can't make it, reply CHANGE. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} raple w nan yon semèn ou gen kontwòl ou ak {{3}}, jou {{4}} a {{5}} (randevou {{6}}). Si ou pa ka vini, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP.
 
 Si una clave no tiene plantilla, se envía como texto (sirve para pruebas dentro de la ventana de 24 horas).
 

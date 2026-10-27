@@ -32,5 +32,9 @@
   "error.no_disponible": "El asistente no está disponible en este momento. Intente más tarde o llame al consultorio.",
   "entrada.sesion_invalida": "Esta conversación ya no es válida. Empiece una conversación nueva.",
   "entrada.demasiadas": "Ha enviado muchos mensajes seguidos. Espere un momento y vuelva a intentarlo.",
-  "entrada.limite_demo": "Llegó al límite de mensajes de la demo por hoy. Gracias por probarla; vuelva mañana."
+  "entrada.limite_demo": "Llegó al límite de mensajes de la demo por hoy. Gracias por probarla; vuelva mañana.",
+  "agenda.seguimiento_creado": "Hola, {1}. {0} le informa que {2} indicó un control para alrededor del {3}. Unas semanas antes le escribiremos para escoger el horario. Para no recibir más avisos, responda STOP.",
+  "agenda.seguimiento_agendado": "Hola, {1}. {0} le informa que {2} indicó un control y le reservamos cita el {3} a las {4} (cita {5}). Responda CONFIRMO para confirmarla o CAMBIAR si prefiere otro horario. Para no recibir más avisos, responda STOP.",
+  "agenda.seguimiento_contacto": "Hola, {1}. {0} le recuerda que {2} indicó un control para alrededor del {3}. ¿Quiere que le busquemos un horario? Responda SÍ y le mostramos las opciones. Para no recibir más avisos, responda STOP.",
+  "agenda.recordatorio_7dias": "Hola, {1}. {0} le recuerda que en una semana tiene su control con {2}, el {3} a las {4} (cita {5}). Si no puede ir, responda CAMBIAR. Para no recibir más avisos, responda STOP."
 }

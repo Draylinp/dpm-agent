@@ -35,6 +35,7 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
         var carnets = await db.CarnetsPendientes.AsNoTracking().Where(c => c.PacienteId == pacienteId || sesiones.Contains(c.SesionId)).ToListAsync(ct);
         var lista = await db.ListaEspera.AsNoTracking().Where(l => l.PacienteId == pacienteId).ToListAsync(ct);
         var autorizaciones = await db.AutorizacionesArs.AsNoTracking().Where(a => a.PacienteId == pacienteId).ToListAsync(ct);
+        var seguimientos = await db.Seguimientos.AsNoTracking().Where(s => s.PacienteId == pacienteId).OrderBy(s => s.FechaObjetivo).ToListAsync(ct);
         var avisos = await db.MensajesSalientes.AsNoTracking().Where(m => m.Destino == p.Telefono && m.Tipo != "respuesta").OrderBy(m => m.Id).ToListAsync(ct);
 
         var json = new JsonObject
@@ -52,6 +53,10 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
             ["listaEspera"] = new JsonArray(lista.Select(l => (JsonNode)new JsonObject
             {
                 ["desde"] = l.Desde.ToString("yyyy-MM-dd"), ["hasta"] = l.Hasta.ToString("yyyy-MM-dd"), ["estado"] = l.Estado,
+            }).ToArray()),
+            ["seguimientos"] = new JsonArray(seguimientos.Select(s => (JsonNode)new JsonObject
+            {
+                ["fechaObjetivo"] = s.FechaObjetivo.ToString("yyyy-MM-dd"), ["toleranciaDias"] = s.ToleranciaDias, ["motivo"] = s.Motivo, ["estado"] = s.Estado,
             }).ToArray()),
             ["consentimientos"] = new JsonArray(consentimientos.Select(c => (JsonNode)new JsonObject
             {
@@ -116,6 +121,7 @@ public sealed class ServicioPrivacidad(DpmDbContext db, Bitacora bitacora, TimeP
         var canal = await db.MensajesSalientes.Where(m => m.Destino == telefono || sesiones.Contains(m.SesionId)).ExecuteDeleteAsync(ct)
                     + await db.MensajesEntrantes.Where(m => m.Telefono == telefono || m.Telefono == internacional).ExecuteDeleteAsync(ct);
         var consentimientos = await db.Consentimientos.Where(c => c.PacienteId == pacienteId).ExecuteDeleteAsync(ct);
+        await db.Seguimientos.Where(s => s.PacienteId == pacienteId).ExecuteDeleteAsync(ct);
         var carnets = await db.CarnetsPendientes
             .Where(c => c.PacienteId == pacienteId || c.TelefonoCanal == telefono || sesiones.Contains(c.SesionId)).ExecuteDeleteAsync(ct);
         var escalamientos = await db.Escalamientos.Where(e => e.PacienteId == pacienteId || sesiones.Contains(e.SesionId)).ExecuteDeleteAsync(ct);

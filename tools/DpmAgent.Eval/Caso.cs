@@ -64,7 +64,12 @@ public sealed class Preparacion
 
     /// <summary>Borra los permisos de avisos de la semilla (paciente que nunca dio su consentimiento).</summary>
     public bool SinConsentimientos { get; init; }
+
+    /// <summary>Seguimientos indicados por el médico (SEG-001, SEG-002... en orden), ya en el estado dado.</summary>
+    public List<SeguimientoPreparado> Seguimientos { get; init; } = [];
 }
+
+public sealed record SeguimientoPreparado(string Paciente, string Medico, string FechaObjetivo, int Tolerancia, string Estado = "contactando");
 
 public sealed record CitaPreparada(string Paciente, string Medico, string Fecha, string Hora);
 
@@ -126,6 +131,9 @@ public sealed class Esperado
 
     /// <summary>Avisos que no salieron por falta de permiso y quedaron para que la secretaria llame.</summary>
     public int? AvisosParaLlamar { get; init; }
+
+    /// <summary>Estado esperado de cada seguimiento al final (SEG-001: agendado).</summary>
+    public Dictionary<string, string>? Seguimientos { get; init; }
 
     /// <summary>Largo máximo de cada respuesta del modelo (sin los textos fijos del sistema): mensajes de WhatsApp, no párrafos.</summary>
     public int? MaxCaracteres { get; init; }

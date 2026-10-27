@@ -54,6 +54,12 @@ public abstract class DpmDbContext : DbContext
 
     public DbSet<Consentimiento> Consentimientos => Set<Consentimiento>();
 
+    public DbSet<Seguimiento> Seguimientos => Set<Seguimiento>();
+
+    public DbSet<Feriado> Feriados => Set<Feriado>();
+
+    public DbSet<BloqueoAgenda> BloqueosAgenda => Set<BloqueoAgenda>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
         // SQLite devuelve DateTime sin Kind y PostgreSQL exige UTC: todo entra y sale como UTC.
@@ -268,6 +274,40 @@ public abstract class DpmDbContext : DbContext
         b.Entity<Mensaje>(e =>
         {
             e.Property(x => x.Rol).HasMaxLength(20);
+        });
+
+        b.Entity<Seguimiento>(e =>
+        {
+            e.ToTable("Seguimientos");
+            e.Property(x => x.Motivo).HasMaxLength(60);
+            e.Property(x => x.RecurrenciaUnidad).HasMaxLength(10);
+            e.Property(x => x.Estado).HasMaxLength(20);
+            e.Property(x => x.CreadoPor).HasMaxLength(60);
+            e.HasIndex(x => new { x.ConsultorioId, x.Estado });
+            e.HasOne<Paciente>().WithMany().HasForeignKey(x => x.PacienteId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Medico>().WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<Feriado>(e =>
+        {
+            e.ToTable("Feriados");
+            e.Property(x => x.Nombre).HasMaxLength(100);
+            e.HasIndex(x => new { x.ConsultorioId, x.Fecha }).IsUnique();
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
+        });
+
+        b.Entity<BloqueoAgenda>(e =>
+        {
+            e.ToTable("BloqueosAgenda");
+            e.Property(x => x.Motivo).HasMaxLength(60);
+            e.Property(x => x.CreadoPor).HasMaxLength(60);
+            e.HasIndex(x => new { x.ConsultorioId, x.MedicoId, x.Desde });
+            e.HasOne<Medico>().WithMany().HasForeignKey(x => x.MedicoId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Consultorio>().WithMany().HasForeignKey(x => x.ConsultorioId);
+            e.HasQueryFilter(x => x.ConsultorioId == _consultorioId);
         });
 
         b.Entity<Consentimiento>(e =>

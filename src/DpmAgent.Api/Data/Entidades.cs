@@ -28,6 +28,12 @@ public sealed class Consultorio
     /// <summary>Nombre con el que se presenta el asistente automático ("Clara" si no se define).</summary>
     public string? NombreAsistente { get; set; }
 
+    /// <summary>Seguimientos con fecha objetivo dentro de este horizonte se agendan de una vez.</summary>
+    public int HorizonteSeguimientoSemanas { get; set; } = 8;
+
+    /// <summary>Días antes de la fecha objetivo en que se contacta al paciente de un seguimiento lejano.</summary>
+    public int DiasContactoSeguimiento { get; set; } = 21;
+
     public DateTime CreadoUtc { get; set; }
 }
 
@@ -122,6 +128,15 @@ public sealed class Cita
 
     /// <summary>Cuándo el paciente confirmó que asistirá.</summary>
     public DateTime? AsistenciaConfirmadaUtc { get; set; }
+
+    /// <summary>Seguimiento indicado por el médico que originó esta cita, si lo hay.</summary>
+    public int? SeguimientoId { get; set; }
+
+    /// <summary>Cuándo se envió el recordatorio de 7 días (solo citas de seguimiento).</summary>
+    public DateTime? RecordatorioSieteDiasUtc { get; set; }
+
+    /// <summary>Un bloqueo de agenda nuevo chocó con esta cita: hay que reprogramarla.</summary>
+    public bool ParaReprogramar { get; set; }
 
     /// <summary>En una cita cancelada: cuándo terminó el intento de llenar el hueco con la lista de espera.</summary>
     public DateTime? HuecoProcesadoUtc { get; set; }
@@ -498,4 +513,85 @@ public sealed class Consentimiento
     public required string RegistradoPor { get; set; }
 
     public DateTime FechaUtc { get; set; }
+}
+
+/// <summary>
+/// Seguimiento indicado por el médico ("control en 3 meses"). Es administrativo: el médico decide la fecha;
+/// el agente solo agenda o contacta al paciente para que escoja horario.
+/// </summary>
+public sealed class Seguimiento
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public DateOnly FechaObjetivo { get; set; }
+
+    /// <summary>Días antes o después de la fecha objetivo que el médico acepta.</summary>
+    public int ToleranciaDias { get; set; }
+
+    /// <summary>Motivo administrativo (lista cerrada, como en las citas).</summary>
+    public required string Motivo { get; set; }
+
+    /// <summary>Si se repite: cada N semanas o meses.</summary>
+    public int? RecurrenciaCada { get; set; }
+
+    /// <summary>semanas o meses.</summary>
+    public string? RecurrenciaUnidad { get; set; }
+
+    /// <summary>pendiente, contactando, agendado, sin_respuesta o cancelado.</summary>
+    public required string Estado { get; set; }
+
+    public int Intentos { get; set; }
+
+    public DateTime? UltimoIntentoUtc { get; set; }
+
+    /// <summary>Sin permiso para avisos: el contacto quedó para que la secretaria llame.</summary>
+    public bool PorLlamada { get; set; }
+
+    public int? CitaId { get; set; }
+
+    /// <summary>Ya se creó el siguiente de la recurrencia.</summary>
+    public bool SiguienteCreado { get; set; }
+
+    public required string CreadoPor { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+}
+
+/// <summary>Día no laborable del consultorio (feriados de RD, configurables).</summary>
+public sealed class Feriado
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public DateOnly Fecha { get; set; }
+
+    public required string Nombre { get; set; }
+}
+
+/// <summary>Días en que un médico no atiende (vacaciones, congresos).</summary>
+public sealed class BloqueoAgenda
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public DateOnly Desde { get; set; }
+
+    public DateOnly Hasta { get; set; }
+
+    /// <summary>Texto administrativo: vacaciones, congreso, otro.</summary>
+    public required string Motivo { get; set; }
+
+    public required string CreadoPor { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
 }

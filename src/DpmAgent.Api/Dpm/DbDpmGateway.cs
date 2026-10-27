@@ -68,8 +68,8 @@ public sealed class DbDpmGateway : IDpmGateway
         var medico = await MedicoActivoAsync(medicoId, ct);
 
         var turnos = HorarioConsultorio.TurnosDelDia(fecha);
-        if (turnos.Count == 0)
-            return turnos;
+        if (turnos.Count == 0 || await NoLaborableAsync(medico, fecha, ct))
+            return [];
 
         var desde = turnos[0].UtcDateTime;
         var hasta = turnos[^1].UtcDateTime;
@@ -281,6 +281,11 @@ public sealed class DbDpmGateway : IDpmGateway
 
         return ACarnet(c);
     }
+
+    /// <summary>Feriado del consultorio o día bloqueado en la agenda del médico.</summary>
+    private async Task<bool> NoLaborableAsync(int medico, DateOnly fecha, CancellationToken ct) =>
+        await _db.Feriados.AnyAsync(f => f.Fecha == fecha, ct) ||
+        await _db.BloqueosAgenda.AnyAsync(b => b.MedicoId == medico && b.Desde <= fecha && fecha <= b.Hasta, ct);
 
     private async Task<int> MedicoActivoAsync(string medicoId, CancellationToken ct) =>
         IdsDpm.Leer(medicoId, "MED") is { } id && await _db.Medicos.AnyAsync(m => m.Id == id && m.Activo, ct)

@@ -167,6 +167,24 @@ public sealed class Ejecutor
         if (prep.SinConsentimientos)
             await db.Consentimientos.ExecuteDeleteAsync(ct);
 
+        foreach (var s in prep.Seguimientos)
+        {
+            db.Seguimientos.Add(new Api.Data.Entidades.Seguimiento
+            {
+                ConsultorioId = db.ConsultorioId,
+                PacienteId = IdsDpm.Leer(s.Paciente, "PAC")!.Value,
+                MedicoId = IdsDpm.Leer(s.Medico, "MED")!.Value,
+                FechaObjetivo = DateOnly.ParseExact(s.FechaObjetivo, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                ToleranciaDias = s.Tolerancia,
+                Motivo = "control",
+                Estado = s.Estado,
+                Intentos = s.Estado == "contactando" ? 1 : 0,
+                CreadoPor = "eval",
+                CreadoUtc = Ahora.UtcDateTime,
+            });
+            await db.SaveChangesAsync(ct);
+        }
+
         foreach (var (pacienteId, idioma) in prep.IdiomasPacientes)
         {
             var id = IdsDpm.Leer(pacienteId, "PAC");

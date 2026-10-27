@@ -36,10 +36,14 @@ WhatsApp only allows free-form text if the patient wrote in the last 24 hours. S
 | `recordatorio` (reminder) | `WhatsApp__Plantillas__recordatorio` |
 | `oferta` (slot offer) | `WhatsApp__Plantillas__oferta` |
 | `oferta_vencida` (offer expired) | `WhatsApp__Plantillas__oferta_vencida` |
+| `seguimiento_creado` | `WhatsApp__Plantillas__seguimiento_creado` |
+| `seguimiento_agendado` | `WhatsApp__Plantillas__seguimiento_agendado` |
+| `seguimiento_contacto` | `WhatsApp__Plantillas__seguimiento_contacto` |
+| `recordatorio_7dias` | `WhatsApp__Plantillas__recordatorio_7dias` |
 
 Language code for each translation: `WhatsApp__IdiomasPlantillas__es`, `__en`, `__ht` (defaults `es`, `en`, `ht`). Check in *WhatsApp Manager* which codes your account accepts; if a language is not available, point it to the English one.
 
-Ready to submit for approval. All three are **Utility** templates (never Marketing): they are about an appointment the patient already has or asked for, name the clinic (`{{1}}`) inside the text, and end with how to opt out (STOP). No body starts or ends with a variable, which Meta rejects. The texts come from `src/DpmAgent.Api/Idiomas/Recursos/` (the same ones the system sends inside the 24-hour window); tests check every translation for the clinic name, the opt-out line and that format.
+Ready to submit for approval. All of them are **Utility** templates (never Marketing): they are about an appointment the patient already has or asked for, name the clinic (`{{1}}`) inside the text, and end with how to opt out (STOP). No body starts or ends with a variable, which Meta rejects. The texts come from `src/DpmAgent.Api/Idiomas/Recursos/` (the same ones the system sends inside the 24-hour window); tests check every translation for the clinic name, the opt-out line and that format.
 
 **recordatorio** — category *Utility*, variables: clinic, patient first name, doctor, day, time, appointment id. Sample values for review: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `martes 27 de octubre`, `9:00 a. m.`, `CITA-12`
 
@@ -58,6 +62,30 @@ Ready to submit for approval. All three are **Utility** templates (never Marketi
 - es: Aviso de {{1}}: el turno del {{2}} a las {{3}} ya no está disponible porque venció el tiempo para aceptarlo. Sigue en la lista de espera y le avisaremos si se libera otro. Para no recibir más avisos, responda STOP.
 - en: Notice from {{1}}: the slot on {{2}} at {{3}} is no longer available because the time to accept it ran out. You are still on the waiting list and we will let you know if another one opens up. To stop receiving notices, reply STOP.
 - ht: Avi {{1}}: randevou {{2}} a {{3}} pa disponib ankò paske tan pou aksepte l la fini. Ou toujou sou lis datant lan e n ap fè ou konnen si gen yon lòt ki libere. Pou pa resevwa plis avi, reponn STOP.
+
+**seguimiento_creado** — category *Utility*, variables: clinic, patient first name, doctor, approximate date. Sample values for review: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `lunes 26 de abril`
+
+- es: Hola, {{2}}. {{1}} le informa que {{3}} indicó un control para alrededor del {{4}}. Unas semanas antes le escribiremos para escoger el horario. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} would like you to know that {{3}} asked for a follow-up visit around {{4}}. A few weeks before, we will write to you so you can choose a time. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} fè w konnen {{3}} mande pou w retounen fè yon kontwòl anviwon {{4}}. Kèk semèn anvan, n ap ekri w pou w chwazi lè a. Pou pa resevwa plis avi, reponn STOP.
+
+**seguimiento_agendado** — category *Utility*, variables: clinic, patient first name, doctor, day, time, appointment id. Sample values for review: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `lunes 9 de noviembre`, `8:00 a. m.`, `CITA-14`
+
+- es: Hola, {{2}}. {{1}} le informa que {{3}} indicó un control y le reservamos cita el {{4}} a las {{5}} (cita {{6}}). Responda CONFIRMO para confirmarla o CAMBIAR si prefiere otro horario. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} would like you to know that {{3}} asked for a follow-up visit, and we booked it for {{4}} at {{5}} (appointment {{6}}). Reply CONFIRM to confirm it or CHANGE if you prefer another time. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} fè w konnen {{3}} mande yon kontwòl e nou rezève yon randevou pou ou jou {{4}} a {{5}} (randevou {{6}}). Reponn KONFIME pou konfime l oswa CHANJE si ou prefere yon lòt lè. Pou pa resevwa plis avi, reponn STOP.
+
+**seguimiento_contacto** — category *Utility*, variables: clinic, patient first name, doctor, approximate date. Sample values for review: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `lunes 26 de abril`
+
+- es: Hola, {{2}}. {{1}} le recuerda que {{3}} indicó un control para alrededor del {{4}}. ¿Quiere que le busquemos un horario? Responda SÍ y le mostramos las opciones. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} reminds you that {{3}} asked for a follow-up visit around {{4}}. Would you like us to find a time for you? Reply YES and we will show you the options. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} raple w {{3}} mande yon kontwòl anviwon {{4}}. Èske ou vle nou chèche yon lè pou ou? Reponn WI e n ap montre w opsyon yo. Pou pa resevwa plis avi, reponn STOP.
+
+**recordatorio_7dias** — category *Utility*, variables: clinic, patient first name, doctor, day, time, appointment id. Sample values for review: `Consultorio Ejemplo`, `María`, `Dra. Ana Valdez`, `lunes 9 de noviembre`, `8:00 a. m.`, `CITA-14`
+
+- es: Hola, {{2}}. {{1}} le recuerda que en una semana tiene su control con {{3}}, el {{4}} a las {{5}} (cita {{6}}). Si no puede ir, responda CAMBIAR. Para no recibir más avisos, responda STOP.
+- en: Hi, {{2}}. {{1}} reminds you that in one week you have your follow-up visit with {{3}}, on {{4}} at {{5}} (appointment {{6}}). If you can't make it, reply CHANGE. To stop receiving notices, reply STOP.
+- ht: Bonjou {{2}}. {{1}} raple w nan yon semèn ou gen kontwòl ou ak {{3}}, jou {{4}} a {{5}} (randevou {{6}}). Si ou pa ka vini, reponn CHANJE. Pou pa resevwa plis avi, reponn STOP.
 
 If a key has no template, the message is sent as text (useful for testing inside the 24-hour window).
 
