@@ -230,7 +230,12 @@ public class DerechosDelPacienteTests
             .ThenText("Le paso con la secretaria.")
             .ThenTool("buscar_paciente", new { })
             .ThenText("Hola, José.");
-        var app = new AppDePrueba(modelo);
+        // Reloj fijo: la cita del 3 de noviembre siempre está en el futuro, se corra cuando se corra.
+        var app = new AppDePrueba(modelo, s =>
+        {
+            s.RemoveAll<TimeProvider>();
+            s.AddSingleton<TimeProvider>(new RelojAjustable(new DateTimeOffset(2026, 10, 26, 12, 0, 0, TimeSpan.FromHours(-4))));
+        });
         (await app.Cliente.PostAsJsonAsync("/api/chat", new { mensaje = "Quiero que borren mis datos", telefono = "8095550101" })).EnsureSuccessStatusCode();
         (await app.Cliente.PostAsJsonAsync("/api/chat", new { mensaje = "Hola", telefono = "8295550102" })).EnsureSuccessStatusCode();
         await app.ConGateway(g => g.CrearCitaAsync("PAC-001", "MED-01",
