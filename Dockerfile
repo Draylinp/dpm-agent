@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # 1. Compilación
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY src/DpmAgent.Api/DpmAgent.Api.csproj src/DpmAgent.Api/
 RUN dotnet restore src/DpmAgent.Api/DpmAgent.Api.csproj
