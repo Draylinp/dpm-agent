@@ -141,7 +141,7 @@ tests/DpmAgent.Tests/  tests with a scripted model (no real calls)
 
 ## Try it
 
-**Public demo mode** — banner, eight one-click examples (English, Spanish, Kreyòl, clinical question, emergency, cancel with waiting list, "see me today", and the doctor ordering a follow-up from his verified number), seeded follow-ups (one in 6 months, one that opens today), the agent's tool trace, and a reset button that only touches the demo clinic. See [docs/DEMO.md](docs/DEMO.md).
+**Public demo mode** — banner, eight one-click examples (English, Spanish, Kreyòl, clinical question, emergency, cancel with waiting list, "see me today", and the doctor ordering a follow-up from his verified number), seeded follow-ups (one in 6 months, one that opens today), the agent's tool trace, and a reset button that only touches the demo clinic. See [docs/DEMO.md](docs/DEMO.md). On Windows, `scripts\iniciar-demo.ps1` starts it with one command ([docs/VIDEO.md](docs/VIDEO.md)).
 
 ```bash
 export META_API_KEY="your-key"

@@ -139,7 +139,7 @@ tests/DpmAgent.Tests/  pruebas con un modelo guionado (sin llamadas reales)
 
 ## Probarlo
 
-**Modo demo pública**: banner, ocho ejemplos de un clic (inglés, español, kreyòl, pregunta clínica, emergencia, cancelar con lista de espera, "que me vean hoy" y el médico pidiendo un control desde su número verificado), seguimientos sembrados (uno en 6 meses y otro que se abre hoy), la traza de herramientas del agente y un botón de reinicio que solo toca el consultorio de demo. Ver [docs/es/DEMO.md](docs/es/DEMO.md).
+**Modo demo pública**: banner, ocho ejemplos de un clic (inglés, español, kreyòl, pregunta clínica, emergencia, cancelar con lista de espera, "que me vean hoy" y el médico pidiendo un control desde su número verificado), seguimientos sembrados (uno en 6 meses y otro que se abre hoy), la traza de herramientas del agente y un botón de reinicio que solo toca el consultorio de demo. Ver [docs/es/DEMO.md](docs/es/DEMO.md). En Windows, `scripts\iniciar-demo.ps1` la inicia con un comando ([docs/es/VIDEO.md](docs/es/VIDEO.md)).
 
 ```bash
 export META_API_KEY="su-clave"
