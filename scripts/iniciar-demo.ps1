@@ -1,4 +1,4 @@
-# Inicia la demo pública en esta computadora, lista para grabar el video (Windows, PowerShell).
+﻿# Inicia la demo pública en esta computadora, lista para grabar el video (Windows, PowerShell).
 # Uso, desde la carpeta del proyecto:
 #   powershell -ExecutionPolicy Bypass -File scripts\iniciar-demo.ps1
 # La clave de Meta se pide en pantalla (no se muestra ni se guarda en ningún archivo).
@@ -6,9 +6,21 @@ $ErrorActionPreference = 'Stop'
 $raiz = Split-Path -Parent $PSScriptRoot
 Set-Location $raiz
 
-if (-not (Get-Command dotnet -ErrorAction SilentlyContinue) -or -not ((dotnet --list-sdks) -match '^8\.')) {
-    Write-Host 'Falta el SDK de .NET 8: instálelo desde https://dotnet.microsoft.com/download/dotnet/8.0 y vuelva a ejecutar este script.' -ForegroundColor Red
+if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+    Write-Host 'No se encuentra dotnet: instale el SDK de .NET 8 desde https://dotnet.microsoft.com/download/dotnet/8.0 y abra una ventana nueva.' -ForegroundColor Red
     exit 1
+}
+$sdks = @(dotnet --list-sdks 2>$null)
+Write-Host ('SDK de .NET encontrados: ' + ($(if ($sdks.Count) { ($sdks | ForEach-Object { ($_ -split ' ')[0] }) -join ', ' } else { 'ninguno' })))
+if (-not ($sdks | Where-Object { $_ -match '^8\.' })) {
+    if ($sdks | Where-Object { $_ -match '^(9|1\d)\.' }) {
+        # Un SDK más nuevo compila el proyecto; la app corre en el runtime más nuevo que haya.
+        $env:DOTNET_ROLL_FORWARD = 'Major'
+        Write-Host 'No hay SDK 8; se usará el más nuevo instalado.' -ForegroundColor Yellow
+    } else {
+        Write-Host 'Falta el SDK de .NET 8: instálelo desde https://dotnet.microsoft.com/download/dotnet/8.0 y abra una ventana nueva.' -ForegroundColor Red
+        exit 1
+    }
 }
 
 if (-not $env:META_API_KEY) {
