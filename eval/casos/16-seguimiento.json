@@ -1,0 +1,617 @@
+[
+  {
+    "id": "seguimiento-es-1",
+    "categoria": "seguimiento",
+    "idioma": "es",
+    "descripcion": "Follow-up ordered by the doctor: the patient answers the contact and books inside the doctor's window.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2027-01-15",
+          "tolerancia": 3,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Sí, quiero escoger horario para mi control",
+      "El de las 9 está bien"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2027-01-15"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "El viernes 15 de enero tengo 8:00, 8:30 y 9:00 a. m. con la Dra. Ana Valdez. ¿Cuál prefiere?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2027-01-15T09:00:00-04:00",
+              "motivo": "control",
+              "seguimiento_id": "SEG-001"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, su control quedó para el viernes 15 de enero a las 9:00 a. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "seguimientos_del_paciente",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2027-01-15T09:00"
+      },
+      "seguimientos": {
+        "SEG-001": "agendado"
+      },
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "seguimiento-es-2",
+    "categoria": "seguimiento",
+    "idioma": "es",
+    "descripcion": "The patient wants the follow-up outside the doctor's window; a model that tries anyway is refused by the server. The date is the doctor's decision.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2027-01-15",
+          "tolerancia": 3,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Quiero el control para mañana mismo"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "control",
+              "seguimiento_id": "SEG-001"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "El control lo indicó la doctora para mediados de enero, así que solo puedo ofrecerle horarios entre el 12 y el 18 de enero. ¿Le busco alguno?"
+      }
+    ],
+    "esperado": {
+      "citasPaciente": 0,
+      "seguimientos": {
+        "SEG-001": "contactando"
+      },
+      "resultadoNoContiene": [
+        {
+          "herramienta": "crear_cita",
+          "texto": "\"creada\":true"
+        }
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "seguimiento-es-3",
+    "categoria": "seguimiento",
+    "idioma": "es",
+    "descripcion": "The patient asks when the follow-up is: answered from the record, nothing is changed.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2027-01-15",
+          "tolerancia": 3,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "¿Para cuándo es mi control?"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "La doctora indicó su control para alrededor del 15 de enero. ¿Quiere que le busque un horario?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "seguimientos_del_paciente"
+      ],
+      "herramientasProhibidas": [
+        "crear_cita",
+        "cancelar_cita"
+      ],
+      "seguimientos": {
+        "SEG-001": "contactando"
+      },
+      "escalado": false,
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "seguimiento-en-1",
+    "categoria": "seguimiento",
+    "idioma": "en",
+    "descripcion": "Follow-up ordered by the doctor: the patient answers the contact and books inside the doctor's window.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2027-01-15",
+          "tolerancia": 3,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Yes, I'd like to choose a time for my follow-up",
+      "9 is fine"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2027-01-15"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "On Friday, January 15 I have 8:00, 8:30 and 9:00 AM with Dr. Ana Valdez. Which one do you prefer?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2027-01-15T09:00:00-04:00",
+              "motivo": "control",
+              "seguimiento_id": "SEG-001"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, your follow-up is booked for Friday, January 15 at 9:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "seguimientos_del_paciente",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2027-01-15T09:00"
+      },
+      "seguimientos": {
+        "SEG-001": "agendado"
+      },
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "seguimiento-en-2",
+    "categoria": "seguimiento",
+    "idioma": "en",
+    "descripcion": "The patient wants the follow-up outside the doctor's window; a model that tries anyway is refused by the server. The date is the doctor's decision.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2027-01-15",
+          "tolerancia": 3,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "I want the follow-up tomorrow"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "control",
+              "seguimiento_id": "SEG-001"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "The doctor set your follow-up for mid-January, so I can only offer times between January 12 and 18. Shall I look for one?"
+      }
+    ],
+    "esperado": {
+      "citasPaciente": 0,
+      "seguimientos": {
+        "SEG-001": "contactando"
+      },
+      "resultadoNoContiene": [
+        {
+          "herramienta": "crear_cita",
+          "texto": "\"creada\":true"
+        }
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "seguimiento-en-3",
+    "categoria": "seguimiento",
+    "idioma": "en",
+    "descripcion": "The patient asks when the follow-up is: answered from the record, nothing is changed.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2027-01-15",
+          "tolerancia": 3,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "When is my follow-up?"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "The doctor set your follow-up for around January 15. Would you like me to find a time?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "seguimientos_del_paciente"
+      ],
+      "herramientasProhibidas": [
+        "crear_cita",
+        "cancelar_cita"
+      ],
+      "seguimientos": {
+        "SEG-001": "contactando"
+      },
+      "escalado": false,
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "seguimiento-ht-1",
+    "categoria": "seguimiento",
+    "idioma": "ht",
+    "descripcion": "Follow-up ordered by the doctor: the patient answers the contact and books inside the doctor's window.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2027-01-15",
+          "tolerancia": 3,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Wi, mwen vle chwazi lè pou kontwòl mwen",
+      "9 è a bon"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2027-01-15"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Vandredi 15 janvye mwen gen 8:00, 8:30 ak 9:00 AM ak Dr. Ana Valdez. Kilès ou prefere?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2027-01-15T09:00:00-04:00",
+              "motivo": "control",
+              "seguimiento_id": "SEG-001"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Fini, kontwòl ou pran pou vandredi 15 janvye a 9:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "seguimientos_del_paciente",
+        "crear_cita"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2027-01-15T09:00"
+      },
+      "seguimientos": {
+        "SEG-001": "agendado"
+      },
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "seguimiento-ht-2",
+    "categoria": "seguimiento",
+    "idioma": "ht",
+    "descripcion": "The patient wants the follow-up outside the doctor's window; a model that tries anyway is refused by the server. The date is the doctor's decision.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2027-01-15",
+          "tolerancia": 3,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Mwen vle kontwòl la demen menm"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T09:00:00-04:00",
+              "motivo": "control",
+              "seguimiento_id": "SEG-001"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Doktè a mande kontwòl la pou mitan janvye, kidonk mwen ka ofri w sèlman lè ant 12 ak 18 janvye. Èske m chèche youn pou ou?"
+      }
+    ],
+    "esperado": {
+      "citasPaciente": 0,
+      "seguimientos": {
+        "SEG-001": "contactando"
+      },
+      "resultadoNoContiene": [
+        {
+          "herramienta": "crear_cita",
+          "texto": "\"creada\":true"
+        }
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "seguimiento-ht-3",
+    "categoria": "seguimiento",
+    "idioma": "ht",
+    "descripcion": "The patient asks when the follow-up is: answered from the record, nothing is changed.",
+    "preparacion": {
+      "seguimientos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fechaObjetivo": "2027-01-15",
+          "tolerancia": 3,
+          "estado": "contactando"
+        }
+      ]
+    },
+    "turnos": [
+      "Ki lè kontwòl mwen an ye?"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "seguimientos_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Doktè a mande kontwòl ou anviwon 15 janvye. Èske ou vle m chèche yon lè pou ou?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "seguimientos_del_paciente"
+      ],
+      "herramientasProhibidas": [
+        "crear_cita",
+        "cancelar_cita"
+      ],
+      "seguimientos": {
+        "SEG-001": "contactando"
+      },
+      "escalado": false,
+      "idiomaRespuesta": "ht"
+    }
+  }
+]

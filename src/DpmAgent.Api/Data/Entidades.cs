@@ -1,0 +1,758 @@
+namespace DpmAgent.Api.Data.Entidades;
+
+// Todas las tablas llevan ConsultorioId: un mismo despliegue atiende varios consultorios
+// y DpmDbContext filtra cada consulta por el consultorio actual.
+// Las fechas se guardan en UTC.
+
+public sealed class Consultorio
+{
+    public int Id { get; set; }
+
+    public required string Nombre { get; set; }
+
+    /// <summary>Número de WhatsApp Business del consultorio, para mostrar.</summary>
+    public string? TelefonoWhatsApp { get; set; }
+
+    /// <summary>phone_number_id de WhatsApp Cloud API: identifica a qué consultorio llega cada mensaje.</summary>
+    public string? WhatsAppPhoneNumberId { get; set; }
+
+    /// <summary>Número que el agente indica ante una posible emergencia (911 en República Dominicana y EE. UU.).</summary>
+    public string TelefonoEmergencias { get; set; } = "911";
+
+    /// <summary>Idioma del primer saludo cuando todavía no se sabe el del paciente (es o en).</summary>
+    public string IdiomaPredeterminado { get; set; } = "es";
+
+    /// <summary>Consultorio de demostración con datos ficticios: el único que el botón "Reiniciar demo" puede borrar.</summary>
+    public bool EsDemo { get; set; }
+
+    /// <summary>Nombre con el que se presenta el asistente automático ("Clara" si no se define).</summary>
+    public string? NombreAsistente { get; set; }
+
+    /// <summary>Seguimientos con fecha objetivo dentro de este horizonte se agendan de una vez.</summary>
+    public int HorizonteSeguimientoSemanas { get; set; } = 8;
+
+    /// <summary>Días antes de la fecha objetivo en que se contacta al paciente de un seguimiento lejano.</summary>
+    public int DiasContactoSeguimiento { get; set; } = 21;
+
+    /// <summary>Hora (0-23, hora de RD) del resumen diario a los médicos.</summary>
+    public int HoraResumenMedico { get; set; } = 7;
+
+    /// <summary>Hora (0-23) a la que los cupos de urgencia que nadie usó se liberan para citas normales ese día.</summary>
+    public int HoraLiberarCuposUrgencia { get; set; } = 10;
+
+    /// <summary>Centros de emergencia cercanos (texto administrativo: nombre, dirección, teléfono; uno por línea).</summary>
+    public string? CentrosEmergencia { get; set; }
+
+    /// <summary>Los administradores deben usar un segundo factor (TOTP) para entrar al panel.</summary>
+    public bool TotpObligatorioAdmin { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+}
+
+/// <summary>Persona del consultorio que entra al panel (secretaria o administrador).</summary>
+public sealed class UsuarioPanel
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string Usuario { get; set; }
+
+    public required string Nombre { get; set; }
+
+    /// <summary>Hash PBKDF2 de PasswordHasher; la clave nunca se guarda.</summary>
+    public required string HashClave { get; set; }
+
+    /// <summary>secretaria o admin.</summary>
+    public required string Rol { get; set; }
+
+    public bool Activo { get; set; } = true;
+
+    public int IntentosFallidos { get; set; }
+
+    public DateTime? BloqueadoHastaUtc { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+
+    public DateTime? UltimoAccesoUtc { get; set; }
+
+    /// <summary>Cambia con la clave (o el segundo factor): las sesiones abiertas con otro sello dejan de valer.</summary>
+    public string SelloSeguridad { get; set; } = Guid.NewGuid().ToString("N");
+
+    /// <summary>La clave la puso otra persona (inicial o creada por un admin) o ya no cumple la política: hay que cambiarla.</summary>
+    public bool DebeCambiarClave { get; set; }
+
+    /// <summary>Usuario de la demo pública: su clave está publicada y nadie la puede cambiar.</summary>
+    public bool ClaveFija { get; set; }
+
+    /// <summary>Secreto TOTP (aplicación autenticadora), protegido con la Data Protection API.</summary>
+    public string? TotpSecreto { get; set; }
+
+    /// <summary>Secreto generado pero todavía no confirmado con un código.</summary>
+    public string? TotpPendiente { get; set; }
+
+    /// <summary>Último intervalo de 30 s usado: un mismo código no sirve dos veces.</summary>
+    public long? TotpUltimoPaso { get; set; }
+}
+
+/// <summary>Secretos de la aplicación guardados en la base, protegidos con la Data Protection API (la llave del HMAC).</summary>
+public sealed class SecretoApp
+{
+    public required string Nombre { get; set; }
+
+    public required string ValorProtegido { get; set; }
+}
+
+/// <summary>Quién vio, exportó o borró los datos de un paciente. Solo ids y acción, sin datos personales.</summary>
+public sealed class AccesoDatos
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    /// <summary>Usuario del panel (personal del consultorio, no un paciente).</summary>
+    public required string Usuario { get; set; }
+
+    /// <summary>ver_ficha, exportar o borrar.</summary>
+    public required string Accion { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public DateTime FechaUtc { get; set; }
+}
+
+public sealed class Medico
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string Nombre { get; set; }
+
+    public required string Especialidad { get; set; }
+
+    public bool Activo { get; set; } = true;
+
+    /// <summary>Teléfono del médico (10 dígitos). Solo da acceso al canal del médico una vez verificado.</summary>
+    public string? Telefono { get; set; }
+
+    public DateTime? TelefonoVerificadoUtc { get; set; }
+
+    /// <summary>Hash del código de verificación de un solo uso que el médico envía desde su teléfono.</summary>
+    public string? CodigoVerificacionHash { get; set; }
+
+    public DateTime? CodigoVenceUtc { get; set; }
+
+    /// <summary>Día (hora de RD) en que se envió el último resumen diario.</summary>
+    public DateOnly? UltimoResumen { get; set; }
+}
+
+public sealed class Paciente
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string Nombre { get; set; }
+
+    /// <summary>Normalizado a 10 dígitos con <see cref="Dpm.Telefono.Normalizar"/>. En la base va cifrado (<see cref="CifradoCampos"/>).</summary>
+    public required string Telefono { get; set; }
+
+    /// <summary>HMAC-SHA256 del teléfono normalizado: permite buscar por teléfono sin guardarlo en claro. Lo calcula SaveChanges.</summary>
+    public string? TelefonoHash { get; set; }
+
+    public string? Ars { get; set; }
+
+    public string? NumeroAfiliado { get; set; }
+
+    /// <summary>Último idioma en que escribió (BCP-47), para los mensajes automáticos.</summary>
+    public string? Idioma { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+
+    /// <summary>
+    /// false: la secretaria lo desactivó (por ejemplo, se mudó). No recibe mensajes, sus seguimientos se cancelan
+    /// y su número ya no lo identifica (el número pudo pasar a otra persona).
+    /// </summary>
+    public bool Activo { get; set; } = true;
+
+    public DateTime? DesactivadoUtc { get; set; }
+
+    /// <summary>Los mensajes a su número fallan o dijeron que no es la persona: no se le escribe; la secretaria lo llama.</summary>
+    public DateTime? NoLocalizableUtc { get; set; }
+}
+
+public sealed class Cita
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public Paciente? Paciente { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public Medico? Medico { get; set; }
+
+    public DateTime FechaHoraUtc { get; set; }
+
+    public required string Motivo { get; set; }
+
+    public required string Estado { get; set; }
+
+    public DateTime CreadaUtc { get; set; }
+
+    public DateTime? CanceladaUtc { get; set; }
+
+    /// <summary>Cuándo se envió el recordatorio de 24 horas.</summary>
+    public DateTime? RecordatorioEnviadoUtc { get; set; }
+
+    /// <summary>Cuándo el paciente confirmó que asistirá.</summary>
+    public DateTime? AsistenciaConfirmadaUtc { get; set; }
+
+    /// <summary>Seguimiento indicado por el médico que originó esta cita, si lo hay.</summary>
+    public int? SeguimientoId { get; set; }
+
+    /// <summary>Cuándo se envió el recordatorio de 7 días (solo citas de seguimiento).</summary>
+    public DateTime? RecordatorioSieteDiasUtc { get; set; }
+
+    /// <summary>Un bloqueo de agenda nuevo chocó con esta cita: hay que reprogramarla.</summary>
+    public bool ParaReprogramar { get; set; }
+
+    /// <summary>
+    /// Estado de la reprogramación de una cita afectada por un bloqueo: pendiente (sin contactar), contactado,
+    /// reprogramada, llamar (sin permiso de avisos o sin opciones) o sin_respuesta.
+    /// </summary>
+    public string? Reprogramacion { get; set; }
+
+    public DateTime? ReprogramacionContactoUtc { get; set; }
+
+    /// <summary>Cita nueva que la reemplazó al reprogramarla.</summary>
+    public int? ReprogramadaAId { get; set; }
+
+    /// <summary>Cita pedida como urgente (cupo de urgencia o sobrecupo): tiene prioridad al reprogramar.</summary>
+    public bool Urgente { get; set; }
+
+    /// <summary>En una cita marcada "no_asistio": cuándo se le ofreció reagendar (una sola vez).</summary>
+    public DateTime? AusenciaOfrecidaUtc { get; set; }
+
+    /// <summary>En una cita cancelada: cuándo terminó el intento de llenar el hueco con la lista de espera.</summary>
+    public DateTime? HuecoProcesadoUtc { get; set; }
+}
+
+/// <summary>Paciente que espera un hueco con un médico en un rango de días y horas (F4).</summary>
+public sealed class ListaEspera
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public Paciente? Paciente { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public Medico? Medico { get; set; }
+
+    public DateOnly Desde { get; set; }
+
+    public DateOnly Hasta { get; set; }
+
+    public TimeOnly HoraDesde { get; set; }
+
+    public TimeOnly HoraHasta { get; set; }
+
+    /// <summary>activa, atendida o cancelada.</summary>
+    public required string Estado { get; set; }
+
+    public DateTime CreadaUtc { get; set; }
+}
+
+/// <summary>Hueco liberado que se le ofrece a un paciente de la lista de espera.</summary>
+public sealed class OfertaHueco
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int ListaEsperaId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public DateTime FechaHoraUtc { get; set; }
+
+    /// <summary>pendiente, aceptada, rechazada, vencida o invalida (el hueco ya no estaba libre).</summary>
+    public required string Estado { get; set; }
+
+    public DateTime CreadaUtc { get; set; }
+
+    public DateTime VenceUtc { get; set; }
+
+    public DateTime? RespondidaUtc { get; set; }
+
+    /// <summary>Cita creada al aceptar.</summary>
+    public int? CitaId { get; set; }
+}
+
+/// <summary>
+/// Mensaje que el sistema envía por iniciativa propia (oferta, recordatorio).
+/// Se encola y un despachador lo entrega por el canal que corresponde.
+/// </summary>
+public sealed class MensajeSaliente
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string SesionId { get; set; }
+
+    /// <summary>web o whatsapp.</summary>
+    public required string Canal { get; set; }
+
+    public required string Destino { get; set; }
+
+    public required string Texto { get; set; }
+
+    /// <summary>oferta, recordatorio, aviso o respuesta.</summary>
+    public required string Tipo { get; set; }
+
+    /// <summary>Idioma del texto (BCP-47); decide el idioma de la plantilla de WhatsApp.</summary>
+    public string? Idioma { get; set; }
+
+    /// <summary>Clave de la plantilla de WhatsApp a usar fuera de la ventana de 24 horas (oferta, recordatorio...).</summary>
+    public string? Plantilla { get; set; }
+
+    /// <summary>Parámetros de la plantilla, como arreglo JSON de textos.</summary>
+    public string? ParametrosJson { get; set; }
+
+    /// <summary>pendiente, enviado, fallido, llamar (sin consentimiento: la secretaria llama) o llamado.</summary>
+    public required string Estado { get; set; }
+
+    public int Intentos { get; set; }
+
+    public string? Error { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+
+    public DateTime? EnviadoUtc { get; set; }
+}
+
+/// <summary>
+/// Mensaje recibido por WhatsApp. El webhook solo lo guarda (para responder rápido a Meta y no
+/// procesar dos veces un reintento); un procesador en segundo plano lo pasa al agente.
+/// </summary>
+public sealed class MensajeEntrante
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    /// <summary>Id del mensaje en WhatsApp (wamid). Único: los reintentos de Meta se ignoran.</summary>
+    public required string ProveedorId { get; set; }
+
+    public required string Telefono { get; set; }
+
+    /// <summary>text, audio, image u otro.</summary>
+    public required string Tipo { get; set; }
+
+    public string? Texto { get; set; }
+
+    public string? MediaId { get; set; }
+
+    /// <summary>pendiente, procesado o fallido.</summary>
+    public required string Estado { get; set; }
+
+    public int Intentos { get; set; }
+
+    public string? Error { get; set; }
+
+    public DateTime RecibidoUtc { get; set; }
+
+    public DateTime? ProcesadoUtc { get; set; }
+}
+
+/// <summary>Bitácora: quién hizo qué y cuándo. Sin detalles clínicos.</summary>
+public sealed class RegistroBitacora
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public DateTime FechaUtc { get; set; }
+
+    /// <summary>agente, sistema o secretaria:usuario.</summary>
+    public required string Actor { get; set; }
+
+    public required string Accion { get; set; }
+
+    public string? Entidad { get; set; }
+
+    public string? EntidadId { get; set; }
+
+    public string? SesionId { get; set; }
+
+    public string? Detalle { get; set; }
+
+    /// <summary>Idioma del paciente en ese momento.</summary>
+    public string? Idioma { get; set; }
+
+    /// <summary>Mensaje original del paciente (o respuesta bloqueada). Se borra al vencer la retención de conversaciones.</summary>
+    public string? TextoOriginal { get; set; }
+
+    public string? ResumenEs { get; set; }
+
+    public string? ResumenEn { get; set; }
+}
+
+public sealed class Escalamiento
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string SesionId { get; set; }
+
+    public int? PacienteId { get; set; }
+
+    /// <summary>Resumen en español para el panel.</summary>
+    public required string Motivo { get; set; }
+
+    /// <summary>Resumen en inglés para el panel.</summary>
+    public string? MotivoEn { get; set; }
+
+    /// <summary>Lo que escribió (o dijo) el paciente, tal cual, en su idioma.</summary>
+    public string? MensajeOriginal { get; set; }
+
+    public string? Idioma { get; set; }
+
+    public bool Urgente { get; set; }
+
+    public required string Estado { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+
+    public DateTime? AtendidoUtc { get; set; }
+
+    public string? AtendidoPor { get; set; }
+}
+
+/// <summary>
+/// Borrador de solicitud de autorización a la ARS para una cita. Lo prepara el sistema,
+/// la secretaria lo revisa, edita y aprueba. Nunca se envía solo.
+/// </summary>
+public sealed class AutorizacionArs
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int CitaId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public required string Contenido { get; set; }
+
+    /// <summary>borrador, aprobada o descartada.</summary>
+    public required string Estado { get; set; }
+
+    public DateTime CreadaUtc { get; set; }
+
+    public required string CreadaPor { get; set; }
+
+    public DateTime ActualizadaUtc { get; set; }
+
+    public DateTime? AprobadaUtc { get; set; }
+
+    public string? AprobadaPor { get; set; }
+}
+
+/// <summary>
+/// Datos leídos de la foto de un carnet de ARS, pendientes de confirmación.
+/// La imagen no se guarda: solo el resultado de la lectura.
+/// </summary>
+public sealed class CarnetPendiente
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string SesionId { get; set; }
+
+    public required string TelefonoCanal { get; set; }
+
+    public int? PacienteId { get; set; }
+
+    public string? Nombre { get; set; }
+
+    public string? Ars { get; set; }
+
+    public string? NumeroAfiliado { get; set; }
+
+    /// <summary>pendiente, confirmado o descartado.</summary>
+    public required string Estado { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+
+    /// <summary>paciente o secretaria.</summary>
+    public string? ResueltoPor { get; set; }
+
+    public DateTime? ResueltoUtc { get; set; }
+}
+
+public sealed class Conversacion
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public required string SesionId { get; set; }
+
+    public string? TelefonoCanal { get; set; }
+
+    public int? PacienteId { get; set; }
+
+    /// <summary>Idioma del paciente (BCP-47) y si es de nivel 1 (es, en, ht) o 2 (cualquier otro).</summary>
+    public string? Idioma { get; set; }
+
+    public int NivelIdioma { get; set; }
+
+    public int Turno { get; set; }
+
+    /// <summary>Cancelación propuesta por el agente y pendiente de que el paciente la confirme.</summary>
+    public string? CancelacionPropuesta { get; set; }
+
+    public int? CancelacionPropuestaTurno { get; set; }
+
+    /// <summary>Turno en que se le mostró el texto de consentimiento y su versión (para registrar la respuesta).</summary>
+    public int? ConsentimientoOfrecidoTurno { get; set; }
+
+    public string? ConsentimientoVersion { get; set; }
+
+    /// <summary>Acción del médico propuesta y pendiente de su confirmación (JSON), y en qué turno.</summary>
+    public string? PropuestaMedico { get; set; }
+
+    public int? PropuestaMedicoTurno { get; set; }
+
+    public DateTime CreadaUtc { get; set; }
+
+    public DateTime ActualizadaUtc { get; set; }
+
+    public List<Mensaje> Mensajes { get; set; } = [];
+}
+
+/// <summary>Un mensaje del historial (usuario, asistente o resultado de herramienta) en formato JSON de chat.</summary>
+public sealed class Mensaje
+{
+    public long Id { get; set; }
+
+    public int ConversacionId { get; set; }
+
+    public required string Rol { get; set; }
+
+    public required string Json { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+}
+
+/// <summary>Una llamada al modelo: solo cifras para calcular costos, nunca el contenido.</summary>
+public sealed class RegistroUsoModelo
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public DateTime FechaUtc { get; set; }
+
+    public required string Proveedor { get; set; }
+
+    public required string Modelo { get; set; }
+
+    /// <summary>agente, filtro, carnet...</summary>
+    public required string Proposito { get; set; }
+
+    /// <summary>Conversación que originó la llamada, si la hubo (para el costo por conversación).</summary>
+    public string? SesionId { get; set; }
+
+    public int TokensEntrada { get; set; }
+
+    public int TokensSalida { get; set; }
+
+    public int Milisegundos { get; set; }
+}
+
+/// <summary>
+/// Consentimiento (opt-in) para recibir mensajes por iniciativa del consultorio. Cada cambio es un registro
+/// nuevo: el vigente es el más reciente por paciente y categoría. Guarda la versión del texto que se mostró.
+/// </summary>
+public sealed class Consentimiento
+{
+    public long Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    /// <summary>Paciente al que se refiere; null si es el permiso de un médico (resumen diario).</summary>
+    public int? PacienteId { get; set; }
+
+    /// <summary>Médico, para la categoría resumen_medico.</summary>
+    public int? MedicoId { get; set; }
+
+    /// <summary>Teléfono de contacto al que se refiere (10 dígitos).</summary>
+    public required string Telefono { get; set; }
+
+    /// <summary>recordatorios, seguimientos o lista_espera.</summary>
+    public required string Categoria { get; set; }
+
+    /// <summary>otorgado o revocado.</summary>
+    public required string Estado { get; set; }
+
+    /// <summary>whatsapp, web o presencial.</summary>
+    public required string Canal { get; set; }
+
+    /// <summary>Versión del texto de consentimiento mostrado (ver Cumplimiento/TextoConsentimiento).</summary>
+    public required string VersionTexto { get; set; }
+
+    public string? Idioma { get; set; }
+
+    /// <summary>agente, sistema o el usuario del panel que lo registró.</summary>
+    public required string RegistradoPor { get; set; }
+
+    public DateTime FechaUtc { get; set; }
+}
+
+/// <summary>
+/// Seguimiento indicado por el médico ("control en 3 meses"). Es administrativo: el médico decide la fecha;
+/// el agente solo agenda o contacta al paciente para que escoja horario.
+/// </summary>
+public sealed class Seguimiento
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public DateOnly FechaObjetivo { get; set; }
+
+    /// <summary>Días antes o después de la fecha objetivo que el médico acepta.</summary>
+    public int ToleranciaDias { get; set; }
+
+    /// <summary>Motivo administrativo (lista cerrada, como en las citas).</summary>
+    public required string Motivo { get; set; }
+
+    /// <summary>Si se repite: cada N semanas o meses.</summary>
+    public int? RecurrenciaCada { get; set; }
+
+    /// <summary>semanas o meses.</summary>
+    public string? RecurrenciaUnidad { get; set; }
+
+    /// <summary>pendiente, contactando, agendado, sin_respuesta o cancelado.</summary>
+    public required string Estado { get; set; }
+
+    public int Intentos { get; set; }
+
+    public DateTime? UltimoIntentoUtc { get; set; }
+
+    /// <summary>Sin permiso para avisos: el contacto quedó para que la secretaria llame.</summary>
+    public bool PorLlamada { get; set; }
+
+    public int? CitaId { get; set; }
+
+    /// <summary>Ya se creó el siguiente de la recurrencia.</summary>
+    public bool SiguienteCreado { get; set; }
+
+    public required string CreadoPor { get; set; }
+
+    /// <summary>En seguimientos lejanos, el paciente confirmó que el número sigue siendo suyo.</summary>
+    public DateTime? NumeroConfirmadoUtc { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+}
+
+/// <summary>Día no laborable del consultorio (feriados de RD, configurables).</summary>
+public sealed class Feriado
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public DateOnly Fecha { get; set; }
+
+    public required string Nombre { get; set; }
+}
+
+/// <summary>Días en que un médico no atiende (vacaciones, congresos).</summary>
+public sealed class BloqueoAgenda
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public DateOnly Desde { get; set; }
+
+    public DateOnly Hasta { get; set; }
+
+    /// <summary>Texto administrativo: vacaciones, congreso, otro.</summary>
+    public required string Motivo { get; set; }
+
+    public required string CreadoPor { get; set; }
+
+    public DateTime CreadoUtc { get; set; }
+}
+
+/// <summary>
+/// El paciente pidió que lo vean lo antes posible y no había hueco: la secretaria o el médico deciden si lo atienden
+/// fuera de agenda. El agente nunca la aprueba; solo comunica la decisión.
+/// </summary>
+public sealed class SolicitudSobrecupo
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int PacienteId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    /// <summary>Día para el que se pide (hoy o el siguiente día hábil).</summary>
+    public DateOnly Fecha { get; set; }
+
+    public required string SesionId { get; set; }
+
+    /// <summary>pendiente, aprobada, rechazada o cancelada.</summary>
+    public required string Estado { get; set; }
+
+    /// <summary>Hora a la que el personal lo citó, si se aprobó.</summary>
+    public DateTime? HoraAprobadaUtc { get; set; }
+
+    public string? DecididaPor { get; set; }
+
+    public DateTime? DecididaUtc { get; set; }
+
+    /// <summary>Ya se le comunicó la decisión al paciente.</summary>
+    public bool Comunicada { get; set; }
+
+    public DateTime CreadaUtc { get; set; }
+}
+
+/// <summary>Turno que el consultorio reserva para urgencias (por médico y día de la semana).</summary>
+public sealed class CupoUrgencia
+{
+    public int Id { get; set; }
+
+    public int ConsultorioId { get; set; }
+
+    public int MedicoId { get; set; }
+
+    public DayOfWeek DiaSemana { get; set; }
+
+    public TimeOnly Hora { get; set; }
+}

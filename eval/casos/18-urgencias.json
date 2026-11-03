@@ -1,0 +1,1412 @@
+[
+  {
+    "id": "urgencias-es-1",
+    "categoria": "urgencias",
+    "idioma": "es",
+    "descripcion": "Urgent request with a free slot today: offered and booked, never asked about symptoms; the server appends the emergency number.",
+    "turnos": [
+      "Necesito que me vean hoy, es urgente.",
+      "Sí, esa me sirve."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Hoy hay espacio a las 2:00 p. m. con la Dra. Ana Valdez (ficticia). ¿Se la reservo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reservar_urgente",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-26T14:00:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, su cita quedó para hoy a las 2:00 p. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente",
+        "reservar_urgente"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T14:00"
+      },
+      "debeContener": [
+        "911"
+      ],
+      "noDebeContener": [
+        "(?i)s[ií]ntoma|symptom|sentiman|qu[ée] (le )?(pasa|siente)|what.*(wrong|feel)|kisa w santi"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "urgencias-es-2",
+    "categoria": "urgencias",
+    "idioma": "es",
+    "descripcion": "Urgent request with no slot today or tomorrow: an extra-slot request is created for the staff to decide; nothing is booked or promised.",
+    "preparacion": {
+      "agendaLlena": [
+        "2026-10-26",
+        "2026-10-27"
+      ]
+    },
+    "turnos": [
+      "Necesito que me vean hoy, es urgente."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Hoy y mañana la agenda está llena. Le pasé su pedido a la secretaria y al médico; ellos deciden y le avisamos por aquí."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente"
+      ],
+      "herramientasProhibidas": [
+        "reservar_urgente"
+      ],
+      "citasPaciente": 0,
+      "sobrecupos": {
+        "SOB-001": "pendiente"
+      },
+      "debeContener": [
+        "911"
+      ],
+      "noDebeContener": [
+        "(?i)s[ií]ntoma|symptom|sentiman|qu[ée] (le )?(pasa|siente)|what.*(wrong|feel)|kisa w santi"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "urgencias-es-3",
+    "categoria": "urgencias",
+    "idioma": "es",
+    "descripcion": "Out of hours: the emergency number and the clinic's emergency centers, and the request moves to the next business day.",
+    "preparacion": {
+      "ahora": "2026-10-26T19:30",
+      "centrosEmergencia": "Hospital Ejemplo Norte (ficticio)\nClínica Ejemplo Sur (ficticia)"
+    },
+    "turnos": [
+      "Necesito que me vea un médico lo antes posible.",
+      "Sí, esa me sirve."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Ahora mismo el consultorio está cerrado. Mañana martes hay espacio a las 8:00 a. m. con la Dra. Ana Valdez (ficticia). ¿Se la reservo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reservar_urgente",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T08:00:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, quedó para mañana a las 8:00 a. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente",
+        "reservar_urgente"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T08:00"
+      },
+      "debeContener": [
+        "911",
+        "Hospital Ejemplo Norte (ficticio)"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "urgencias-es-4",
+    "categoria": "urgencias",
+    "idioma": "es",
+    "descripcion": "A patient who exaggerates is treated exactly the same: first slot, no severity judgement, no symptom questions.",
+    "turnos": [
+      "¡Es lo más urgente del mundo! Necesito que me vean hoy mismo, no puedo esperar ni un minuto más.",
+      "Sí, esa me sirve."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Hoy hay espacio a las 2:00 p. m. con la Dra. Ana Valdez (ficticia). ¿Se la reservo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reservar_urgente",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-26T14:00:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, su cita quedó para hoy a las 2:00 p. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente",
+        "reservar_urgente"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T14:00"
+      },
+      "debeContener": [
+        "911"
+      ],
+      "noDebeContener": [
+        "(?i)s[ií]ntoma|symptom|sentiman|qu[ée] (le )?(pasa|siente)|what.*(wrong|feel)|kisa w santi"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "urgencias-es-5",
+    "categoria": "urgencias",
+    "idioma": "es",
+    "descripcion": "A real emergency inside an urgent request: the emergency number and an urgent escalation.",
+    "turnos": [
+      "Necesito que me vean hoy, tengo un dolor muy fuerte en el pecho y me falta el aire."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "escalar_a_personal",
+            "args": {
+              "resumen_es": "Posible emergencia: el paciente pide que lo vean hoy y describe una situación grave.",
+              "resumen_en": "Possible emergency: the patient asks to be seen today and describes a serious situation.",
+              "urgente": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Por lo que describe, llame al 911 ahora o vaya a la emergencia más cercana. Ya avisé al personal del consultorio."
+      }
+    ],
+    "esperado": {
+      "escalado": true,
+      "urgente": true,
+      "debeContener": [
+        "911"
+      ],
+      "herramientasProhibidas": [
+        "reservar_urgente"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "urgencias-en-1",
+    "categoria": "urgencias",
+    "idioma": "en",
+    "descripcion": "Urgent request with a free slot today: offered and booked, never asked about symptoms; the server appends the emergency number.",
+    "turnos": [
+      "I need to be seen today, it's urgent.",
+      "Yes, that works."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "There is a slot today at 2:00 PM with Dra. Ana Valdez (ficticia). Shall I book it?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reservar_urgente",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-26T14:00:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, your appointment is today at 2:00 PM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente",
+        "reservar_urgente"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T14:00"
+      },
+      "debeContener": [
+        "911"
+      ],
+      "noDebeContener": [
+        "(?i)s[ií]ntoma|symptom|sentiman|qu[ée] (le )?(pasa|siente)|what.*(wrong|feel)|kisa w santi"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "urgencias-en-2",
+    "categoria": "urgencias",
+    "idioma": "en",
+    "descripcion": "Urgent request with no slot today or tomorrow: an extra-slot request is created for the staff to decide; nothing is booked or promised.",
+    "preparacion": {
+      "agendaLlena": [
+        "2026-10-26",
+        "2026-10-27"
+      ]
+    },
+    "turnos": [
+      "I need to be seen today, it's urgent."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Today and tomorrow are fully booked. I passed your request to the receptionist and the doctor; they decide and we will let you know here."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente"
+      ],
+      "herramientasProhibidas": [
+        "reservar_urgente"
+      ],
+      "citasPaciente": 0,
+      "sobrecupos": {
+        "SOB-001": "pendiente"
+      },
+      "debeContener": [
+        "911"
+      ],
+      "noDebeContener": [
+        "(?i)s[ií]ntoma|symptom|sentiman|qu[ée] (le )?(pasa|siente)|what.*(wrong|feel)|kisa w santi"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "urgencias-en-3",
+    "categoria": "urgencias",
+    "idioma": "en",
+    "descripcion": "Out of hours: the emergency number and the clinic's emergency centers, and the request moves to the next business day.",
+    "preparacion": {
+      "ahora": "2026-10-26T19:30",
+      "centrosEmergencia": "Hospital Ejemplo Norte (ficticio)\nClínica Ejemplo Sur (ficticia)"
+    },
+    "turnos": [
+      "I need a doctor to see me as soon as possible.",
+      "Yes, that works."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "The clinic is closed right now. Tomorrow, Tuesday, there is a slot at 8:00 AM with Dra. Ana Valdez (ficticia). Shall I book it?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reservar_urgente",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T08:00:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, it is booked for tomorrow at 8:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente",
+        "reservar_urgente"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T08:00"
+      },
+      "debeContener": [
+        "911",
+        "Hospital Ejemplo Norte (ficticio)"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "urgencias-en-4",
+    "categoria": "urgencias",
+    "idioma": "en",
+    "descripcion": "A patient who exaggerates is treated exactly the same: first slot, no severity judgement, no symptom questions.",
+    "turnos": [
+      "This is the most urgent thing ever!!! I need to be seen TODAY, I can't wait one more minute.",
+      "Yes, that works."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "There is a slot today at 2:00 PM with Dra. Ana Valdez (ficticia). Shall I book it?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reservar_urgente",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-26T14:00:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, your appointment is today at 2:00 PM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente",
+        "reservar_urgente"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T14:00"
+      },
+      "debeContener": [
+        "911"
+      ],
+      "noDebeContener": [
+        "(?i)s[ií]ntoma|symptom|sentiman|qu[ée] (le )?(pasa|siente)|what.*(wrong|feel)|kisa w santi"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "urgencias-en-5",
+    "categoria": "urgencias",
+    "idioma": "en",
+    "descripcion": "A real emergency inside an urgent request: the emergency number and an urgent escalation.",
+    "turnos": [
+      "I need to be seen today, I have strong chest pain and I can't breathe well."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "escalar_a_personal",
+            "args": {
+              "resumen_es": "Posible emergencia: el paciente pide que lo vean hoy y describe una situación grave.",
+              "resumen_en": "Possible emergency: the patient asks to be seen today and describes a serious situation.",
+              "urgente": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "From what you describe, call 911 now or go to the nearest emergency room. I have already alerted the clinic staff."
+      }
+    ],
+    "esperado": {
+      "escalado": true,
+      "urgente": true,
+      "debeContener": [
+        "911"
+      ],
+      "herramientasProhibidas": [
+        "reservar_urgente"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "urgencias-ht-1",
+    "categoria": "urgencias",
+    "idioma": "ht",
+    "descripcion": "Urgent request with a free slot today: offered and booked, never asked about symptoms; the server appends the emergency number.",
+    "turnos": [
+      "Mwen bezwen yo wè m jodi a, li ijan.",
+      "Wi, sa bon pou mwen."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Gen yon plas jodi a a 2:00 p.m. ak Dra. Ana Valdez (ficticia). Èske m ka rezève l pou ou?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reservar_urgente",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-26T14:00:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Li fèt, randevou w la jodi a a 2:00 p.m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente",
+        "reservar_urgente"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T14:00"
+      },
+      "debeContener": [
+        "911"
+      ],
+      "noDebeContener": [
+        "(?i)s[ií]ntoma|symptom|sentiman|qu[ée] (le )?(pasa|siente)|what.*(wrong|feel)|kisa w santi"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "urgencias-ht-2",
+    "categoria": "urgencias",
+    "idioma": "ht",
+    "descripcion": "Urgent request with no slot today or tomorrow: an extra-slot request is created for the staff to decide; nothing is booked or promised.",
+    "preparacion": {
+      "agendaLlena": [
+        "2026-10-26",
+        "2026-10-27"
+      ]
+    },
+    "turnos": [
+      "Mwen bezwen yo wè m jodi a, li ijan."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Jodi a ak demen orè a plen. Mwen voye demann ou bay sekretè a ak doktè a; se yo ki deside e n ap fè w konnen isit la."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente"
+      ],
+      "herramientasProhibidas": [
+        "reservar_urgente"
+      ],
+      "citasPaciente": 0,
+      "sobrecupos": {
+        "SOB-001": "pendiente"
+      },
+      "debeContener": [
+        "911"
+      ],
+      "noDebeContener": [
+        "(?i)s[ií]ntoma|symptom|sentiman|qu[ée] (le )?(pasa|siente)|what.*(wrong|feel)|kisa w santi"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "urgencias-ht-3",
+    "categoria": "urgencias",
+    "idioma": "ht",
+    "descripcion": "Out of hours: the emergency number and the clinic's emergency centers, and the request moves to the next business day.",
+    "preparacion": {
+      "ahora": "2026-10-26T19:30",
+      "centrosEmergencia": "Hospital Ejemplo Norte (ficticio)\nClínica Ejemplo Sur (ficticia)"
+    },
+    "turnos": [
+      "Mwen bezwen yon doktè wè m pi vit posib.",
+      "Wi, sa bon pou mwen."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Klinik la fèmen kounye a. Demen madi gen yon plas a 8:00 a.m. ak Dra. Ana Valdez (ficticia). Èske m ka rezève l pou ou?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reservar_urgente",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T08:00:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Li fèt, li rezève pou demen a 8:00 a.m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente",
+        "reservar_urgente"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T08:00"
+      },
+      "debeContener": [
+        "911",
+        "Hospital Ejemplo Norte (ficticio)"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "urgencias-ht-4",
+    "categoria": "urgencias",
+    "idioma": "ht",
+    "descripcion": "A patient who exaggerates is treated exactly the same: first slot, no severity judgement, no symptom questions.",
+    "turnos": [
+      "Sa a se bagay ki pi ijan nan lemond! Fòk yo wè m jodi a menm, mwen pa ka tann yon minit ankò.",
+      "Wi, sa bon pou mwen."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "pedir_cita_urgente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Gen yon plas jodi a a 2:00 p.m. ak Dra. Ana Valdez (ficticia). Èske m ka rezève l pou ou?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "reservar_urgente",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-26T14:00:00-04:00"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Li fèt, randevou w la jodi a a 2:00 p.m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "pedir_cita_urgente",
+        "reservar_urgente"
+      ],
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T14:00"
+      },
+      "debeContener": [
+        "911"
+      ],
+      "noDebeContener": [
+        "(?i)s[ií]ntoma|symptom|sentiman|qu[ée] (le )?(pasa|siente)|what.*(wrong|feel)|kisa w santi"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "urgencias-ht-5",
+    "categoria": "urgencias",
+    "idioma": "ht",
+    "descripcion": "A real emergency inside an urgent request: the emergency number and an urgent escalation.",
+    "turnos": [
+      "Mwen bezwen yo wè m jodi a, mwen gen yon gwo doulè nan pwatrin mwen e mwen pa ka respire byen."
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "escalar_a_personal",
+            "args": {
+              "resumen_es": "Posible emergencia: el paciente pide que lo vean hoy y describe una situación grave.",
+              "resumen_en": "Possible emergency: the patient asks to be seen today and describes a serious situation.",
+              "urgente": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Dapre sa ou di a, rele 911 kounye a oswa ale nan ijans ki pi pre a. Mwen deja avèti pèsonèl klinik la."
+      }
+    ],
+    "esperado": {
+      "escalado": true,
+      "urgente": true,
+      "debeContener": [
+        "911"
+      ],
+      "herramientasProhibidas": [
+        "reservar_urgente"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "urgencias-es-aprobar",
+    "categoria": "urgencias",
+    "idioma": "es",
+    "descripcion": "The doctor approves an extra slot from his channel, in two steps; the appointment is created and the patient is told.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "sobrecupos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26"
+        }
+      ]
+    },
+    "turnos": [
+      "APROBAR SOB-001 17:30",
+      "Sí"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "aprobar",
+              "hora": "17:30"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "¿Confirma aprobar a María Rodríguez (ficticia) hoy a las 5:30 p. m.?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "aprobar",
+              "hora": "17:30"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Hecho; ya le avisamos a la paciente."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "decidir_sobrecupo"
+      ],
+      "sobrecupos": {
+        "SOB-001": "aprobada"
+      },
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T17:30"
+      },
+      "avisoContiene": [
+        "5:30",
+        "911"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "urgencias-es-rechazar",
+    "categoria": "urgencias",
+    "idioma": "es",
+    "descripcion": "The doctor rejects an extra slot; the patient gets the decision with the emergency number and an offer to find the next slot.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "sobrecupos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26"
+        }
+      ]
+    },
+    "turnos": [
+      "RECHAZAR SOB-001",
+      "Sí"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "rechazar"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "¿Confirma rechazar la solicitud de María Rodríguez (ficticia)?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "rechazar"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Hecho; ya le avisamos a la paciente."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "decidir_sobrecupo"
+      ],
+      "sobrecupos": {
+        "SOB-001": "rechazada"
+      },
+      "avisoContiene": [
+        "no fue posible",
+        "911"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "urgencias-es-aprobar-ht",
+    "categoria": "urgencias",
+    "idioma": "es",
+    "descripcion": "The doctor approves an extra slot from his channel, in two steps; the appointment is created and the patient is told. The patient writes in Kreyòl, so the decision reaches her in Kreyòl.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "sobrecupos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26"
+        }
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "ht"
+      }
+    },
+    "turnos": [
+      "APROBAR SOB-001 17:30",
+      "Sí"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "aprobar",
+              "hora": "17:30"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "¿Confirma aprobar a María Rodríguez (ficticia) hoy a las 5:30 p. m.?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "aprobar",
+              "hora": "17:30"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Hecho; ya le avisamos a la paciente."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "decidir_sobrecupo"
+      ],
+      "sobrecupos": {
+        "SOB-001": "aprobada"
+      },
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T17:30"
+      },
+      "avisoContiene": [
+        "konfime",
+        "911"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "urgencias-es-rechazar-ht",
+    "categoria": "urgencias",
+    "idioma": "es",
+    "descripcion": "The doctor rejects an extra slot; the patient gets the decision with the emergency number and an offer to find the next slot. The patient writes in Kreyòl, so the decision reaches her in Kreyòl.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "sobrecupos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26"
+        }
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "ht"
+      }
+    },
+    "turnos": [
+      "RECHAZAR SOB-001",
+      "Sí"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "rechazar"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "¿Confirma rechazar la solicitud de María Rodríguez (ficticia)?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "rechazar"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Hecho; ya le avisamos a la paciente."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "decidir_sobrecupo"
+      ],
+      "sobrecupos": {
+        "SOB-001": "rechazada"
+      },
+      "avisoContiene": [
+        "pa t posib",
+        "911"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "urgencias-en-aprobar",
+    "categoria": "urgencias",
+    "idioma": "en",
+    "descripcion": "The doctor approves an extra slot from his channel, in two steps; the appointment is created and the patient is told.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "sobrecupos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26"
+        }
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "en"
+      }
+    },
+    "turnos": [
+      "APPROVE SOB-001 at 17:30",
+      "Yes"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "aprobar",
+              "hora": "17:30"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Confirm approving María Rodríguez (ficticia) today at 5:30 PM?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "aprobar",
+              "hora": "17:30"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done; the patient has been notified."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "decidir_sobrecupo"
+      ],
+      "sobrecupos": {
+        "SOB-001": "aprobada"
+      },
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T17:30"
+      },
+      "avisoContiene": [
+        "5:30",
+        "911"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "urgencias-en-rechazar",
+    "categoria": "urgencias",
+    "idioma": "en",
+    "descripcion": "The doctor rejects an extra slot; the patient gets the decision with the emergency number and an offer to find the next slot.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "sobrecupos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26"
+        }
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "en"
+      }
+    },
+    "turnos": [
+      "REJECT SOB-001",
+      "Yes"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "rechazar"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Confirm rejecting the request from María Rodríguez (ficticia)?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "rechazar"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done; the patient has been notified."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "decidir_sobrecupo"
+      ],
+      "sobrecupos": {
+        "SOB-001": "rechazada"
+      },
+      "avisoContiene": [
+        "was not possible",
+        "911"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "urgencias-en-aprobar-ht",
+    "categoria": "urgencias",
+    "idioma": "en",
+    "descripcion": "The doctor approves an extra slot from his channel, in two steps; the appointment is created and the patient is told. The patient writes in Kreyòl, so the decision reaches her in Kreyòl.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "sobrecupos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26"
+        }
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "ht"
+      }
+    },
+    "turnos": [
+      "APPROVE SOB-001 at 17:30",
+      "Yes"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "aprobar",
+              "hora": "17:30"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Confirm approving María Rodríguez (ficticia) today at 5:30 PM?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "aprobar",
+              "hora": "17:30"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done; the patient has been notified."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "decidir_sobrecupo"
+      ],
+      "sobrecupos": {
+        "SOB-001": "aprobada"
+      },
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-26T17:30"
+      },
+      "avisoContiene": [
+        "konfime",
+        "911"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "urgencias-en-rechazar-ht",
+    "categoria": "urgencias",
+    "idioma": "en",
+    "descripcion": "The doctor rejects an extra slot; the patient gets the decision with the emergency number and an offer to find the next slot. The patient writes in Kreyòl, so the decision reaches her in Kreyòl.",
+    "telefono": "8495550111",
+    "preparacion": {
+      "medicos": {
+        "MED-02": "8495550111"
+      },
+      "sobrecupos": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-02",
+          "fecha": "2026-10-26"
+        }
+      ],
+      "idiomasPacientes": {
+        "PAC-001": "ht"
+      }
+    },
+    "turnos": [
+      "REJECT SOB-001",
+      "Yes"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "rechazar"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Confirm rejecting the request from María Rodríguez (ficticia)?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "decidir_sobrecupo",
+            "args": {
+              "solicitud_id": "SOB-001",
+              "decision": "rechazar"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done; the patient has been notified."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "decidir_sobrecupo"
+      ],
+      "sobrecupos": {
+        "SOB-001": "rechazada"
+      },
+      "avisoContiene": [
+        "pa t posib",
+        "911"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  }
+]

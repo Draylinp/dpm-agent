@@ -1,0 +1,104 @@
+using DpmAgent.Api.Dpm;
+using DpmAgent.Api.Idiomas;
+
+namespace DpmAgent.Api.Agenda;
+
+/// <param name="Texto">Mensaje completo (chat web y WhatsApp dentro de la ventana de 24 horas).</param>
+/// <param name="Plantilla">Clave de la plantilla de WhatsApp equivalente (ver WhatsApp:Plantillas).</param>
+/// <param name="Parametros">Valores de {{1}}, {{2}}... de la plantilla, en orden.</param>
+/// <param name="Idioma">Idioma del texto: es, en o ht.</param>
+public sealed record MensajeAgenda(string Texto, string Plantilla, IReadOnlyList<string> Parametros, string Idioma);
+
+/// <summary>
+/// Mensajes automáticos. Son plantillas fijas en es/en/ht (Idiomas/Recursos), no salen del modelo:
+/// así nunca llevan nada clínico ni inventado. Para otros idiomas se usa inglés.
+/// </summary>
+public static class TextosAgenda
+{
+    // Todas llevan el nombre del consultorio ({0} en la plantilla) y cómo darse de baja (STOP): plantillas de utilidad.
+    public static MensajeAgenda Oferta(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, DateTimeOffset vence)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), Textos.Hora(vence, i)];
+        return new(Textos.Obtener("agenda.oferta", i, p), "oferta", p, i);
+    }
+
+    public static MensajeAgenda OfertaVencida(string idioma, string consultorio, DateTimeOffset fechaHora)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i)];
+        return new(Textos.Obtener("agenda.oferta_vencida", i, p), "oferta_vencida", p, i);
+    }
+
+    public static MensajeAgenda Recordatorio(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId];
+        return new(Textos.Obtener("agenda.recordatorio", i, p), "recordatorio", p, i);
+    }
+
+    public static MensajeAgenda SeguimientoCreado(string idioma, string consultorio, string nombrePaciente, string medico, DateOnly fechaObjetivo)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(HorarioConsultorio.EnHoraRd(fechaObjetivo, new TimeOnly(12, 0)), i)];
+        return new(Textos.Obtener("agenda.seguimiento_creado", i, p), "seguimiento_creado", p, i);
+    }
+
+    public static MensajeAgenda SeguimientoAgendado(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId];
+        return new(Textos.Obtener("agenda.seguimiento_agendado", i, p), "seguimiento_agendado", p, i);
+    }
+
+    public static MensajeAgenda SeguimientoContacto(string idioma, string consultorio, string nombrePaciente, string medico, DateOnly fechaObjetivo)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(HorarioConsultorio.EnHoraRd(fechaObjetivo, new TimeOnly(12, 0)), i)];
+        return new(Textos.Obtener("agenda.seguimiento_contacto", i, p), "seguimiento_contacto", p, i);
+    }
+
+    /// <summary>Primer contacto de un seguimiento lejano: confirma que el número sigue siendo del paciente, sin más detalles.</summary>
+    public static MensajeAgenda SeguimientoConfirmarNumero(string idioma, string consultorio, string nombrePaciente)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente)];
+        return new(Textos.Obtener("agenda.seguimiento_confirmar_numero", i, p), "seguimiento_confirmar_numero", p, i);
+    }
+
+    public static MensajeAgenda RecordatorioSieteDias(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId];
+        return new(Textos.Obtener("agenda.recordatorio_7dias", i, p), "recordatorio_7dias", p, i);
+    }
+
+    /// <param name="opciones">Horarios propuestos, ya en texto.</param>
+    public static MensajeAgenda Reprogramar(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora, string citaId,
+        IReadOnlyList<DateTimeOffset> opciones)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        var lista = string.Join("; ", opciones.Select(o => $"{Textos.Dia(o, i)}, {Textos.Hora(o, i)}"));
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i), Textos.Hora(fechaHora, i), citaId, lista];
+        return new(Textos.Obtener("agenda.reprogramar", i, p), "reprogramar", p, i);
+    }
+
+    public static MensajeAgenda Retraso(string idioma, string consultorio, string nombrePaciente, string medico, int minutos, DateTimeOffset fechaHora)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, minutos.ToString(System.Globalization.CultureInfo.InvariantCulture), Textos.Hora(fechaHora, i)];
+        return new(Textos.Obtener("agenda.retraso", i, p), "retraso", p, i);
+    }
+
+    public static MensajeAgenda Ausencia(string idioma, string consultorio, string nombrePaciente, string medico, DateTimeOffset fechaHora)
+    {
+        var i = Idiomas.Idiomas.ParaTextos(idioma);
+        string[] p = [consultorio, PrimerNombre(nombrePaciente), medico, Textos.Dia(fechaHora, i)];
+        return new(Textos.Obtener("agenda.ausencia", i, p), "ausencia", p, i);
+    }
+
+    /// <summary>Hora en español (para el panel).</summary>
+    public static string Hora(DateTimeOffset d) => Textos.Hora(d, Idiomas.Idiomas.Espanol);
+
+    private static string PrimerNombre(string nombre) => nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? nombre;
+}

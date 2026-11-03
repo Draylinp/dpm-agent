@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel del consultorio</title>
+  <script src="i18n.js"></script>
+  <script src="accesibilidad.js"></script>
+  <script src="dialogos.js"></script>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+<main>
+  <div class="idioma derecha">
+    <button id="tamanoLetra" type="button" class="sec">A+</button>
+    <label for="selectorIdioma" data-i18n="idioma"></label>
+    <select id="selectorIdioma" data-selector-idioma></select>
+  </div>
+  <section id="login" class="card" hidden>
+    <h1 data-i18n="panel.titulo"></h1>
+    <p class="muted" data-i18n="panel.solo_personal"></p>
+    <form id="formLogin">
+      <label for="usuario" data-i18n="panel.usuario"></label>
+      <input id="usuario" autocomplete="username" required>
+      <label for="clave" data-i18n="panel.clave"></label>
+      <input id="clave" type="password" autocomplete="current-password" required>
+      <div id="grupoCodigo" hidden>
+        <label for="codigo" data-i18n="cuenta.codigo"></label>
+        <input id="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+      </div>
+      <button data-i18n="panel.entrar"></button>
+      <p id="errorLogin" class="error" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="app" hidden>
+    <header class="top">
+      <div>
+        <h1 data-i18n="panel.titulo"></h1>
+        <span id="quien" class="muted"></span>
+      </div>
+      <button id="salir" class="sec" data-i18n="panel.salir"></button>
+    </header>
+    <nav id="tabs" data-i18n-aria="panel.secciones">
+      <button data-tab="citas" class="activa" aria-current="page" data-i18n="tab.citas"></button>
+      <button data-tab="escalamientos" data-i18n="tab.escalamientos"></button>
+      <button data-tab="carnets" data-i18n="tab.carnets"></button>
+      <button data-tab="autorizaciones" data-i18n="tab.autorizaciones"></button>
+      <button data-tab="urgencias" data-i18n="tab.urgencias"></button>
+      <button data-tab="seguimientos" data-i18n="tab.seguimientos"></button>
+      <button data-tab="llamadas" data-i18n="tab.llamadas"></button>
+      <button data-tab="medicos" data-i18n="tab.medicos"></button>
+      <button data-tab="familias" data-i18n="tab.familias"></button>
+      <button data-tab="pacientes" data-i18n="tab.pacientes"></button>
+      <button data-tab="costos" data-i18n="tab.costos"></button>
+      <button data-tab="bitacora" data-i18n="tab.bitacora"></button>
+      <button data-tab="cuenta" data-i18n="tab.cuenta"></button>
+      <button data-tab="accesos" data-i18n="tab.accesos" hidden></button>
+    </nav>
+    <div class="card">
+      <p id="error" class="error" role="alert"></p>
+      <div id="vista"></div>
+    </div>
+  </section>
+</main>
+<script src="panel.js"></script>
+</body>
+</html>

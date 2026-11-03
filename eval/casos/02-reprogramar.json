@@ -1,0 +1,584 @@
+[
+  {
+    "id": "reprogramar-es-1",
+    "categoria": "reprogramar",
+    "idioma": "es",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Quiero cambiar mi cita del martes a las 9 para las 11",
+      "Sí, cámbiela por favor"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Tengo libre el martes a las 11:00 a. m. ¿Cambio su cita de las 9:00 a las 11:00?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T11:00:00-04:00",
+              "motivo": "control"
+            }
+          },
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, su cita ahora es el martes 27 a las 11:00 a. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "citas_del_paciente",
+        "crear_cita",
+        "cancelar_cita"
+      ],
+      "citasPaciente": 1,
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T11:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "reprogramar-es-2",
+    "categoria": "reprogramar",
+    "idioma": "es",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Necesito mover mi cita del martes para el miércoles a las 10",
+      "Sí, confirmo el cambio"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-28"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "El miércoles 28 a las 10:00 a. m. está libre. ¿Muevo su cita del martes para ese día?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-28T10:00:00-04:00",
+              "motivo": "control"
+            }
+          },
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Hecho, su cita quedó para el miércoles 28 a las 10:00 a. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "citas_del_paciente",
+        "crear_cita",
+        "cancelar_cita"
+      ],
+      "citasPaciente": 1,
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-28T10:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "reprogramar-en-1",
+    "categoria": "reprogramar",
+    "idioma": "en",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "I want to move my Tuesday 9 o'clock appointment to 11",
+      "Yes, please change it"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Tuesday at 11:00 AM is free. Should I move your appointment from 9:00 to 11:00?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T11:00:00-04:00",
+              "motivo": "control"
+            }
+          },
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, your appointment is now on Tuesday the 27th at 11:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "citas_del_paciente",
+        "crear_cita",
+        "cancelar_cita"
+      ],
+      "citasPaciente": 1,
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T11:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "reprogramar-en-2",
+    "categoria": "reprogramar",
+    "idioma": "en",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "I need to move my Tuesday appointment to Wednesday at 10",
+      "Yes, I confirm the change"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-28"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Wednesday the 28th at 10:00 AM is free. Should I move your Tuesday appointment to that day?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-28T10:00:00-04:00",
+              "motivo": "control"
+            }
+          },
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Done, your appointment is now on Wednesday the 28th at 10:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "citas_del_paciente",
+        "crear_cita",
+        "cancelar_cita"
+      ],
+      "citasPaciente": 1,
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-28T10:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "reprogramar-ht-1",
+    "categoria": "reprogramar",
+    "idioma": "ht",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Mwen vle chanje randevou madi a 9è a pou 11è",
+      "Wi, tanpri chanje l"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Madi a 11:00 AM lib. Èske m chanje randevou ou a soti 9:00 pou 11:00?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T11:00:00-04:00",
+              "motivo": "control"
+            }
+          },
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Dakò, kounye a randevou ou se madi 27 a 11:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "citas_del_paciente",
+        "crear_cita",
+        "cancelar_cita"
+      ],
+      "citasPaciente": 1,
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-27T11:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "reprogramar-ht-2",
+    "categoria": "reprogramar",
+    "idioma": "ht",
+    "preparacion": {
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ]
+    },
+    "turnos": [
+      "Mwen bezwen deplase randevou madi a pou mèkredi a 10è",
+      "Wi, mwen konfime chanjman an"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "citas_del_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-28"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Mèkredi 28 a 10:00 AM lib. Èske m deplase randevou madi a pou jou sa a?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-28T10:00:00-04:00",
+              "motivo": "control"
+            }
+          },
+          {
+            "nombre": "cancelar_cita",
+            "args": {
+              "cita_id": "{cita0}"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Fini, randevou ou pran pou mèkredi 28 a 10:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "citas_del_paciente",
+        "crear_cita",
+        "cancelar_cita"
+      ],
+      "citasPaciente": 1,
+      "citaEn": {
+        "paciente": "PAC-001",
+        "fechaHora": "2026-10-28T10:00"
+      },
+      "escalado": false,
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  }
+]

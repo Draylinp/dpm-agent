@@ -1,0 +1,42 @@
+# Análisis estático de seguridad con CodeQL (C# y JavaScript) en cada push y una vez por semana.
+name: CodeQL
+
+on:
+  push:
+    branches: ['**']
+  schedule:
+    - cron: '23 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  analizar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lenguaje: csharp
+            build: manual
+          - lenguaje: javascript-typescript
+            build: none
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        if: matrix.lenguaje == 'csharp'
+        with:
+          dotnet-version: 8.0.x
+      - uses: github/codeql-action/init@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
+        with:
+          languages: ${{ matrix.lenguaje }}
+          build-mode: ${{ matrix.build }}
+          queries: security-extended
+      - if: matrix.lenguaje == 'csharp'
+        run: dotnet build -c Release
+      - uses: github/codeql-action/analyze@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3.39.1
+        with:
+          category: /language:${{ matrix.lenguaje }}

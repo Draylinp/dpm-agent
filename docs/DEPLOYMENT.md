@@ -1,0 +1,105 @@
+# Deploying to Azure
+
+*Versión en español: [es/DESPLIEGUE.md](es/DESPLIEGUE.md)*
+
+The app runs on **Azure App Service (Linux, .NET 8)** with **Azure Database for PostgreSQL – Flexible Server**. Secrets live in *App Settings* or **Key Vault**, never in the repository. GitHub Actions deploys with OIDC, so no Azure password is stored in GitHub.
+
+## 1. Resources
+
+```bash
+GROUP=dpm-agent
+REGION=eastus2
+APP=dpm-agent-<unique-suffix>
+PG=dpm-agent-pg-<unique-suffix>
+
+az group create -n $GROUP -l $REGION
+
+# Database
+az postgres flexible-server create -g $GROUP -n $PG -l $REGION \
+  --tier Burstable --sku-name Standard_B1ms --storage-size 32 \
+  --admin-user dpmadmin --admin-password '<strong-password>' --public-access 0.0.0.0
+az postgres flexible-server db create -g $GROUP -s $PG -d dpm
+
+# App Service
+az appservice plan create -g $GROUP -n $APP-plan --is-linux --sku B1
+az webapp create -g $GROUP -p $APP-plan -n $APP --runtime "DOTNETCORE:8.0"
+az webapp config set -g $GROUP -n $APP --always-on true --http20-enabled true --min-tls-version 1.2
+az webapp update -g $GROUP -n $APP --https-only true
+az webapp config set -g $GROUP -n $APP --generic-configurations '{"healthCheckPath": "/health/ready"}'
+```
+
+**Always On** is required: the waiting list, reminders, the WhatsApp processor and data retention run in the background.
+
+## 2. Configuration (App Settings)
+
+```bash
+az webapp config appsettings set -g $GROUP -n $APP --settings \
+  ASPNETCORE_ENVIRONMENT=Production \
+  Logging__Formato=json \
+  BaseDatos__Proveedor=Postgres \
+  Limites__ConfiarEncabezadosReenviados=true \
+  META_API_KEY='@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/meta-api-key/)' \
+  ConnectionStrings__Dpm='@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/dpm-connection/)' \
+  Panel__ClaveInicial='@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/panel-initial-password/)' \
+  WhatsApp__AccessToken='@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/whatsapp-token/)' \
+  WhatsApp__AppSecret='@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/whatsapp-app-secret/)' \
+  WhatsApp__VerifyToken='@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/whatsapp-verify-token/)' \
+  WhatsApp__PhoneNumberId='<phone-number-id>'
+```
+
+The PostgreSQL connection string looks like `Host=<pg>.postgres.database.azure.com;Database=dpm;Username=dpmadmin;Password=<password>;Ssl Mode=Require`. `Ssl Mode=Require` (or `VerifyFull`) is mandatory: in production the app does not start without TLS to the database. On App Service the Data Protection keys (which also encrypt patient phone and member numbers) are persisted by the platform; in a container, `DataProtection__Ruta` must point to a volume or the app does not start.
+
+For App Service to read Key Vault, enable the app's managed identity (`az webapp identity assign`) and give it the **Key Vault Secrets User** role on the vault.
+
+| Variable | Purpose |
+|---|---|
+| `Limites__ConfiarEncabezadosReenviados=true` | App Service puts a proxy in front: this lets rate limiting see the real client IP |
+| `Limites__MensajesPorMinutoPorSesion` | 12 by default |
+| `Limites__PeticionesPorMinutoPorIp` | 120 by default |
+| `Retencion__DiasConversaciones` | 30 by default; the audit log keeps 365 (`Retencion__DiasBitacora`) |
+| `DataProtection__Ruta` | Containers only: persistent folder for the keys that encrypt the dashboard cookie (App Service persists them on its own) |
+
+On startup the app applies migrations and creates the `secretaria` user with `Panel__ClaveInicial`. The first sign-in forces a new password (the initial one only works once); then create the real users from the dashboard and remove that variable.
+
+### Secrets: Key Vault references and rotation
+
+Every secret goes in Key Vault and App Settings only hold a **reference** (`@Microsoft.KeyVault(SecretUri=...)`), never the value. Use a SecretUri **without a version** so App Service follows the latest version: it refreshes references periodically (about every 24 hours) and on every restart or settings change.
+
+**Rotating the Meta API key** (`META_API_KEY`):
+1. Create a new key in the Meta developer console (keep the old one active).
+2. `az keyvault secret set --vault-name <vault> --name meta-api-key --value '<new key>'` (a new version of the same secret).
+3. `az webapp restart -g $GROUP -n $APP` so the app reads it now; check `/health/ready` and send a test message in the demo.
+4. Revoke the old key in the Meta console. If a key may have leaked, do steps 1 to 4 immediately and review the cost view for unusual use.
+
+**Rotating the WhatsApp app secret** (`WhatsApp__AppSecret`, used to verify the webhook signature):
+1. In the Meta app dashboard (App settings → Basic) choose *Reset* for the App Secret: from that moment Meta signs webhooks with the new one.
+2. Right away, `az keyvault secret set --vault-name <vault> --name whatsapp-app-secret --value '<new secret>'` and `az webapp restart`. Webhooks that arrive in between fail the signature check and are rejected (401); Meta retries them, so nothing is lost as long as the restart happens within minutes.
+3. Rotate the access token (`WhatsApp__AccessToken`) the same way when using a long-lived system-user token; `WhatsApp__VerifyToken` can be any new random value, then update it in the webhook settings.
+
+The Data Protection keys are not a secret you rotate by hand: ASP.NET Core rotates them every 90 days and keeps the old ones to read existing data. Never delete that folder (or, on App Service, `/home/ASP.NET/DataProtection-Keys`): it would make the encrypted patient fields unreadable.
+
+## 3. GitHub Actions with OIDC
+
+1. Create an app registration in Entra ID and a **federated credential** for the repository (`repo:Draylinp/dpm-agent:environment:produccion`).
+2. Give it the **Website Contributor** role on the Web App.
+3. In GitHub, create the `produccion` environment with the secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_SUBSCRIPTION_ID`, and the repository variable `AZURE_WEBAPP_NAME`.
+
+The workflow `.github/workflows/deploy-azure.yml` runs the tests, publishes and deploys on every push to `main` (or manually). Without the `AZURE_WEBAPP_NAME` variable it does nothing.
+
+## 4. Container (alternative)
+
+```bash
+docker build -t dpm-agent .
+docker run -p 8080:8080 \
+  -e META_API_KEY=... \
+  -e BaseDatos__Proveedor=Postgres -e ConnectionStrings__Dpm="Host=..." \
+  -e Panel__ClaveInicial=... \
+  -e DataProtection__Ruta=/data/keys -v dpm-data:/data \
+  dpm-agent
+```
+
+With SQLite inside the container, use `-e ConnectionStrings__Dpm="Data Source=/data/dpm.db"` and the `/data` volume. For a clinic install with PostgreSQL in one command, see [INSTALLATION.md](INSTALLATION.md).
+
+## 5. Single instance
+
+Background jobs are designed for **one instance** (a B1 plan without horizontal scaling). With several instances, message dispatch and the scheduling engine would have to move to a single worker.

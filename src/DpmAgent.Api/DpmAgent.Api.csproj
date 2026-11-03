@@ -10,6 +10,22 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="DpmAgent.Tests" />
+    <InternalsVisibleTo Include="DpmAgent.Eval" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Textos fijos del sistema por idioma (es, en, ht). -->
+    <EmbeddedResource Include="Idiomas\Recursos\*.json" LogicalName="DpmAgent.Api.Idiomas.Recursos.%(Filename)%(Extension)" WithCulture="false" />
+    <Content Remove="Idiomas\Recursos\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
   </ItemGroup>
 
 </Project>

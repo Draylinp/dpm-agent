@@ -14,7 +14,7 @@ public class ReceptionAgentTests
         var clock = new FixedClock(Ahora);
         var dpm = new MockDpmGateway(clock);
         var tools = new AgentTools(dpm);
-        var agent = new ReceptionAgent(modelo, tools, new ConversationStore(), NullLogger<ReceptionAgent>.Instance, clock);
+        var agent = new ReceptionAgent(modelo, tools, new InMemoryConversationStore(), NullLogger<ReceptionAgent>.Instance, clock);
         return (agent, tools, dpm);
     }
 
@@ -22,24 +22,25 @@ public class ReceptionAgentTests
     public async Task Agenda_una_cita_en_varios_pasos()
     {
         var modelo = new ScriptedChatModel()
+            .ThenTool("buscar_paciente", new { })
             .ThenTool("consultar_disponibilidad", new { medico_id = "MED-01", fecha = "2026-10-27" })
             .Then(msgs =>
             {
                 var resultado = JsonNode.Parse(msgs[^1]["content"]!.ToString())!;
                 var slot = resultado["horarios"]![0]!["fecha_hora"]!.ToString();
                 return ScriptedChatModel.ToolCall("crear_cita",
-                    new { paciente_id = "PAC-001", medico_id = "MED-01", fecha_hora = slot, motivo = "control" });
+                    new { medico_id = "MED-01", fecha_hora = slot, motivo = "control" });
             })
             .ThenText("Su cita quedó para el martes 27 a las 8:00 a. m.");
 
         var (agent, _, dpm) = Crear(modelo);
 
-        var reply = await agent.RunAsync(null, "Quiero cita mañana temprano", CancellationToken.None);
+        var reply = await agent.RunAsync(null, "Quiero cita mañana temprano", "809-555-0101", CancellationToken.None);
 
-        Assert.Equal(["consultar_disponibilidad", "crear_cita"], reply.Pasos.Select(p => p.Herramienta));
-        Assert.Contains("\"creada\":true", reply.Pasos[1].Resultado);
+        Assert.Equal(["buscar_paciente", "consultar_disponibilidad", "crear_cita"], reply.Pasos.Select(p => p.Herramienta));
+        Assert.Contains("\"creada\":true", reply.Pasos[2].Resultado);
         Assert.Single(await dpm.CitasDePacienteAsync("PAC-001", CancellationToken.None));
-        Assert.Equal("Su cita quedó para el martes 27 a las 8:00 a. m.", reply.Respuesta);
+        Assert.EndsWith("Su cita quedó para el martes 27 a las 8:00 a. m.", reply.Respuesta);
     }
 
     [Fact]
@@ -63,11 +64,11 @@ public class ReceptionAgentTests
             .ThenTool("escalar_a_personal", new { motivo = "Pregunta sobre medicamento", urgente = false })
             .ThenText("Eso se lo responde la doctora. Ya le pasé su consulta al personal.");
 
-        var (agent, tools, _) = Crear(modelo);
+        var (agent, _, dpm) = Crear(modelo);
 
         await agent.RunAsync("s1", "¿Puedo tomar ibuprofeno?", CancellationToken.None);
 
-        var esc = Assert.Single(tools.Escalamientos);
+        var esc = Assert.Single(await dpm.ListarEscalamientosAsync(CancellationToken.None));
         Assert.Equal("s1", esc.SesionId);
         Assert.False(esc.Urgente);
     }
@@ -83,7 +84,7 @@ public class ReceptionAgentTests
 
         // system + user + assistant + user
         Assert.Equal(4, modelo.Llamadas[1].Count);
-        Assert.Equal("¿Para qué día?", modelo.Llamadas[1][2]["content"]!.ToString());
+        Assert.EndsWith("¿Para qué día?", modelo.Llamadas[1][2]["content"]!.ToString());
     }
 
     [Fact]
@@ -97,7 +98,7 @@ public class ReceptionAgentTests
         var reply = await agent.RunAsync(null, "cita", CancellationToken.None);
 
         Assert.Contains("\"error\"", reply.Pasos[0].Resultado);
-        Assert.Equal("Ese médico no existe.", reply.Respuesta);
+        Assert.EndsWith("Ese médico no existe.", reply.Respuesta);
     }
 
     [Fact]

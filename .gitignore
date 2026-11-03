@@ -486,3 +486,8 @@ $RECYCLE.BIN/
 # Local
 .env
 *.local.json
+
+# Bases de datos locales
+*.db
+*.db-shm
+*.db-wal

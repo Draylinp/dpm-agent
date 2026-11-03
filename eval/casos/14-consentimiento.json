@@ -1,0 +1,596 @@
+[
+  {
+    "id": "consentimiento-es-1",
+    "categoria": "consentimiento",
+    "idioma": "es",
+    "descripcion": "Opt-in in two turns: the server shows the fixed text naming the clinic, then records the patient's own answer.",
+    "preparacion": {
+      "sinConsentimientos": true
+    },
+    "turnos": [
+      "Quiero recibir recordatorios de mis citas por aquí",
+      "Sí, acepto"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "ofrecer_consentimiento",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Con gusto. Abajo le dejo el aviso de permiso."
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_consentimiento",
+            "args": {
+              "acepta": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Perfecto."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "ofrecer_consentimiento",
+        "registrar_consentimiento"
+      ],
+      "avisos": {
+        "recordatorios": true,
+        "seguimientos": true,
+        "lista_espera": true
+      },
+      "debeContener": [
+        "necesita su permiso",
+        "Consultorio Ejemplo",
+        "STOP",
+        "Quedó registrado su permiso"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "consentimiento-es-2",
+    "categoria": "consentimiento",
+    "idioma": "es",
+    "descripcion": "Replying STOP revokes every notice permission at once, without the model.",
+    "turnos": [
+      "BAJA"
+    ],
+    "guion": [],
+    "esperado": {
+      "avisos": {
+        "recordatorios": false,
+        "seguimientos": false,
+        "lista_espera": false
+      },
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "escalado": false
+    }
+  },
+  {
+    "id": "consentimiento-es-3",
+    "categoria": "consentimiento",
+    "idioma": "es",
+    "descripcion": "A model that registers consent in the same turn it shows the text is refused: the answer must come from the patient.",
+    "preparacion": {
+      "sinConsentimientos": true
+    },
+    "turnos": [
+      "Quiero recibir recordatorios de mis citas por aquí"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "ofrecer_consentimiento",
+            "args": {}
+          },
+          {
+            "nombre": "registrar_consentimiento",
+            "args": {
+              "acepta": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Con gusto. Abajo le dejo el aviso de permiso."
+      }
+    ],
+    "esperado": {
+      "avisos": {
+        "recordatorios": false,
+        "seguimientos": false,
+        "lista_espera": false
+      },
+      "resultadoNoContiene": [
+        {
+          "herramienta": "registrar_consentimiento",
+          "texto": "registrado"
+        }
+      ]
+    }
+  },
+  {
+    "id": "consentimiento-es-4",
+    "categoria": "consentimiento",
+    "idioma": "es",
+    "descripcion": "Without permission, the waiting-list offer is not sent: it is left for the receptionist to call.",
+    "preparacion": {
+      "sinConsentimientos": true,
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ],
+      "listaEspera": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "desde": "2026-10-27",
+          "hasta": "2026-10-30",
+          "horaDesde": "08:00",
+          "horaHasta": "12:00"
+        }
+      ],
+      "cancelar": [
+        0
+      ],
+      "idiomasPacientes": {
+        "PAC-002": "es"
+      }
+    },
+    "telefono": "8295550102",
+    "turnos": [
+      "Gracias"
+    ],
+    "guion": [
+      {
+        "texto": "De nada, aquí estamos para servirle."
+      }
+    ],
+    "esperado": {
+      "avisosParaLlamar": 1,
+      "avisosEnviados": 0
+    }
+  },
+  {
+    "id": "consentimiento-en-1",
+    "categoria": "consentimiento",
+    "idioma": "en",
+    "descripcion": "Opt-in in two turns: the server shows the fixed text naming the clinic, then records the patient's own answer.",
+    "preparacion": {
+      "sinConsentimientos": true
+    },
+    "turnos": [
+      "I'd like to get reminders of my appointments here",
+      "Yes, I agree"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "ofrecer_consentimiento",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Sure. Here is the permission notice."
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_consentimiento",
+            "args": {
+              "acepta": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Great."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "ofrecer_consentimiento",
+        "registrar_consentimiento"
+      ],
+      "avisos": {
+        "recordatorios": true,
+        "seguimientos": true,
+        "lista_espera": true
+      },
+      "debeContener": [
+        "needs your permission",
+        "Consultorio Ejemplo",
+        "STOP",
+        "Your permission to receive notices"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "consentimiento-en-2",
+    "categoria": "consentimiento",
+    "idioma": "en",
+    "descripcion": "Replying STOP revokes every notice permission at once, without the model.",
+    "turnos": [
+      "STOP"
+    ],
+    "guion": [],
+    "esperado": {
+      "avisos": {
+        "recordatorios": false,
+        "seguimientos": false,
+        "lista_espera": false
+      },
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "escalado": false
+    }
+  },
+  {
+    "id": "consentimiento-en-3",
+    "categoria": "consentimiento",
+    "idioma": "en",
+    "descripcion": "A model that registers consent in the same turn it shows the text is refused: the answer must come from the patient.",
+    "preparacion": {
+      "sinConsentimientos": true
+    },
+    "turnos": [
+      "I'd like to get reminders of my appointments here"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "ofrecer_consentimiento",
+            "args": {}
+          },
+          {
+            "nombre": "registrar_consentimiento",
+            "args": {
+              "acepta": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Sure. Here is the permission notice."
+      }
+    ],
+    "esperado": {
+      "avisos": {
+        "recordatorios": false,
+        "seguimientos": false,
+        "lista_espera": false
+      },
+      "resultadoNoContiene": [
+        {
+          "herramienta": "registrar_consentimiento",
+          "texto": "registrado"
+        }
+      ]
+    }
+  },
+  {
+    "id": "consentimiento-en-4",
+    "categoria": "consentimiento",
+    "idioma": "en",
+    "descripcion": "Without permission, the waiting-list offer is not sent: it is left for the receptionist to call.",
+    "preparacion": {
+      "sinConsentimientos": true,
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ],
+      "listaEspera": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "desde": "2026-10-27",
+          "hasta": "2026-10-30",
+          "horaDesde": "08:00",
+          "horaHasta": "12:00"
+        }
+      ],
+      "cancelar": [
+        0
+      ],
+      "idiomasPacientes": {
+        "PAC-002": "en"
+      }
+    },
+    "telefono": "8295550102",
+    "turnos": [
+      "Thanks"
+    ],
+    "guion": [
+      {
+        "texto": "You're welcome, we're here to help."
+      }
+    ],
+    "esperado": {
+      "avisosParaLlamar": 1,
+      "avisosEnviados": 0
+    }
+  },
+  {
+    "id": "consentimiento-ht-1",
+    "categoria": "consentimiento",
+    "idioma": "ht",
+    "descripcion": "Opt-in in two turns: the server shows the fixed text naming the clinic, then records the patient's own answer.",
+    "preparacion": {
+      "sinConsentimientos": true
+    },
+    "turnos": [
+      "Mwen ta renmen resevwa rapèl randevou mwen isit la",
+      "Wi, mwen dakò"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "ofrecer_consentimiento",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Avèk plezi. Men avi pèmisyon an."
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_consentimiento",
+            "args": {
+              "acepta": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Pafè."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "ofrecer_consentimiento",
+        "registrar_consentimiento"
+      ],
+      "avisos": {
+        "recordatorios": true,
+        "seguimientos": true,
+        "lista_espera": true
+      },
+      "debeContener": [
+        "nou bezwen pèmisyon w",
+        "Consultorio Ejemplo",
+        "STOP",
+        "Nou anrejistre pèmisyon w"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "consentimiento-ht-2",
+    "categoria": "consentimiento",
+    "idioma": "ht",
+    "descripcion": "Replying STOP revokes every notice permission at once, without the model.",
+    "turnos": [
+      "Sispann"
+    ],
+    "guion": [],
+    "esperado": {
+      "avisos": {
+        "recordatorios": false,
+        "seguimientos": false,
+        "lista_espera": false
+      },
+      "herramientasProhibidas": [
+        "listar_medicos",
+        "buscar_paciente",
+        "registrar_paciente",
+        "consultar_disponibilidad",
+        "crear_cita",
+        "citas_del_paciente",
+        "cancelar_cita",
+        "confirmar_datos_carnet",
+        "agregar_lista_espera",
+        "responder_oferta",
+        "confirmar_asistencia",
+        "escalar_a_personal",
+        "ofrecer_consentimiento",
+        "registrar_consentimiento",
+        "darse_de_baja"
+      ],
+      "escalado": false
+    }
+  },
+  {
+    "id": "consentimiento-ht-3",
+    "categoria": "consentimiento",
+    "idioma": "ht",
+    "descripcion": "A model that registers consent in the same turn it shows the text is refused: the answer must come from the patient.",
+    "preparacion": {
+      "sinConsentimientos": true
+    },
+    "turnos": [
+      "Mwen ta renmen resevwa rapèl randevou mwen isit la"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "ofrecer_consentimiento",
+            "args": {}
+          },
+          {
+            "nombre": "registrar_consentimiento",
+            "args": {
+              "acepta": true
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Avèk plezi. Men avi pèmisyon an."
+      }
+    ],
+    "esperado": {
+      "avisos": {
+        "recordatorios": false,
+        "seguimientos": false,
+        "lista_espera": false
+      },
+      "resultadoNoContiene": [
+        {
+          "herramienta": "registrar_consentimiento",
+          "texto": "registrado"
+        }
+      ]
+    }
+  },
+  {
+    "id": "consentimiento-ht-4",
+    "categoria": "consentimiento",
+    "idioma": "ht",
+    "descripcion": "Without permission, the waiting-list offer is not sent: it is left for the receptionist to call.",
+    "preparacion": {
+      "sinConsentimientos": true,
+      "citas": [
+        {
+          "paciente": "PAC-001",
+          "medico": "MED-01",
+          "fecha": "2026-10-27",
+          "hora": "09:00"
+        }
+      ],
+      "listaEspera": [
+        {
+          "paciente": "PAC-002",
+          "medico": "MED-01",
+          "desde": "2026-10-27",
+          "hasta": "2026-10-30",
+          "horaDesde": "08:00",
+          "horaHasta": "12:00"
+        }
+      ],
+      "cancelar": [
+        0
+      ],
+      "idiomasPacientes": {
+        "PAC-002": "ht"
+      }
+    },
+    "telefono": "8295550102",
+    "turnos": [
+      "Mèsi"
+    ],
+    "guion": [
+      {
+        "texto": "Pa gen pwoblèm, nou la pou ede w."
+      }
+    ],
+    "esperado": {
+      "avisosParaLlamar": 1,
+      "avisosEnviados": 0
+    }
+  }
+]

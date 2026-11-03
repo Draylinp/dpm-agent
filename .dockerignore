@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/*.db
+**/*.db-shm
+**/*.db-wal
+.git/
+.github/
+.vs/
+.vscode/
+.env
+tests/
+docs/
+deploy/

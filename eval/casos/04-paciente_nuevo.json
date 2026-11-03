@@ -1,0 +1,371 @@
+[
+  {
+    "id": "paciente_nuevo-es-1",
+    "categoria": "paciente_nuevo",
+    "idioma": "es",
+    "telefono": "8495550123",
+    "turnos": [
+      "Hola, es mi primera vez, quiero una cita",
+      "Me llamo Rosa Peña"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "¡Bienvenida! No la tengo registrada todavía. ¿Cuál es su nombre completo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Rosa Peña (ficticia)"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Gracias, Rosa. Ya está registrada. ¿Para qué día quiere la cita?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "buscar_paciente",
+        "registrar_paciente"
+      ],
+      "pacienteConTelefono": "8495550123",
+      "escalado": false,
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "paciente_nuevo-es-2",
+    "categoria": "paciente_nuevo",
+    "idioma": "es",
+    "telefono": "8495550124",
+    "turnos": [
+      "Buenos días, soy paciente nuevo y quiero ver a la doctora el martes",
+      "Carlos Gómez",
+      "A las 10 está bien"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "¡Bienvenido! ¿Me dice su nombre completo para registrarlo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Carlos Gómez (ficticio)"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Listo, Carlos. El martes tengo 9:30, 10:00 y 10:30 a. m. con la Dra. Ana Valdez. ¿Cuál le sirve?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T10:00:00-04:00",
+              "motivo": "primera consulta"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Su cita quedó para el martes 27 a las 10:00 a. m."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "registrar_paciente",
+        "crear_cita"
+      ],
+      "pacienteConTelefono": "8495550124",
+      "citasPaciente": 1,
+      "citaEn": {
+        "paciente": "PAC-003",
+        "fechaHora": "2026-10-27T10:00"
+      },
+      "idiomaSesion": "es",
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "paciente_nuevo-en-1",
+    "categoria": "paciente_nuevo",
+    "idioma": "en",
+    "telefono": "8495550123",
+    "turnos": [
+      "Hello, it's my first time, I would like an appointment",
+      "My name is Rosa Peña"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Welcome! I don't have you registered yet. What is your full name?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Rosa Peña (ficticia)"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Thank you, Rosa. You are now registered. Which day would you like the appointment?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "buscar_paciente",
+        "registrar_paciente"
+      ],
+      "pacienteConTelefono": "8495550123",
+      "escalado": false,
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "paciente_nuevo-en-2",
+    "categoria": "paciente_nuevo",
+    "idioma": "en",
+    "telefono": "8495550124",
+    "turnos": [
+      "Good morning, I'm a new patient and I want to see the doctor on Tuesday",
+      "Carlos Gómez",
+      "10 o'clock is fine"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Welcome! Could you tell me your full name so I can register you?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Carlos Gómez (ficticio)"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Thanks, Carlos. On Tuesday I have 9:30, 10:00 and 10:30 AM with Dr. Ana Valdez. Which one works for you?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T10:00:00-04:00",
+              "motivo": "primera consulta"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Your appointment is booked for Tuesday the 27th at 10:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "registrar_paciente",
+        "crear_cita"
+      ],
+      "pacienteConTelefono": "8495550124",
+      "citasPaciente": 1,
+      "citaEn": {
+        "paciente": "PAC-003",
+        "fechaHora": "2026-10-27T10:00"
+      },
+      "idiomaSesion": "en",
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "paciente_nuevo-ht-1",
+    "categoria": "paciente_nuevo",
+    "idioma": "ht",
+    "telefono": "8495550123",
+    "turnos": [
+      "Bonjou, se premye fwa mwen vini, mwen vle yon randevou",
+      "Mwen rele Rosa Peña"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Byenveni! Mwen poko gen ou anrejistre. Ki non konplè ou?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Rosa Peña (ficticia)"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Mèsi, Rosa. Ou anrejistre kounye a. Ki jou ou vle randevou a?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "buscar_paciente",
+        "registrar_paciente"
+      ],
+      "pacienteConTelefono": "8495550123",
+      "escalado": false,
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "paciente_nuevo-ht-2",
+    "categoria": "paciente_nuevo",
+    "idioma": "ht",
+    "telefono": "8495550124",
+    "turnos": [
+      "Bonjou, mwen se yon nouvo pasyan e mwen vle wè doktè a madi",
+      "Carlos Gómez",
+      "10è a bon pou mwen"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Byenveni! Ki non konplè ou pou m ka anrejistre ou?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Carlos Gómez (ficticio)"
+            }
+          }
+        ]
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "consultar_disponibilidad",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha": "2026-10-27"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Mèsi, Carlos. Madi mwen gen 9:30, 10:00 ak 10:30 AM ak Dr. Ana Valdez. Kilès ki bon pou ou?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "crear_cita",
+            "args": {
+              "medico_id": "MED-01",
+              "fecha_hora": "2026-10-27T10:00:00-04:00",
+              "motivo": "primera consulta"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Randevou ou pran pou madi 27 a 10:00 AM."
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "registrar_paciente",
+        "crear_cita"
+      ],
+      "pacienteConTelefono": "8495550124",
+      "citasPaciente": 1,
+      "citaEn": {
+        "paciente": "PAC-003",
+        "fechaHora": "2026-10-27T10:00"
+      },
+      "idiomaSesion": "ht",
+      "idiomaRespuesta": "ht"
+    }
+  }
+]

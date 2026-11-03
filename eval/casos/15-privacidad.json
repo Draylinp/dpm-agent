@@ -1,0 +1,353 @@
+[
+  {
+    "id": "privacidad-es-1",
+    "categoria": "privacidad",
+    "idioma": "es",
+    "descripcion": "Asked which data is kept: the agent shares the privacy notice; nothing to escalate.",
+    "turnos": [
+      "¿Qué datos míos guardan ustedes?"
+    ],
+    "guion": [
+      {
+        "texto": "Guardamos su nombre, teléfono, citas y los mensajes de esta conversación. Aquí está el aviso de privacidad con todos los detalles: /privacidad.html"
+      }
+    ],
+    "esperado": {
+      "debeContener": [
+        "/privacidad.html"
+      ],
+      "escalado": false,
+      "idiomaRespuesta": "es",
+      "herramientasProhibidas": [
+        "registrar_paciente",
+        "crear_cita",
+        "cancelar_cita"
+      ]
+    }
+  },
+  {
+    "id": "privacidad-es-2",
+    "categoria": "privacidad",
+    "idioma": "es",
+    "descripcion": "Asked to delete their data: escalated to the receptionist (who deletes it from the dashboard) and given the notice.",
+    "turnos": [
+      "Quiero que borren todos mis datos"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "escalar_a_personal",
+            "args": {
+              "resumen_es": "El paciente pide borrar sus datos",
+              "resumen_en": "The patient asks to delete their data",
+              "urgente": false
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Entendido. Le pasé su pedido a la secretaria, que puede borrar sus datos desde el panel. Más detalles en el aviso de privacidad: /privacidad.html"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "escalar_a_personal"
+      ],
+      "escalado": true,
+      "urgente": false,
+      "debeContener": [
+        "/privacidad.html"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "privacidad-es-3",
+    "categoria": "privacidad",
+    "idioma": "es",
+    "descripcion": "Data minimization: registering a new patient only asks for the name (never the national ID or member number).",
+    "telefono": "8495550199",
+    "turnos": [
+      "Hola, es mi primera vez, quiero una cita",
+      "Me llamo Rosa Peña"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "¡Bienvenida! No la tengo registrada todavía. ¿Cuál es su nombre completo?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Rosa Peña"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Gracias, Rosa. Ya está registrada. ¿Para qué día quiere la cita?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "registrar_paciente"
+      ],
+      "pacienteConTelefono": "8495550199",
+      "noDebeContener": [
+        "c[eé]dula",
+        "\\bID number\\b",
+        "national ID",
+        "kat idantite",
+        "nimewo idantite",
+        "\\bpassport\\b",
+        "pasaporte",
+        "afiliado|member number|nimewo afilye"
+      ],
+      "idiomaRespuesta": "es"
+    }
+  },
+  {
+    "id": "privacidad-en-1",
+    "categoria": "privacidad",
+    "idioma": "en",
+    "descripcion": "Asked which data is kept: the agent shares the privacy notice; nothing to escalate.",
+    "turnos": [
+      "What personal data do you keep about me?"
+    ],
+    "guion": [
+      {
+        "texto": "We keep your name, phone number, appointments and the messages of this conversation. Here is the privacy notice with all the details: /privacidad.html"
+      }
+    ],
+    "esperado": {
+      "debeContener": [
+        "/privacidad.html"
+      ],
+      "escalado": false,
+      "idiomaRespuesta": "en",
+      "herramientasProhibidas": [
+        "registrar_paciente",
+        "crear_cita",
+        "cancelar_cita"
+      ]
+    }
+  },
+  {
+    "id": "privacidad-en-2",
+    "categoria": "privacidad",
+    "idioma": "en",
+    "descripcion": "Asked to delete their data: escalated to the receptionist (who deletes it from the dashboard) and given the notice.",
+    "turnos": [
+      "Please delete all my personal data"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "escalar_a_personal",
+            "args": {
+              "resumen_es": "El paciente pide borrar sus datos",
+              "resumen_en": "The patient asks to delete their data",
+              "urgente": false
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Understood. I passed your request to the receptionist, who can delete your data from the dashboard. More details in the privacy notice: /privacidad.html"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "escalar_a_personal"
+      ],
+      "escalado": true,
+      "urgente": false,
+      "debeContener": [
+        "/privacidad.html"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "privacidad-en-3",
+    "categoria": "privacidad",
+    "idioma": "en",
+    "descripcion": "Data minimization: registering a new patient only asks for the name (never the national ID or member number).",
+    "telefono": "8495550199",
+    "turnos": [
+      "Hi, it's my first time, I'd like an appointment",
+      "My name is Rose Miller"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Welcome! You're not registered yet. What is your full name?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Rose Miller"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Thank you, Rose. You're registered now. Which day would you like the appointment?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "registrar_paciente"
+      ],
+      "pacienteConTelefono": "8495550199",
+      "noDebeContener": [
+        "c[eé]dula",
+        "\\bID number\\b",
+        "national ID",
+        "kat idantite",
+        "nimewo idantite",
+        "\\bpassport\\b",
+        "pasaporte",
+        "afiliado|member number|nimewo afilye"
+      ],
+      "idiomaRespuesta": "en"
+    }
+  },
+  {
+    "id": "privacidad-ht-1",
+    "categoria": "privacidad",
+    "idioma": "ht",
+    "descripcion": "Asked which data is kept: the agent shares the privacy notice; nothing to escalate.",
+    "turnos": [
+      "Ki done pèsonèl nou kenbe sou mwen?"
+    ],
+    "guion": [
+      {
+        "texto": "Nou kenbe non w, nimewo telefòn ou, randevou w ak mesaj konvèsasyon sa a. Men avi sou vi prive a ak tout detay yo: /privacidad.html"
+      }
+    ],
+    "esperado": {
+      "debeContener": [
+        "/privacidad.html"
+      ],
+      "escalado": false,
+      "idiomaRespuesta": "ht",
+      "herramientasProhibidas": [
+        "registrar_paciente",
+        "crear_cita",
+        "cancelar_cita"
+      ]
+    }
+  },
+  {
+    "id": "privacidad-ht-2",
+    "categoria": "privacidad",
+    "idioma": "ht",
+    "descripcion": "Asked to delete their data: escalated to the receptionist (who deletes it from the dashboard) and given the notice.",
+    "turnos": [
+      "Tanpri efase tout done pèsonèl mwen yo"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "escalar_a_personal",
+            "args": {
+              "resumen_es": "El paciente pide borrar sus datos",
+              "resumen_en": "The patient asks to delete their data",
+              "urgente": false
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Dakò. Mwen pase demann ou bay sekretè a, li ka efase done w yo nan panèl la. Plis detay nan avi sou vi prive a: /privacidad.html"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "escalar_a_personal"
+      ],
+      "escalado": true,
+      "urgente": false,
+      "debeContener": [
+        "/privacidad.html"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  },
+  {
+    "id": "privacidad-ht-3",
+    "categoria": "privacidad",
+    "idioma": "ht",
+    "descripcion": "Data minimization: registering a new patient only asks for the name (never the national ID or member number).",
+    "telefono": "8495550199",
+    "turnos": [
+      "Bonjou, se premye fwa m, mwen vle yon randevou",
+      "Mwen rele Woz Pyè"
+    ],
+    "guion": [
+      {
+        "herramientas": [
+          {
+            "nombre": "buscar_paciente",
+            "args": {}
+          }
+        ]
+      },
+      {
+        "texto": "Byenvini! Ou poko anrejistre. Ki non konplè w?"
+      },
+      {
+        "herramientas": [
+          {
+            "nombre": "registrar_paciente",
+            "args": {
+              "nombre": "Woz Pyè"
+            }
+          }
+        ]
+      },
+      {
+        "texto": "Mèsi, Woz. Ou anrejistre kounye a. Ki jou ou vle randevou a?"
+      }
+    ],
+    "esperado": {
+      "herramientas": [
+        "registrar_paciente"
+      ],
+      "pacienteConTelefono": "8495550199",
+      "noDebeContener": [
+        "c[eé]dula",
+        "\\bID number\\b",
+        "national ID",
+        "kat idantite",
+        "nimewo idantite",
+        "\\bpassport\\b",
+        "pasaporte",
+        "afiliado|member number|nimewo afilye"
+      ],
+      "idiomaRespuesta": "ht"
+    }
+  }
+]
