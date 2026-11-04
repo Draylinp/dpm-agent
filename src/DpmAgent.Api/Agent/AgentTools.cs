@@ -330,7 +330,7 @@ public sealed class AgentTools
 
     private async Task<string> Escalar(Sesion sesion, JsonObject args, CancellationToken ct)
     {
-        var urgente = args["urgente"]?.GetValueKind() == JsonValueKind.True;
+        var urgente = Bool(args, "urgente") == true;
 
         // Escalar nunca debe fallar por un argumento: si falta un resumen se usa el otro, y si faltan ambos,
         // el panel verá el mensaje original del paciente.
@@ -454,12 +454,7 @@ public sealed class AgentTools
         if (_agenda is null)
             return Error(SinAgenda);
 
-        var acepta = args["acepta"]?.GetValueKind() switch
-        {
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            _ => throw new ArgumentException("Falta el parámetro 'acepta' (true o false)."),
-        };
+        var acepta = Bool(args, "acepta") ?? throw new ArgumentException("Falta el parámetro 'acepta' (true o false).");
 
         var r = await _agenda.ResponderOfertaAsync(PacienteDeSesion(sesion), acepta, ct);
         if (!r.Aceptada)
@@ -570,12 +565,7 @@ public sealed class AgentTools
     {
         if (_contacto is null)
             return Error("No disponible en este momento. Usa escalar_a_personal.");
-        var correcto = args["correcto"]?.GetValueKind() switch
-        {
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            _ => throw new ArgumentException("Falta el parámetro 'correcto' (true o false)."),
-        };
+        var correcto = Bool(args, "correcto") ?? throw new ArgumentException("Falta el parámetro 'correcto' (true o false).");
         var pid = IdsDpm.Leer(PacienteDeSesion(sesion), "PAC")!.Value;
         await _contacto.ConfirmarNumeroAsync(pid, correcto, sesion.Id, ct);
         if (correcto)
@@ -635,13 +625,8 @@ public sealed class AgentTools
         if (sesion.ConsentimientoOfrecidoTurno is not { } turno || turno >= sesion.Turno || sesion.ConsentimientoVersion is null)
             return Error("Primero hay que mostrarle el texto de permiso con ofrecer_consentimiento y esperar su respuesta.");
 
-        var acepta = args["acepta"]?.GetValueKind() switch
-        {
-            JsonValueKind.True => true,
-            JsonValueKind.False => false,
-            _ => throw new ArgumentException("Falta el parámetro 'acepta' (true o false)."),
-        };
-        var categorias = args["categorias"] is JsonArray arr && arr.Count > 0 ? arr.Select(c => c?.ToString() ?? "").ToList() : null;
+        var acepta = Bool(args, "acepta") ?? throw new ArgumentException("Falta el parámetro 'acepta' (true o false).");
+        var categorias = Lista(args, "categorias");
 
         await _consentimientos.RegistrarAsync(pacienteId, categorias, acepta, CanalDeSesion(sesion), sesion.Idioma, Bitacora.Agente, sesion.Id, ct,
             sesion.ConsentimientoVersion);
@@ -660,7 +645,7 @@ public sealed class AgentTools
             return Error(SinConsentimientos);
         var pacienteId = IdsDpm.Leer(PacienteDeSesion(sesion), "PAC")!.Value;
 
-        var categorias = args["categorias"] is JsonArray arr && arr.Count > 0 ? arr.Select(c => c?.ToString() ?? "").ToList() : null;
+        var categorias = Lista(args, "categorias");
         if (categorias is null)
             await _consentimientos.RevocarTodoAsync(pacienteId, CanalDeSesion(sesion), sesion.Idioma, Bitacora.Agente, sesion.Id, ct);
         else
@@ -703,6 +688,44 @@ public sealed class AgentTools
     }
 
     private static string? Opt(JsonObject args, string key) => args[key]?.ToString();
+
+    /// <summary>
+    /// Booleano de una herramienta. Algunos modelos (Llama, entre otros) lo envían como texto ("true", "false"):
+    /// se acepta igual, porque leerlo mal puede, por ejemplo, quitarle la urgencia a una emergencia.
+    /// </summary>
+    internal static bool? Bool(JsonObject args, string key) => args[key] switch
+    {
+        JsonValue v when v.GetValueKind() == JsonValueKind.True => true,
+        JsonValue v when v.GetValueKind() == JsonValueKind.False => false,
+        JsonValue v when v.GetValueKind() == JsonValueKind.String => v.GetValue<string>().Trim().ToLowerInvariant() switch
+        {
+            "true" or "yes" or "si" or "sí" or "1" => true,
+            "false" or "no" or "0" => false,
+            _ => null,
+        },
+        _ => null,
+    };
+
+    /// <summary>Lista de textos; también acepta la lista escrita como texto JSON ("[\"a\"]"). Vacía o ausente: null.</summary>
+    internal static List<string>? Lista(JsonObject args, string key)
+    {
+        var nodo = args[key];
+        if (nodo is JsonValue v && v.GetValueKind() == JsonValueKind.String)
+        {
+            var texto = v.GetValue<string>().Trim();
+            try
+            {
+                nodo = texto.StartsWith('[') ? JsonNode.Parse(texto) : new JsonArray(texto);
+            }
+            catch (JsonException)
+            {
+                nodo = null;
+            }
+        }
+
+        var lista = nodo is JsonArray arr ? arr.Select(c => c?.ToString() ?? "").Where(c => c.Length > 0).ToList() : null;
+        return lista is { Count: > 0 } ? lista : null;
+    }
 
     internal static string MotivoAdministrativo(string? motivo)
     {

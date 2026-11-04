@@ -18,6 +18,25 @@ public class AgentToolsTests
         Assert.DoesNotContain(nombres, n => n.Contains("diagnost") || n.Contains("medicamento") || n.Contains("sintoma"));
     }
 
+    [Theory]
+    [InlineData("""{"resumen_es":"Dolor en el pecho","resumen_en":"Chest pain","urgente":true}""")]
+    [InlineData("""{"resumen_es":"Dolor en el pecho","resumen_en":"Chest pain","urgente":"true"}""")]
+    public async Task Una_emergencia_es_urgente_aunque_el_modelo_mande_el_booleano_como_texto(string args)
+    {
+        var sesion = new Sesion("s");
+        var r = await Crear().ExecuteAsync(sesion, "escalar_a_personal", args, CancellationToken.None);
+        Assert.Contains("\"urgente\":true", r);
+    }
+
+    [Fact]
+    public void Lee_booleanos_y_listas_escritos_como_texto()
+    {
+        var a = System.Text.Json.Nodes.JsonNode.Parse("""{"x":"false","y":"sí","z":"quizás","c":"[\"recordatorios\"]","d":"[]"}""")!.AsObject();
+        Assert.Equal((false, true, (bool?)null), (AgentTools.Bool(a, "x"), AgentTools.Bool(a, "y"), AgentTools.Bool(a, "z")));
+        Assert.Equal(["recordatorios"], AgentTools.Lista(a, "c"));
+        Assert.Null(AgentTools.Lista(a, "d"));
+    }
+
     [Fact]
     public async Task Parametro_faltante_devuelve_error()
     {
