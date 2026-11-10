@@ -52,7 +52,7 @@ services:
   # OpenAICompatible__BaseUrl=http://glimmer:8000/v1/, OpenAICompatible__Model=<GLIMMER_MODELO>.
   glimmer:
     profiles: ["glimmer"]
-    image: "${VLLM_IMAGEN:-vllm/vllm-openai:v0.10.1}"
+    image: "${VLLM_IMAGEN:-vllm/vllm-openai:v0.33.0}"
     restart: unless-stopped
     environment:
       HF_TOKEN: "${HF_TOKEN:-}"
