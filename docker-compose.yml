@@ -27,7 +27,7 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:16
+    image: postgres:18
     restart: unless-stopped
     # Arranca con TLS y un certificado propio de esta instalación (docker/postgres/iniciar-con-tls.sh).
     entrypoint: ["/bin/sh", "/usr/local/bin/iniciar-con-tls.sh"]
